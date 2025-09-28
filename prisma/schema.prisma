@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  nickname      String?
+  passwordHash  String
+  status        String   @default("active")
+  roles         Role[]
+  scripts       Script[] @relation("AuthorScripts")
+  reviews       Review[] @relation("UserReviews")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastLoginAt   DateTime?
+}
+
+model Role {
+  id              String  @id @default(cuid())
+  key             String
+  name            String
+  permissionsJson String
+  users           User[]
+}
+
+model Script {
+  id           String        @id @default(cuid())
+  title        String
+  authorName   String?
+  summary      String?
+  tagsCsv      String?
+  language     String?
+  license      String?
+  sourceLink   String?
+  state        String        @default("draft")
+  coverImageId String?
+  author       User?         @relation("AuthorScripts", fields: [authorId], references: [id])
+  authorId     String?
+  versions     ScriptJSON[]
+  images       ImageAsset[]
+  reviews      Review[]
+  downloads    DownloadEvent[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  publishedAt  DateTime?
+}
+
+model ScriptJSON {
+  id           String   @id @default(cuid())
+  script       Script   @relation(fields: [scriptId], references: [id])
+  scriptId     String
+  version      Int
+  content      String
+  contentHash  String   @unique
+  schemaValid  Boolean  @default(false)
+  schemaErrors String?
+  createdAt    DateTime @default(now())
+  createdById  String?
+}
+
+model ImageAsset {
+  id         String   @id @default(cuid())
+  script     Script   @relation(fields: [scriptId], references: [id])
+  scriptId   String
+  path       String
+  mime       String
+  size       Int
+  width      Int?
+  height     Int?
+  sha256     String
+  isCover    Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  createdById String?
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  script     Script   @relation(fields: [scriptId], references: [id])
+  scriptId   String
+  reviewer   User     @relation("UserReviews", fields: [reviewerId], references: [id])
+  reviewerId String
+  decision   String
+  reason     String?
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  objectType String
+  objectId   String
+  result     String
+  context    String?
+  createdAt  DateTime @default(now())
+  ip         String?
+  userAgent  String?
+}
+
+model Source {
+  id            String   @id @default(cuid())
+  url           String
+  license       String?
+  allowed       Boolean  @default(true)
+  availability  String   @default("unknown")
+  lastCheckedAt DateTime?
+}
+
+model DownloadEvent {
+  id        String   @id @default(cuid())
+  script    Script   @relation(fields: [scriptId], references: [id])
+  scriptId  String
+  actorId   String?
+  createdAt DateTime @default(now())
+  ip        String?
+  userAgent String?
+  referrer  String?
+}
