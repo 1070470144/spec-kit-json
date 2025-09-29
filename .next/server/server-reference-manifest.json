@@ -1,55 +1,16 @@
 {
   "node": {
-    "40129763abda0bdc1358885da1b684f82413b680a9": {
+    "40d0619549e078d3eb10a513f13738f870f4b4f270": {
       "workers": {
-        "app/admin/review/page": {
-          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cadmin%5C%5Creview%5C%5Cpage.tsx%22%2C%5B%7B%22id%22%3A%2200129763abda0bdc1358885da1b684f82413b680a9%22%2C%22exportedName%22%3A%22%24%24RSC_SERVER_ACTION_0%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cadmin%5C%5Creview%5C%5Cpage.tsx%22%7D%5D%5D%5D&__client_imported__=!",
+        "app/my/uploads/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cmy%5C%5Cuploads%5C%5Cpage.tsx%22%2C%5B%7B%22id%22%3A%2240d0619549e078d3eb10a513f13738f870f4b4f270%22%2C%22exportedName%22%3A%22%24%24RSC_SERVER_ACTION_0%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cmy%5C%5Cuploads%5C%5Cpage.tsx%22%7D%5D%5D%5D&__client_imported__=!",
           "async": false
         }
       },
       "layer": {
-        "app/admin/review/page": "rsc"
+        "app/my/uploads/page": "rsc"
       },
-      "filename": "../D:\\xue\\test-spec-pro\\xueran-juben-project\\app\\admin\\review\\page.tsx",
-      "exportedName": "$$RSC_SERVER_ACTION_0"
-    },
-    "403fb5a89ca71b964818426345e14f62a9c53a9b6e": {
-      "workers": {
-        "app/admin/users/page": {
-          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cadmin%5C%5Cusers%5C%5Cpage.tsx%22%2C%5B%7B%22id%22%3A%22403fb5a89ca71b964818426345e14f62a9c53a9b6e%22%2C%22exportedName%22%3A%22%24%24RSC_SERVER_ACTION_0%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cadmin%5C%5Cusers%5C%5Cpage.tsx%22%7D%5D%5D%5D&__client_imported__=!",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/admin/users/page": "rsc"
-      },
-      "filename": "../D:\\xue\\test-spec-pro\\xueran-juben-project\\app\\admin\\users\\page.tsx",
-      "exportedName": "$$RSC_SERVER_ACTION_0"
-    },
-    "601acd0e3052611f8dcd858c8fe87340e84c10214d": {
-      "workers": {
-        "app/admin/users/[id]/page": {
-          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cadmin%5C%5Cusers%5C%5C%5Bid%5D%5C%5Cpage.tsx%22%2C%5B%7B%22id%22%3A%22601acd0e3052611f8dcd858c8fe87340e84c10214d%22%2C%22exportedName%22%3A%22%24%24RSC_SERVER_ACTION_0%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cadmin%5C%5Cusers%5C%5C%5Bid%5D%5C%5Cpage.tsx%22%7D%5D%5D%5D&__client_imported__=!",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/admin/users/[id]/page": "rsc"
-      },
-      "filename": "../D:\\xue\\test-spec-pro\\xueran-juben-project\\app\\admin\\users\\[id]\\page.tsx",
-      "exportedName": "$$RSC_SERVER_ACTION_0"
-    },
-    "00faae0b1338f8d17a9e6b323d95842836e2640f34": {
-      "workers": {
-        "app/admin/scripts/page": {
-          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cadmin%5C%5Cscripts%5C%5Cpage.tsx%22%2C%5B%7B%22id%22%3A%2200faae0b1338f8d17a9e6b323d95842836e2640f34%22%2C%22exportedName%22%3A%22%24%24RSC_SERVER_ACTION_0%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cadmin%5C%5Cscripts%5C%5Cpage.tsx%22%7D%5D%5D%5D&__client_imported__=!",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/admin/scripts/page": "rsc"
-      },
-      "filename": "../D:\\xue\\test-spec-pro\\xueran-juben-project\\app\\admin\\scripts\\page.tsx",
+      "filename": "../D:\\xue\\test-spec-pro\\xueran-juben-project\\app\\my\\uploads\\page.tsx",
       "exportedName": "$$RSC_SERVER_ACTION_0"
     },
     "00129763abda0bdc1358885da1b684f82413b680a9": {
@@ -63,19 +24,6 @@
         "app/admin/review/page": "rsc"
       },
       "filename": "../D:\\xue\\test-spec-pro\\xueran-juben-project\\app\\admin\\review\\page.tsx",
-      "exportedName": "$$RSC_SERVER_ACTION_0"
-    },
-    "60a4a7c1c69c97bd79545c9540aaa421f802659675": {
-      "workers": {
-        "app/admin/users/new/page": {
-          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22D%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cadmin%5C%5Cusers%5C%5Cnew%5C%5Cpage.tsx%22%2C%5B%7B%22id%22%3A%2260a4a7c1c69c97bd79545c9540aaa421f802659675%22%2C%22exportedName%22%3A%22%24%24RSC_SERVER_ACTION_0%22%2C%22filename%22%3A%22..%2FD%3A%5C%5Cxue%5C%5Ctest-spec-pro%5C%5Cxueran-juben-project%5C%5Capp%5C%5Cadmin%5C%5Cusers%5C%5Cnew%5C%5Cpage.tsx%22%7D%5D%5D%5D&__client_imported__=!",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/admin/users/new/page": "rsc"
-      },
-      "filename": "../D:\\xue\\test-spec-pro\\xueran-juben-project\\app\\admin\\users\\new\\page.tsx",
       "exportedName": "$$RSC_SERVER_ACTION_0"
     }
   },

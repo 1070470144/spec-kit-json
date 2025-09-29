@@ -12,12 +12,13 @@ export async function DELETE(_req: NextRequest) {
   if (!isSuper) return forbidden('SUPERUSER_ONLY')
 
   await prisma.$transaction(async (tx) => {
+    await (tx as any)["like"].deleteMany({})
+    await (tx as any)["favorite"].deleteMany({})
+    await (tx as any)["likeEvent"].deleteMany({}).catch(()=>{})
     await tx.imageAsset.deleteMany({})
     await tx.scriptJSON.deleteMany({})
     await tx.review.deleteMany({})
     await tx.downloadEvent.deleteMany({})
-    await (tx as any)["likeEvent"].deleteMany({}).catch(()=>{})
-    await (tx as any)["favorite"].deleteMany({}).catch(()=>{})
     await tx.comment.deleteMany({})
     await tx.script.deleteMany({})
   })

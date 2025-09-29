@@ -1,15 +1,11 @@
 {
-  "/api/admin/storytellers/route": "app/api/admin/storytellers/route.js",
   "/api/scripts/route": "app/api/scripts/route.js",
-  "/api/scripts/stats-batch/route": "app/api/scripts/stats-batch/route.js",
+  "/api/admin/review/approve-all/route": "app/api/admin/review/approve-all/route.js",
   "/api/me/route": "app/api/me/route.js",
   "/api/site-config/route": "app/api/site-config/route.js",
-  "/api/files/route": "app/api/files/route.js",
-  "/api/admin/auth/me/route": "app/api/admin/auth/me/route.js",
-  "/api/scripts/[id]/route": "app/api/scripts/[id]/route.js",
-  "/scripts/page": "app/scripts/page.js",
-  "/leaderboard/page": "app/leaderboard/page.js",
   "/page": "app/page.js",
-  "/admin/storytellers/page": "app/admin/storytellers/page.js",
-  "/admin/settings/email/page": "app/admin/settings/email/page.js"
+  "/my/uploads/page": "app/my/uploads/page.js",
+  "/admin/scripts/page": "app/admin/scripts/page.js",
+  "/admin/scripts/batch/page": "app/admin/scripts/batch/page.js",
+  "/admin/review/page": "app/admin/review/page.js"
 }

@@ -3,25 +3,30 @@ import ScriptImagesCarousel from '@/app/scripts/ScriptImagesCarousel'
 
 type Item = { id: string; title: string; state: string; createdAt?: string }
 
-async function fetchMyUploads() {
+async function fetchMyUploads(page = 1, pageSize = 24) {
   const h = await headers()
   const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
   const proto = h.get('x-forwarded-proto') || 'http'
   const base = `${proto}://${host}`
   const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ')
-  const res = await fetch(`${base}/api/scripts?mine=1`, { cache: 'no-store', headers: { cookie: cookieHeader } })
+  const qs = new URLSearchParams({ mine: '1', page: String(page), pageSize: String(pageSize) })
+  const res = await fetch(`${base}/api/scripts?${qs.toString()}`, { cache: 'no-store', headers: { cookie: cookieHeader } })
   const j = await res.json().catch(()=>({}))
   const items = (j?.data?.items ?? j?.items ?? []) as Item[]
-  return { items }
+  const total = Number(j?.data?.total ?? j?.total ?? 0)
+  return { items, total, page, pageSize }
 }
 
-export default async function MyUploadsPage() {
-  const { items } = await fetchMyUploads()
+export default async function MyUploadsPage({ searchParams }: { searchParams?: Promise<{ page?: string }> }) {
+  const sp = searchParams ? await searchParams : undefined
+  const pageNum = Math.max(1, Number(sp?.page || '1'))
+  const { items, total, page, pageSize } = await fetchMyUploads(pageNum, 24)
+  const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize))
+  const makeHref = (p: number) => `/my/uploads?${new URLSearchParams({ page: String(p) }).toString()}`
   return (
     <div className="container-page section">
       <div className="max-w-5xl">
         <h1 className="text-2xl font-semibold">我的上传</h1>
-        <p className="subtitle mt-1">记录你提交的所有剧本，便于查看状态与跳转详情。</p>
       </div>
       <div className="grid-cards">
         {(!items || items.length === 0) && (
@@ -54,6 +59,13 @@ export default async function MyUploadsPage() {
           </div>
         ))}
       </div>
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <a className="btn btn-outline" href={makeHref(Math.max(1, page-1))} aria-disabled={page<=1}>上一页</a>
+          <span className="text-sm text-gray-600">第 {page} / {totalPages} 页（共 {total} 条）</span>
+          <a className="btn btn-outline" href={makeHref(Math.min(totalPages, page+1))} aria-disabled={page>=totalPages}>下一页</a>
+        </div>
+      )}
     </div>
   )
 }

@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     if (!s) {
       return ok({ items: [], total: 0, page, pageSize })
     }
-    where.versions = { some: { createdById: s.userId } }
+    where.createdById = s.userId
   }
 
   const [itemsRaw, total] = await Promise.all([
@@ -84,7 +84,8 @@ export async function POST(req: Request) {
       const storage = new LocalStorage()
       const contentStr = JSON.stringify(json)
       const hash = (await import('node:crypto')).createHash('sha256').update(contentStr).digest('hex')
-      const session = await getSession()
+      const [session, admin] = await Promise.all([getSession(), getAdminSession()])
+      const ownerId = admin?.userId || session?.userId || null
 
       // 不再按标题合并系列：始终创建新剧本
       const created = await prisma.script.create({
@@ -92,13 +93,14 @@ export async function POST(req: Request) {
           title,
           authorName: authorName || undefined,
           state: 'pending',
+          createdById: ownerId,
           versions: {
             create: {
               content: contentStr,
               contentHash: hash,
               schemaValid: true,
               version: 1,
-              createdById: session?.userId || null
+              createdById: ownerId
             }
           }
         },
@@ -148,19 +150,21 @@ export async function POST(req: Request) {
 
   const contentStr = JSON.stringify(json)
   const hash = (await import('node:crypto')).createHash('sha256').update(contentStr).digest('hex')
-  const session = await getSession()
+  const [session, admin] = await Promise.all([getSession(), getAdminSession()])
+  const ownerId = admin?.userId || session?.userId || null
   try {
     const created = await prisma.script.create({
       data: {
         title,
         state: 'pending',
+        createdById: ownerId,
         versions: {
           create: {
             content: contentStr,
             contentHash: hash,
             schemaValid: true,
             version: 1,
-            createdById: session?.userId || null
+            createdById: ownerId
           }
         }
       },

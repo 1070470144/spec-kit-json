@@ -17,6 +17,7 @@ model User {
   storytellerLevel Int     @default(0)
   roles           Role[]
   scripts         Script[] @relation("AuthorScripts")
+  createdScripts  Script[] @relation("CreatedScripts")
   reviews         Review[] @relation("UserReviews")
   comments        Comment[]
   storytellerApplications StorytellerApplication[]
@@ -47,6 +48,8 @@ model Script {
   sourceLink   String?
   state        String        @default("pending")
   coverImageId String?
+  createdBy    User?         @relation("CreatedScripts", fields: [createdById], references: [id])
+  createdById  String?
   author       User?         @relation("AuthorScripts", fields: [authorId], references: [id])
   authorId     String?
   versions     ScriptJSON[]

@@ -17,6 +17,8 @@ export async function POST(_req: NextRequest, context: { params: Promise<{ id: s
       await tx.scriptJSON.deleteMany({ where: { scriptId: id } })
       await tx.review.deleteMany({ where: { scriptId: id } })
       await tx.downloadEvent.deleteMany({ where: { scriptId: id } })
+      await tx.like.deleteMany({ where: { scriptId: id } })
+      await tx.favorite.deleteMany({ where: { scriptId: id } })
       await tx.script.delete({ where: { id } })
     })
     return ok({ hardDeleted: true })
@@ -24,7 +26,7 @@ export async function POST(_req: NextRequest, context: { params: Promise<{ id: s
 
   const session = await getSession()
   if (!session) return unauthorized()
-  const mine = await prisma.script.findFirst({ where: { id, versions: { some: { createdById: session.userId } } }, select: { id: true } })
+  const mine = await prisma.script.findFirst({ where: { id, createdById: session.userId }, select: { id: true } })
   if (!mine) return unauthorized()
   await prisma.script.update({ where: { id }, data: { state: 'abandoned' } })
   return ok({ softDeleted: true })

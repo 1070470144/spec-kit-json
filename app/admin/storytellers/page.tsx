@@ -39,16 +39,6 @@ export default async function AdminStorytellersPage({ searchParams }: { searchPa
                     <div className="text-xs text-gray-600">状态：{it.status} · 等级：{it.level}</div>
                   </div>
                   <StorytellerLevelButtons id={it.id} />
-                  <form action={`/api/admin/storytellers/reject`} method="post" className="flex items-center gap-2">
-                    <input className="input" name="reason" placeholder="拒绝原因" disabled={it.status==='rejected'} />
-                    <input type="hidden" name="id" value={it.id} />
-                    <button
-                      className={`btn btn-danger ${it.status==='rejected' ? 'opacity-60 cursor-not-allowed' : ''}`}
-                      formAction={`/api/admin/storytellers/reject?id=${encodeURIComponent(it.id)}&reason=`}
-                      type="submit"
-                      disabled={it.status==='rejected'}
-                    >拒绝</button>
-                  </form>
                 </div>
               ))}
             </div>
