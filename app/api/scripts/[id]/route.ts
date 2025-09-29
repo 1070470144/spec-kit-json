@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/src/db/client'
-import { ok, notFound, badRequest, unauthorized } from '@/src/api/http'
+import { ok, notFound, badRequest, unauthorized, forbidden } from '@/src/api/http'
 import { getAdminSession } from '@/src/auth/adminSession'
 
 export async function GET(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -41,5 +41,22 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     const hash = (await import('node:crypto')).createHash('sha256').update(contentStr).digest('hex')
     await prisma.scriptJSON.create({ data: { scriptId: id, content: contentStr, contentHash: hash, schemaValid: true, version: 1 } })
   }
+  return ok({ id })
+}
+
+export async function DELETE(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const admin = await getAdminSession()
+  if (!admin) return unauthorized('NOT_ADMIN')
+  const { id } = await context.params
+  const exist = await prisma.script.findUnique({ where: { id }, select: { id: true } })
+  if (!exist) return notFound()
+  // 事务删除关联资源
+  await prisma.$transaction(async (tx) => {
+    await tx.imageAsset.deleteMany({ where: { scriptId: id } })
+    await tx.scriptJSON.deleteMany({ where: { scriptId: id } })
+    await tx.review.deleteMany({ where: { scriptId: id } })
+    await tx.downloadEvent.deleteMany({ where: { scriptId: id } })
+    await tx.script.delete({ where: { id } })
+  })
   return ok({ id })
 }

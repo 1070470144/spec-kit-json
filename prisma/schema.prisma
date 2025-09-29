@@ -59,7 +59,7 @@ model ScriptJSON {
   scriptId     String
   version      Int
   content      String
-  contentHash  String   @unique
+  contentHash  String
   schemaValid  Boolean  @default(false)
   schemaErrors String?
   createdAt    DateTime @default(now())

@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import Gallery from '../_components/Gallery'
 
 type Detail = { id: string; title: string; author?: string | null; state: string; images: { id: string; url: string; isCover?: boolean }[]; json?: unknown }
 
@@ -17,35 +18,33 @@ export default async function ScriptDetailPage({ params }: { params: { id: strin
   const { data, base } = await fetchDetail(params.id)
   const images = data.images ?? []
   const cover = images.find(i=>i.isCover) || images[0]
+  const jsonPreview = data.json ? JSON.stringify(data.json, null, 2) : null
   return (
     <div className="container-page section">
       <div className="card">
         <div className="card-body">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="card-title">{data.title}</div>
-              <div className="muted">作者：{data.author || '-'}</div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className={`px-2 py-1 text-xs rounded-full border ${data.state==='pending' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : data.state==='approved' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>{data.state}</span>
+          {/* 顶部：不论图片尺寸，固定高度的横向滚动展示 */}
+          <Gallery images={images} title={data.title} />
+
+          {/* 中部：作者名与剧本名 */}
+          <div className="mt-4">
+            <div className="text-sm text-gray-600">作者：{data.author || '-'}</div>
+            <div className="card-title mt-1">{data.title}</div>
+          </div>
+
+          {/* 底部：JSON 预览与操作 */}
+          <div className="mt-4">
+            <div className="text-sm font-medium mb-2">JSON 预览</div>
+            {jsonPreview ? (
+              <pre className="text-xs bg-slate-50 border rounded-lg p-3 overflow-auto max-h-[32rem] whitespace-pre-wrap break-words">{jsonPreview}</pre>
+            ) : (
+              <div className="muted">暂无 JSON 内容</div>
+            )}
+            <div className="mt-3 flex gap-2">
               <a className="btn btn-outline" href={`${base}/api/scripts/${data.id}/download`} download>下载 JSON</a>
               <a className="btn btn-outline" href={`/scripts`}>返回列表</a>
             </div>
           </div>
-
-          {cover?.url && (
-            <div className="mt-4">
-              <img src={cover.url} alt={data.title} className="w-full max-h-[420px] object-cover rounded-lg border" />
-            </div>
-          )}
-
-          {!!images.length && (
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3">
-              {images.map(img => (
-                <img key={img.id} src={img.url} alt={data.title} className="rounded border bg-white object-cover w-full h-28" />
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>

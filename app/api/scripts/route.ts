@@ -81,55 +81,25 @@ export async function POST(req: Request) {
       const hash = (await import('node:crypto')).createHash('sha256').update(contentStr).digest('hex')
       const session = await getSession()
 
-      // 若存在相同标题，则作为同一剧本新增版本；否则新建剧本
-      const existing = await prisma.script.findFirst({ where: { title }, select: { id: true, authorName: true } })
-      let scriptId: string
-      if (existing) {
-        try {
-          await prisma.$transaction(async (tx) => {
-            const latest = await tx.scriptJSON.findFirst({ where: { scriptId: existing.id }, orderBy: { version: 'desc' } })
-            const nextVersion = (latest?.version ?? 0) + 1
-            await tx.scriptJSON.create({
-              data: {
-                scriptId: existing.id,
-                version: nextVersion,
-                content: contentStr,
-                contentHash: hash,
-                schemaValid: true,
-                createdById: session?.userId || null
-              }
-            })
-            await tx.script.update({ where: { id: existing.id }, data: { state: 'pending', authorName: existing.authorName || authorName || undefined } })
-          })
-          scriptId = existing.id
-        } catch (e: any) {
-          if (e?.code === 'P2002') {
-            // 相同内容已存在，直接返回现有剧本 id
-            scriptId = existing.id
-          } else {
-            throw e
-          }
-        }
-      } else {
-        const created = await prisma.script.create({
-          data: {
-            title,
-            authorName: authorName || undefined,
-            state: 'pending',
-            versions: {
-              create: {
-                content: contentStr,
-                contentHash: hash,
-                schemaValid: true,
-                version: 1,
-                createdById: session?.userId || null
-              }
+      // 不再按标题合并系列：始终创建新剧本
+      const created = await prisma.script.create({
+        data: {
+          title,
+          authorName: authorName || undefined,
+          state: 'pending',
+          versions: {
+            create: {
+              content: contentStr,
+              contentHash: hash,
+              schemaValid: true,
+              version: 1,
+              createdById: session?.userId || null
             }
-          },
-          select: { id: true }
-        })
-        scriptId = created.id
-      }
+          }
+        },
+        select: { id: true }
+      })
+      const scriptId = created.id
 
       let sortOrder = 0
       for (const f of images) {

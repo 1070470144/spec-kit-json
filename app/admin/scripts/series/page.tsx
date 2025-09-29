@@ -5,31 +5,6 @@ async function fetchSeries() {
   return { items }
 }
 
-export default async function AdminSeriesPage() {
-  const { items } = await fetchSeries()
-  return (
-    <div className="container-page section" data-admin>
-      <div className="card">
-        <div className="card-title">系列管理</div>
-        {!items?.length && <div className="muted">暂无系列</div>}
-        {!!items?.length && (
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {items.map(s => (
-              <div key={s.id} className="card">
-                <div className="card-body">
-                  <div className="font-medium">{s.title}</div>
-                  <div className="muted">状态：{s.state} · 版本：{s.versions} · 图片：{s.images}</div>
-                  <div className="card-actions">
-                    <a className="btn btn-outline" href={`/scripts/${s.id}`}>查看</a>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
+export default async function AdminSeriesPage() { return <div className="container-page section" data-admin><div className="muted">系列功能已下线</div></div> }
 
 

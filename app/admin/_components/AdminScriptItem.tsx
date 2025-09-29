@@ -6,6 +6,17 @@ type Item = { id: string; title: string; state?: string; authorName?: string | n
 
 export default function AdminScriptItem({ item }: { item: Item }) {
   const [open, setOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  async function onDelete() {
+    if (!confirm('确定要删除该剧本吗？此操作不可恢复')) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/scripts/${item.id}`, { method: 'DELETE' })
+      if (!res.ok) { alert('删除失败'); return }
+      location.reload()
+    } finally { setDeleting(false) }
+  }
 
   return (
     <div className="card">
@@ -16,6 +27,7 @@ export default function AdminScriptItem({ item }: { item: Item }) {
         <div className="card-actions">
           <button className="btn btn-outline" onClick={()=>setOpen(true)}>查看</button>
           <a className="btn btn-primary" href={`/admin/scripts/${item.id}`}>编辑</a>
+          <button className="btn btn-danger" onClick={onDelete} disabled={deleting}>删除</button>
         </div>
       </div>
       <AdminScriptViewModal id={item.id} open={open} onClose={()=>setOpen(false)} />

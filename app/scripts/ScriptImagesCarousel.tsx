@@ -44,13 +44,13 @@ export default function ScriptImagesCarousel({ id }: { id: string }) {
 
   return (
     <div className="relative overflow-hidden rounded-t-xl">
-      <div className="aspect-video w-full bg-black/5">
+      <div className="aspect-video w-full bg-white">
         {images.map((img, i) => (
           <img
             key={img.id}
             src={img.url}
             alt="preview"
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${i === index ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-500 ${i === index ? 'opacity-100' : 'opacity-0'}`}
             draggable={false}
           />
         ))}

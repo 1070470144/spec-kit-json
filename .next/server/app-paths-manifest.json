@@ -1,12 +1,12 @@
 {
-  "/api/scripts/[id]/route": "app/api/scripts/[id]/route.js",
   "/api/scripts/route": "app/api/scripts/route.js",
-  "/api/files/route": "app/api/files/route.js",
+  "/api/scripts/[id]/route": "app/api/scripts/[id]/route.js",
   "/api/me/route": "app/api/me/route.js",
-  "/profile/page": "app/profile/page.js",
+  "/api/files/route": "app/api/files/route.js",
+  "/api/admin/auth/me/route": "app/api/admin/auth/me/route.js",
+  "/scripts/page": "app/scripts/page.js",
+  "/upload/page": "app/upload/page.js",
   "/my/uploads/page": "app/my/uploads/page.js",
   "/scripts/[id]/page": "app/scripts/[id]/page.js",
-  "/scripts/page": "app/scripts/page.js",
-  "/admin/scripts/page": "app/admin/scripts/page.js",
-  "/admin/scripts/[id]/page": "app/admin/scripts/[id]/page.js"
+  "/admin/review/page": "app/admin/review/page.js"
 }

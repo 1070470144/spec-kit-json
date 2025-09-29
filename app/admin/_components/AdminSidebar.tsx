@@ -21,7 +21,6 @@ export default function AdminSidebar() {
       label: '剧本管理',
       children: [
         { href: '/admin/scripts', label: '剧本列表' },
-        { href: '/admin/scripts/series', label: '系列管理' },
         { href: '/admin/review', label: '剧本审核' },
       ],
     },
