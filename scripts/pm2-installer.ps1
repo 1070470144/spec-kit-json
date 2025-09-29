@@ -138,71 +138,24 @@ function Step-Backup($cfg){
   if($paths.Count -gt 0){ Compress-Archive -Path $paths -DestinationPath $target -Force; OK "backup saved: $target" } else { Info 'nothing to backup' }
 }
 
-# Write Caddyfile and start caddy if exists
-function Step-SetupCaddy($cfg){
-  T 'SETUP CADDY (reverse proxy)'
-  $caddyDir = 'C:\caddy'
-  if(!(Test-Path $caddyDir)){ New-Item -ItemType Directory -Force -Path $caddyDir | Out-Null }
-  $caddyfile = @'
-{DOMAIN} {
-  encode zstd gzip
-  reverse_proxy 127.0.0.1:{PORT}
-}
-'@
-  $domain = $cfg.APP_BASE_URL -replace '^https?://', ''
-  $domain = $domain -replace '/.*$', ''
-  $caddyfile = $caddyfile -replace '\{DOMAIN\}', $domain
-  $caddyfile = $caddyfile -replace '\{PORT\}', $cfg.APP_PORT
-  $caddyPath = Join-Path $caddyDir 'Caddyfile'
-  $caddyfile | Out-File -Encoding ASCII $caddyPath
-  $exe = Join-Path $caddyDir 'caddy.exe'
-  if(Test-Path $exe){
-    Push-Location $caddyDir
-    & $exe stop *> $null
-    & $exe start --config $caddyPath
-    Pop-Location
-    OK 'caddy started (port 80/443)'
-  } else {
-    Info "caddy.exe not found at $caddyDir. Download from https://caddyserver.com/ and place caddy.exe in $caddyDir, then rerun this step."
-  }
-}
-
-function Step-StopCaddy(){
-  $exe = 'C:\caddy\caddy.exe'
-  if(Test-Path $exe){ & $exe stop; OK 'caddy stopped' } else { Info 'caddy.exe not found' }
-}
-
-function Step-OpenFirewall(){
-  T 'OPEN WINDOWS FIREWALL PORTS 80/443'
+# Quick expose 10080 and show access URL
+function Step-QuickExpose(){
+  T 'QUICK EXPOSE 10080'
   try {
-    netsh advfirewall firewall add rule name="Juben HTTP 80" dir=in action=allow protocol=TCP localport=80 | Out-Null
+    netsh advfirewall firewall add rule name="Juben HTTP 10080" dir=in action=allow protocol=TCP localport=10080 | Out-Null
   } catch {}
-  try {
-    netsh advfirewall firewall add rule name="Juben HTTPS 443" dir=in action=allow protocol=TCP localport=443 | Out-Null
-  } catch {}
-  OK 'Windows firewall open for 80/443 (ensure cloud security group also allows)'
-}
-
-function Step-DownloadCaddy(){
-  T 'DOWNLOAD CADDY (Windows amd64)'
-  $caddyDir = 'C:\caddy'
-  if(!(Test-Path $caddyDir)){ New-Item -ItemType Directory -Force -Path $caddyDir | Out-Null }
-  $zip = Join-Path $env:TEMP 'caddy_windows_amd64.zip'
-  $url = 'https://github.com/caddyserver/caddy/releases/latest/download/caddy_windows_amd64.zip'
-  try {
-    Invoke-WebRequest -Uri $url -OutFile $zip -UseBasicParsing
-  } catch {
-    Err "download failed: $url"; throw
+  $pub = ''
+  try { $pub = (Invoke-RestMethod -UseBasicParsing -Uri 'https://api.ipify.org') } catch {}
+  if([string]::IsNullOrWhiteSpace($pub)){
+    try { $pub = (Invoke-RestMethod -UseBasicParsing -Uri 'https://ifconfig.me') } catch {}
   }
-  $tmp = Join-Path $env:TEMP ('caddy_' + [guid]::NewGuid().ToString('N'))
-  New-Item -ItemType Directory -Force -Path $tmp | Out-Null
-  Expand-Archive -Path $zip -DestinationPath $tmp -Force
-  $exe = Get-ChildItem -Path $tmp -Recurse -Filter 'caddy.exe' | Select-Object -First 1
-  if(-not $exe){ Err 'caddy.exe not found in zip'; throw 'unzip failed' }
-  Copy-Item -Force $exe.FullName (Join-Path $caddyDir 'caddy.exe')
-  Remove-Item -Force $zip -ErrorAction SilentlyContinue
-  Remove-Item -Force -Recurse $tmp -ErrorAction SilentlyContinue
-  OK 'caddy.exe downloaded to C:\caddy\caddy.exe'
+  if([string]::IsNullOrWhiteSpace($pub)){
+    $pub = (Get-NetIPAddress -AddressFamily IPv4 -PrefixOrigin Dhcp -ErrorAction SilentlyContinue | Where-Object { $_.IPAddress -notmatch '^169\.' } | Select-Object -ExpandProperty IPAddress -First 1)
+  }
+  if([string]::IsNullOrWhiteSpace($pub)){ $pub = '你的服务器IP' }
+  $url = 'http://{0}:10080' -f $pub
+  OK ('opened firewall for 10080. Access: {0}' -f $url)
+  Info '如果在云厂商上，请确认安全组也放行 10080。'
 }
 
 function Menu(){
@@ -220,10 +173,7 @@ function Menu(){
     Write-Host '7) stop (pm2)'
     Write-Host '8) logs (pm2)'
     Write-Host '9) backup uploads/sqlite'
-    Write-Host '10) setup caddy (reverse proxy)'
-    Write-Host '11) stop caddy'
-    Write-Host '12) open Windows firewall ports 80/443'
-    Write-Host '13) download caddy (win64)'
+    Write-Host '10) quick expose 10080 and show URL'
     Write-Host '0) exit'
     $sel = Read-Host 'select'
     switch($sel){
@@ -236,10 +186,7 @@ function Menu(){
       '7' { Step-Stop $cfg; continue }
       '8' { Step-Logs $cfg; continue }
       '9' { Step-Backup $cfg; continue }
-      '10' { Step-SetupCaddy $cfg; continue }
-      '11' { Step-StopCaddy; continue }
-      '12' { Step-OpenFirewall; continue }
-      '13' { Step-DownloadCaddy; continue }
+      '10' { Step-QuickExpose; continue }
       '0' { break }
       default { Info 'invalid option'; Start-Sleep -Seconds 1 }
     }

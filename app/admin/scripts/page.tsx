@@ -7,7 +7,8 @@ async function fetchScripts(state?: string, page = 1, pageSize = 24) {
   const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
   const proto = h.get('x-forwarded-proto') || 'http'
   const base = `${proto}://${host}`
-  const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ')
+  const allCookies = (await cookies()).getAll() as Array<{ name: string; value: string }>
+  const cookieHeader = allCookies.map(c => `${c.name}=${c.value}`).join('; ')
   const qs = new URLSearchParams({ page: String(page), pageSize: String(pageSize), ...(state ? { state } : {}) })
   const res = await fetch(`${base}/api/scripts?${qs.toString()}`, { cache: 'no-store', headers: { cookie: cookieHeader } })
   const j = await res.json().catch(()=>({}))
@@ -16,8 +17,8 @@ async function fetchScripts(state?: string, page = 1, pageSize = 24) {
   return { items, total, page, pageSize }
 }
 
-export default async function AdminScriptsManagePage({ searchParams }: { searchParams?: Promise<{ state?: string; page?: string }> }) {
-  const sp = searchParams ? await searchParams : undefined
+export default async function AdminScriptsManagePage({ searchParams }: { searchParams?: { state?: string; page?: string } }) {
+  const sp = searchParams
   const state = sp?.state
   const pageNum = Math.max(1, Number(sp?.page || '1'))
   const { items, total, page, pageSize } = await fetchScripts(state, pageNum)

@@ -1,8 +1,5 @@
 {
   "/api/scripts/route": "app/api/scripts/route.js",
-  "/api/admin/review/approve-all/route": "app/api/admin/review/approve-all/route.js",
-  "/api/me/route": "app/api/me/route.js",
-  "/api/site-config/route": "app/api/site-config/route.js",
   "/page": "app/page.js",
   "/my/uploads/page": "app/my/uploads/page.js",
   "/admin/scripts/page": "app/admin/scripts/page.js",
