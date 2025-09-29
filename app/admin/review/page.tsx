@@ -8,15 +8,23 @@ async function fetchPending() {
 export default async function ReviewPage() {
   const { items } = await fetchPending()
   return (
-    <div className="space-y-4">
+    <div className="container-page section">
       <h1 className="text-2xl font-semibold">待审核</h1>
-      <ul className="space-y-2">
-        {items.map(i => (
-          <li key={i.id} className="p-3 rounded border bg-white">
-            <a className="text-blue-600" href={`/scripts/${i.id}`}>{i.title}</a>
-          </li>
-        ))}
-      </ul>
+      {(!items || items.length === 0) && (
+        <div className="muted">暂无待审核的剧本</div>
+      )}
+      {items && items.length > 0 && (
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {items.map(i => (
+            <div key={i.id} className="card">
+              <div className="card-title">{i.title}</div>
+              <div className="card-actions">
+                <a className="btn btn-primary" href={`/scripts/${i.id}`}>去审核</a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

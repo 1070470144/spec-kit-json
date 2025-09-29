@@ -1,3 +1,40 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --m3-bg: #f8fafc;
+  --m3-surface: #ffffff;
+  --m3-text: #0f172a;
+  --m3-muted: #475569;
+  --m3-primary: #2563eb;
+  --m3-primary-foreground: #ffffff;
+  --m3-border: #e2e8f0;
+  --m3-error: #dc2626;
+}
+
+@layer base {
+  body { @apply bg-[var(--m3-bg)] text-[var(--m3-text)]; }
+}
+
+@layer components {
+  .container-page { @apply mx-auto max-w-5xl p-6; }
+  .card { @apply bg-[var(--m3-surface)] border border-[var(--m3-border)] rounded-xl shadow-sm; }
+  .card-body { @apply p-4 md:p-6; }
+  .card-title { @apply text-lg font-semibold mb-2 text-[var(--m3-text)]; }
+  .muted { @apply text-sm text-[var(--m3-muted)]; }
+
+  .btn { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors border border-transparent; }
+  .btn-primary { @apply bg-[var(--m3-primary)] text-[var(--m3-primary-foreground)] hover:bg-blue-600 active:bg-blue-700; }
+  .btn-outline { @apply border-[var(--m3-border)] text-[var(--m3-text)] hover:bg-slate-50; }
+  .btn-danger { @apply bg-[var(--m3-error)] text-white hover:bg-red-700; }
+  .btn:disabled { @apply opacity-60 cursor-not-allowed; }
+
+  .input { @apply w-full rounded-lg border border-[var(--m3-border)] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400; }
+  .textarea { @apply w-full rounded-lg border border-[var(--m3-border)] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400; }
+  .input-error { @apply border-[var(--m3-error)] focus:ring-red-200 focus:border-red-400; }
+  .help-error { @apply text-xs text-[var(--m3-error)] mt-1; }
+
+  .section { @apply space-y-4; }
+  .grid-cards { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4; }
+}

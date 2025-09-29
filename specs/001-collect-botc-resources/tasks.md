@@ -149,3 +149,23 @@ Task: "Integration test upload flow in tests/integration/upload.flow.test.ts"
 - [ ] A006 契约：在 `contracts/README.md` 增加 Admin 登录/登出接口说明与错误码。
 - [ ] A007 测试：契约测试 `tests/contract/api.admin.login.test.ts` 与集成测试 `tests/integration/admin.guard.test.ts`。
 - [ ] A008 种子/角色：确保存在管理员账号（admin@example.com），文档化如何升级普通账号为管理员（临时策略或角色表）。
+
+## Auth（注册/邮箱验证/重置）
+- [ ] AU01 Prisma：新增表 `VerificationToken(id, userId, token, expiresAt)`、`PasswordResetToken(id, userId, token, expiresAt)`
+- [ ] AU02 API：`POST /api/auth/register`（创建用户并发验证邮件）
+- [ ] AU03 API：`POST /api/auth/email/send-verification`（登录后或未验证用户可触发，限流）
+- [ ] AU04 API：`GET /api/auth/email/verify?token=...`（校验并标记已验证）
+- [ ] AU05 API：`POST /api/auth/password/forgot`（发重置邮件，限流）
+- [ ] AU06 API：`POST /api/auth/password/reset`（携带 token 与新密码，完成重置）
+- [ ] AU07 Pages：`/register`、`/verify/[token]`、`/forgot`、`/reset/[token]` 表单与提示
+- [ ] AU08 邮件发送：`src/auth/mailer.ts`（SMTP/本地捕获），模板与链接生成
+- [ ] AU09 速率限制：注册/发信/忘记接口（IP+邮箱），统一错误码 `RATE_LIMITED`
+- [ ] AU10 测试：契约/集成覆盖注册→验证、忘记→重置 happy path 与失败场景
+
+## UI（Material 3）与导航调整
+- [ ] UI01 建立主题与色板（Tailwind 变量/类），按钮/输入/卡片的 hover/focus/disabled/error 状态
+- [ ] UI02 门户导航移除“审核”，保留“首页/剧本列表/上传/登录/注册”
+- [ ] UI03 管理端导航：`/admin/login` 未登录时可见，“审核”登录后可见
+- [ ] UI04 列表与详情页样式美化（卡片、轮播、留白）
+- [ ] UI05 表单页（上传/登录/注册/忘记/重置）间距与错误提示统一
+- [ ] UI06 可访问性：对比度、aria 属性、键盘可达

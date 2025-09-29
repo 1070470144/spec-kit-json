@@ -30,14 +30,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="container-page section">
       <h1 className="text-2xl font-semibold">登录</h1>
-      <form onSubmit={onSubmit} className="space-y-3">
-        <input className="w-full p-2 border rounded" value={email} onChange={e=>setEmail(e.target.value)} />
-        <input className="w-full p-2 border rounded" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-        <button className="px-4 py-2 bg-blue-600 text-white rounded" type="submit">登录</button>
+      <form onSubmit={onSubmit} className="space-y-3 max-w-md">
+        <input className="input" value={email} onChange={e=>setEmail(e.target.value)} placeholder="邮箱" />
+        <input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="密码" />
+        <div className="flex gap-2">
+          <button className="btn btn-primary" type="submit">登录</button>
+          <a className="btn btn-outline" href="/forgot">忘记密码</a>
+        </div>
       </form>
-      {msg && <div className="text-sm text-gray-700">{msg}</div>}
+      {msg && <div className="muted">{msg}</div>}
     </div>
   )
 }

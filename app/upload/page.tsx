@@ -25,14 +25,8 @@ export default function UploadPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setMessage('')
-    if (!title || !jsonFile) {
-      setMessage('请填写标题并选择 JSON 文件')
-      return
-    }
-    if (images.length > 3) {
-      setMessage('最多选择 3 张图片')
-      return
-    }
+    if (!title || !jsonFile) { setMessage('请填写标题并选择 JSON 文件'); return }
+    if (images.length > 3) { setMessage('最多选择 3 张图片'); return }
     const form = new FormData()
     form.set('title', title)
     if (authorName) form.set('authorName', authorName)
@@ -41,32 +35,29 @@ export default function UploadPage() {
 
     const res = await fetch('/api/scripts', { method: 'POST', body: form })
     const data = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      setMessage(data?.error?.message || '上传失败')
-      return
-    }
+    if (!res.ok) { setMessage(data?.error?.message || '上传失败'); return }
     const id = data?.data?.id || data?.id
     setMessage('创建成功')
     if (id) location.href = `/scripts/${id}`
   }
 
   return (
-    <div className="space-y-4">
+    <div className="container-page section">
       <h1 className="text-2xl font-semibold">上传剧本（JSON + 0-3 图片）</h1>
       <form onSubmit={handleSubmit} className="space-y-3">
-        <input className="w-full p-2 border rounded" placeholder="名字（标题）" value={title} onChange={e=>setTitle(e.target.value)} />
-        <input className="w-full p-2 border rounded" placeholder="作者（可选）" value={authorName} onChange={e=>setAuthorName(e.target.value)} />
+        <input className="input" placeholder="名字（标题）" value={title} onChange={e=>setTitle(e.target.value)} />
+        <input className="input" placeholder="作者（可选）" value={authorName} onChange={e=>setAuthorName(e.target.value)} />
         <div className="space-y-1">
           <div className="text-sm text-gray-700">选择剧本 JSON 文件</div>
-          <input type="file" accept="application/json" onChange={onPickJson} />
+          <input className="input" type="file" accept="application/json" onChange={onPickJson} />
         </div>
         <div className="space-y-1">
           <div className="text-sm text-gray-700">选择图片（0-3，JPG/PNG/WebP）</div>
-          <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={onPickImages} />
+          <input className="input" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={onPickImages} />
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded" type="submit">提交</button>
+        <button className="btn btn-primary" type="submit">提交</button>
       </form>
-      {message && <div className="text-sm text-gray-700">{message}</div>}
+      {message && <div className="muted">{message}</div>}
     </div>
   )
 }

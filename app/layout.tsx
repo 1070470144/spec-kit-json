@@ -7,12 +7,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-CN">
       <body className="min-h-screen bg-gray-50 text-gray-900">
-        <header className="border-b bg-white">
-          <nav className="mx-auto max-w-5xl p-4 flex gap-4">
-            <Link href="/">首页</Link>
-            <Link href="/scripts">剧本列表</Link>
-            <Link href="/upload">上传</Link>
-            <Link href="/admin/review">审核</Link>
+        <header className="border-b bg-white/90 backdrop-blur">
+          <nav className="mx-auto max-w-5xl px-4 py-3 flex items-center gap-5 text-sm">
+            <Link className="font-medium text-gray-900 hover:text-blue-700" href="/">首页</Link>
+            <Link className="text-gray-700 hover:text-blue-700" href="/scripts">剧本列表</Link>
+            <Link className="text-gray-700 hover:text-blue-700" href="/upload">上传</Link>
+            <span className="ml-auto flex items-center gap-4">
+              <Link className="text-gray-700 hover:text-blue-700" href="/login">登录</Link>
+              <Link className="text-gray-700 hover:text-blue-700" href="/register">注册</Link>
+              <Link className="text-gray-700 hover:text-blue-700" href="/admin/login">管理员登录</Link>
+            </span>
           </nav>
         </header>
         <main className="mx-auto max-w-5xl p-6">{children}</main>

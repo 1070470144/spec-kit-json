@@ -12,26 +12,27 @@ export default async function ScriptDetailPage({ params }: { params: { id: strin
   const images = data.images ?? []
   const json = data.json ?? null
   return (
-    <div className="space-y-4">
+    <div className="container-page section">
       <h1 className="text-2xl font-semibold">{data.title}</h1>
-      <div className="text-sm text-gray-600">状态：{data.state}</div>
+      <div className="muted">状态：{data.state}</div>
 
-      <form action={`/api/scripts/${data.id}/submit`} method="post" className="flex gap-2">
-        <button className="px-3 py-2 bg-indigo-600 text-white rounded" type="submit">提交审核</button>
-      </form>
+      <div className="flex gap-2">
+        <form action={`/api/scripts/${data.id}/submit`} method="post">
+          <button className="btn btn-outline" type="submit">提交审核</button>
+        </form>
+        <form action={`/api/scripts/${data.id}/review`} method="post">
+          <input type="hidden" name="decision" value="approved" />
+          <button className="btn btn-primary" type="submit">审核通过</button>
+        </form>
+        <form action={`/api/scripts/${data.id}/review`} method="post">
+          <input type="hidden" name="decision" value="rejected" />
+          <button className="btn btn-danger" type="submit">驳回</button>
+        </form>
+      </div>
 
       <form action={`/api/scripts/${data.id}/images`} method="post" encType="multipart/form-data" className="flex gap-2 items-center">
-        <input type="file" name="files" multiple className="border p-1" />
-        <button className="px-3 py-2 bg-blue-600 text-white rounded" type="submit">上传图片</button>
-      </form>
-
-      <form action={`/api/scripts/${data.id}/review`} method="post" className="flex gap-2 items-center">
-        <input type="hidden" name="decision" value="approved" />
-        <button className="px-3 py-2 bg-green-600 text-white rounded" type="submit">审核通过</button>
-      </form>
-      <form action={`/api/scripts/${data.id}/review`} method="post" className="flex gap-2 items-center">
-        <input type="hidden" name="decision" value="rejected" />
-        <button className="px-3 py-2 bg-red-600 text-white rounded" type="submit">驳回</button>
+        <input className="input" type="file" name="files" multiple />
+        <button className="btn btn-outline" type="submit">上传图片</button>
       </form>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -39,7 +40,12 @@ export default async function ScriptDetailPage({ params }: { params: { id: strin
           <img key={img.id} src={img.url} alt={data.title} className="rounded border bg-white" />
         ))}
       </div>
-      <pre className="p-3 bg-white rounded border overflow-auto text-sm">{JSON.stringify(json, null, 2)}</pre>
+      <div className="card">
+        <div className="card-body">
+          <div className="card-title">JSON</div>
+          <pre className="overflow-auto text-sm">{JSON.stringify(json, null, 2)}</pre>
+        </div>
+      </div>
     </div>
   )
 }
