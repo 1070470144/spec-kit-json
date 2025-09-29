@@ -1,7 +1,7 @@
 async function fetchList() {
   const res = await fetch('http://localhost:3000/api/scripts?state=published', { cache: 'no-store' })
   const j = await res.json()
-  const items = (j?.data?.items ?? j?.items ?? []) as { id: string; title: string }[]
+  const items = (j?.data?.items ?? j?.items ?? []) as { id: string; title: string; authorName?: string|null }[]
   return { items }
 }
 
@@ -18,7 +18,11 @@ export default async function ScriptsPage() {
             <ClientCarouselWrapper id={i.id} />
             <div className="card-body">
               <div className="card-title">{i.title}</div>
-              <a className="btn btn-outline mt-3" href={`/scripts/${i.id}`}>查看详情</a>
+              <div className="muted">作者：{i.authorName || '-'}</div>
+              <div className="mt-3">
+                {/* @ts-expect-error Server-Client boundary */}
+                <ClientActionsWrapper id={i.id} />
+              </div>
             </div>
           </div>
         ))}
@@ -31,4 +35,9 @@ export default async function ScriptsPage() {
 function ClientCarouselWrapper({ id }: { id: string }) {
   const Carousel = require('./ScriptImagesCarousel').default as (p: { id: string }) => JSX.Element
   return <Carousel id={id} />
+}
+
+function ClientActionsWrapper({ id }: { id: string }) {
+  const Actions = require('./ScriptCardActions').default as (p: { id: string }) => JSX.Element
+  return <Actions id={id} />
 }

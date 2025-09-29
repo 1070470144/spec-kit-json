@@ -1,4 +1,5 @@
 import { headers, cookies } from 'next/headers'
+import ScriptImagesCarousel from '@/app/scripts/ScriptImagesCarousel'
 
 type Item = { id: string; title: string; state: string; createdAt?: string }
 
@@ -28,11 +29,26 @@ export default async function MyUploadsPage() {
         )}
         {items && items.length > 0 && items.map(s => (
           <div key={s.id} className="card">
+            {/* @ts-expect-error Server Component boundary */}
+            <ClientCarouselWrapper id={s.id} />
             <div className="card-body">
-              <div className="card-title">{s.title}</div>
-              <div className="muted">状态：{s.state || '-'}</div>
+              <div className="card-title flex items-center justify-between">
+                <span className={s.state==='abandoned' ? 'line-through text-gray-500' : ''}>{s.title}</span>
+                <span className="text-xs px-2 py-0.5 rounded border text-gray-600">{s.state || '-'}</span>
+              </div>
               <div className="card-actions">
                 <a className="btn btn-outline" href={`/scripts/${s.id}`}>查看详情</a>
+                <form className="inline" action={async () => {
+                  'use server'
+                  const h = await headers()
+                  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
+                  const proto = h.get('x-forwarded-proto') || 'http'
+                  const base = `${proto}://${host}`
+                  const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ')
+                  await fetch(`${base}/api/scripts/${s.id}/delete`, { method: 'POST', headers: { cookie: cookieHeader } })
+                }}>
+                  <button className="btn btn-danger" type="submit">删除</button>
+                </form>
               </div>
             </div>
           </div>
@@ -40,6 +56,12 @@ export default async function MyUploadsPage() {
       </div>
     </div>
   )
+}
+
+// 复用剧本图片轮播
+function ClientCarouselWrapper({ id }: { id: string }) {
+  const Carousel = require('../../scripts/ScriptImagesCarousel').default as (p: { id: string }) => JSX.Element
+  return <Carousel id={id} />
 }
 
 

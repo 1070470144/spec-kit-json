@@ -18,8 +18,14 @@ export async function POST(req: Request) {
   if (!user.emailVerifiedAt) {
     return unauthorized('EMAIL_NOT_VERIFIED')
   }
-  const role = user.email === 'admin@example.com' ? 'admin' : 'user'
+  const isAdmin = (await prisma.user.findUnique({ where: { id: user.id }, select: { roles: { select: { key: true } } } }))?.roles.some(r=>r.key==='admin' || r.key==='superuser')
+  const role = isAdmin ? 'admin' : 'user'
   const token = signSession({ userId: user.id, email: user.email, role })
   await setSessionCookie(token)
+  try {
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || ''
+    const ua = req.headers.get('user-agent') || ''
+    await prisma.auditLog.create({ data: { actorId: user.id, action: 'user_login', objectType: 'user', objectId: user.id, result: 'ok', ip, userAgent: ua } })
+  } catch {}
   return ok({ id: user.id, email: user.email, role })
 }

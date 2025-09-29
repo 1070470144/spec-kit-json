@@ -12,7 +12,7 @@ export default function AdminScriptItem({ item }: { item: Item }) {
     if (!confirm('确定要删除该剧本吗？此操作不可恢复')) return
     setDeleting(true)
     try {
-      const res = await fetch(`/api/scripts/${item.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/scripts/${item.id}/delete`, { method: 'POST' })
       if (!res.ok) { alert('删除失败'); return }
       location.reload()
     } finally { setDeleting(false) }

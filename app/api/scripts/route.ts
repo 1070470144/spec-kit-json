@@ -17,8 +17,8 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * pageSize
 
   const where: any = {}
-  const effectiveState = state || 'published'
-  if (effectiveState !== 'published') {
+  const effectiveState = state ?? (mine ? undefined : 'published')
+  if (effectiveState && effectiveState !== 'published' && !mine) {
     const admin = await getAdminSession()
     if (!admin) return forbidden('NOT_ADMIN')
   }

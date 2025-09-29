@@ -14,9 +14,14 @@ model User {
   passwordHash    String
   emailVerifiedAt DateTime?
   status          String   @default("active")
+  storytellerLevel Int     @default(0)
   roles           Role[]
   scripts         Script[] @relation("AuthorScripts")
   reviews         Review[] @relation("UserReviews")
+  comments        Comment[]
+  storytellerApplications StorytellerApplication[]
+  likes           Like[]
+  favorites      Favorite[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   lastLoginAt     DateTime?
@@ -25,7 +30,7 @@ model User {
 
 model Role {
   id              String  @id @default(cuid())
-  key             String
+  key             String  @unique
   name            String
   permissionsJson String
   users           User[]
@@ -48,6 +53,10 @@ model Script {
   images       ImageAsset[]
   reviews      Review[]
   downloads    DownloadEvent[]
+  likeEvents   LikeEvent[]
+  likes        Like[]
+  favorites    Favorite[]
+  comments     Comment[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   publishedAt  DateTime?
@@ -93,6 +102,16 @@ model Review {
   createdAt  DateTime @default(now())
 }
 
+model Comment {
+  id        String   @id @default(cuid())
+  script    Script   @relation(fields: [scriptId], references: [id])
+  scriptId  String
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   actorId    String?
@@ -124,6 +143,45 @@ model DownloadEvent {
   ip        String?
   userAgent String?
   referrer  String?
+}
+
+model StorytellerApplication {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  imagePath  String
+  status     String   @default("pending")
+  level      Int      @default(0)
+  createdAt  DateTime @default(now())
+  reason     String?
+}
+
+model LikeEvent {
+  id        String   @id @default(cuid())
+  script    Script   @relation(fields: [scriptId], references: [id])
+  scriptId  String
+  actorId   String?
+  createdAt DateTime @default(now())
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  script    Script   @relation(fields: [scriptId], references: [id])
+  scriptId  String
+  createdAt DateTime @default(now())
+  @@unique([userId, scriptId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  script    Script   @relation(fields: [scriptId], references: [id])
+  scriptId  String
+  createdAt DateTime @default(now())
+  @@unique([userId, scriptId])
 }
 
 model VerificationToken {

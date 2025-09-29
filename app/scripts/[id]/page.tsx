@@ -1,5 +1,5 @@
 import { headers } from 'next/headers'
-import Gallery from '../_components/Gallery'
+import CenteredImagesWithLightbox from '../_components/CenteredImagesWithLightbox'
 
 type Detail = { id: string; title: string; author?: string | null; state: string; images: { id: string; url: string; isCover?: boolean }[]; json?: unknown }
 
@@ -18,13 +18,15 @@ export default async function ScriptDetailPage({ params }: { params: { id: strin
   const { data, base } = await fetchDetail(params.id)
   const images = data.images ?? []
   const cover = images.find(i=>i.isCover) || images[0]
+  const displayImages = images.slice(0, 3)
   const jsonPreview = data.json ? JSON.stringify(data.json, null, 2) : null
   return (
     <div className="container-page section">
       <div className="card">
         <div className="card-body">
           {/* 顶部：不论图片尺寸，固定高度的横向滚动展示 */}
-          <Gallery images={images} title={data.title} />
+          {/* 顶部最多展示三张图片，居中 + 点击放大预览 */}
+          <CenteredImagesWithLightbox images={displayImages} title={data.title} />
 
           {/* 中部：作者名与剧本名 */}
           <div className="mt-4">
@@ -47,6 +49,15 @@ export default async function ScriptDetailPage({ params }: { params: { id: strin
           </div>
         </div>
       </div>
+
+      {/* 评论区域 */}
+      {/* @ts-expect-error Server Component boundary */}
+      <ClientCommentsWrapper id={params.id} />
     </div>
   )
+}
+
+function ClientCommentsWrapper({ id }: { id: string }) {
+  const Comp = require('./comments').default as (p: { id: string }) => JSX.Element
+  return <Comp id={id} />
 }

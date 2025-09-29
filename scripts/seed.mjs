@@ -20,11 +20,13 @@ async function main() {
     prisma.role.upsert({ where: { key: 'user' }, update: {}, create: { key: 'user', name: '用户', permissionsJson: '{}' } }),
   ])
 
-  const adminEmail = 'admin@example.com'
+  // 设置一个更复杂的超级管理员账号
+  const adminEmail = 'admin@xueran.local'
+  const adminPassword = 'A1d$Min_2025!xr9S'
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {},
-    create: { email: adminEmail, passwordHash: hashPassword('admin123'), status: 'active' }
+    update: { status: 'active' },
+    create: { email: adminEmail, passwordHash: hashPassword(adminPassword), status: 'active' }
   })
   // bind roles to admin
   await prisma.user.update({
@@ -33,6 +35,22 @@ async function main() {
       roles: { set: [{ id: rSuper.id }, { id: rAdmin.id }, { id: rUser.id }] }
     }
   })
+
+  // 默认系统配置：发送邮箱
+  const mailDefaults = [
+    { key: 'smtp.host', value: 'smtp.qq.com' },
+    { key: 'smtp.port', value: '465' },
+    { key: 'smtp.user', value: '1070470144@qq.com' },
+    { key: 'smtp.pass', value: 'ttcrvmnndyiqbdig' },
+    { key: 'mail.from', value: '1070470144@qq.com' },
+  ]
+  for (const m of mailDefaults) {
+    await prisma.systemConfig.upsert({
+      where: { key: m.key },
+      update: { value: m.value },
+      create: { key: m.key, value: m.value },
+    })
+  }
 
   const contentStr = JSON.stringify({ name: 'botc-demo' })
   await prisma.script.create({
@@ -43,7 +61,7 @@ async function main() {
     }
   })
 
-  console.log('Seed done:', { admin: admin.email, roles: ['superuser','admin','user'] })
+  console.log('Seed done:', { admin: admin.email, password: adminPassword, roles: ['superuser','admin','user'], mailDefaults })
 }
 
 main().catch((e) => { console.error(e); process.exit(1) }).finally(async () => { await prisma.$disconnect() })

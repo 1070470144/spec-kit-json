@@ -2,8 +2,8 @@
 import { useState } from 'react'
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState('admin@example.com')
-  const [password, setPassword] = useState('admin123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [msg, setMsg] = useState('')
 
   async function onSubmit(e: React.FormEvent) {
@@ -28,8 +28,8 @@ export default function AdminLoginPage() {
   return (
     <div className="space-y-3">
       <form onSubmit={onSubmit} className="space-y-3">
-        <input className="input" placeholder="邮箱" value={email} onChange={e=>setEmail(e.target.value)} />
-        <input className="input" type="password" placeholder="密码" value={password} onChange={e=>setPassword(e.target.value)} />
+        <input className="input" placeholder="邮箱（例如：admin@xueran.local）" value={email} onChange={e=>setEmail(e.target.value)} />
+        <input className="input" type="password" placeholder="密码（例如：A1d$Min_2025!xr9S）" value={password} onChange={e=>setPassword(e.target.value)} />
         <button className="btn btn-primary w-full" type="submit">登录</button>
       </form>
       {msg && <div className="muted">{msg}</div>}

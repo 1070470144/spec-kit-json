@@ -11,11 +11,25 @@ export default function RegisterPage() {
   const [hasRegistered, setHasRegistered] = useState(false)
   const [verified, setVerified] = useState(false)
   const [toast, setToast] = useState<null | { type: 'success' | 'error' | 'info'; text: string }>(null)
+  const [closed, setClosed] = useState<boolean | null>(null)
 
   function showToast(text: string, type: 'success' | 'error' | 'info' = 'info') {
     setToast({ type, text })
     setTimeout(() => setToast(null), 3000)
   }
+
+  useEffect(() => {
+    let aborted = false
+    async function check() {
+      try {
+        const res = await fetch('/api/admin/settings/system', { cache: 'no-store' })
+        const j = await res.json().catch(()=>({}))
+        if (!aborted) setClosed(String(j?.data?.openRegister) === 'false')
+      } catch {}
+    }
+    check()
+    return () => { aborted = true }
+  }, [])
 
   async function onRegister() {
     setMsg('')
@@ -76,7 +90,10 @@ export default function RegisterPage() {
             <h1 className="text-3xl font-semibold">创建账户</h1>
             <p className="subtitle mt-1">输入邮箱与密码，提交后输入邮箱验证码完成验证。</p>
           </div>
-          <div className="space-y-4">
+          {closed && (
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 text-yellow-800 px-3 py-2 text-sm">注册已关闭，请联系管理员开启。</div>
+          )}
+          <div className="space-y-4 opacity-100">
             <div>
               <label className="block text-sm font-medium mb-1">邮箱</label>
               <input className="input" placeholder="name@example.com" value={email} onChange={e=>setEmail(e.target.value)} />
@@ -95,7 +112,7 @@ export default function RegisterPage() {
               <div className="flex gap-2">
                 <input className="input flex-1" placeholder="6 位数字" value={code} onChange={e=>setCode(e.target.value)} />
                 {!verified ? (
-                  <button className="btn btn-outline" type="button" onClick={onSendCode} disabled={cooldownSec > 0}>
+                  <button className="btn btn-outline" type="button" onClick={onSendCode} disabled={cooldownSec > 0 || !!closed}>
                     {cooldownSec > 0 ? `${cooldownSec}s` : '发送验证码'}
                   </button>
                 ) : (
@@ -106,7 +123,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="flex flex-wrap gap-2 pt-2">
-            <button className="btn btn-primary" type="button" onClick={onVerify} disabled={!email || code.length !== 6}>注册</button>
+            <button className="btn btn-primary" type="button" onClick={onVerify} disabled={!email || code.length !== 6 || !!closed}>注册</button>
             <a className="btn" href="/login">去登录</a>
           </div>
         </div>

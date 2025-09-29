@@ -21,13 +21,36 @@ export default function AdminSidebar() {
       label: '剧本管理',
       children: [
         { href: '/admin/scripts', label: '剧本列表' },
+        { href: '/admin/scripts/batch', label: '批量上传' },
         { href: '/admin/review', label: '剧本审核' },
+      ],
+    },
+    {
+      label: '数据分析',
+      children: [
+        { href: '/admin/analytics/users', label: '用户分析' },
+        { href: '/admin/analytics/scripts', label: '剧本分析' },
+      ],
+    },
+    {
+      label: '评论管理',
+      children: [
+        { href: '/admin/comments', label: '评论管理' },
+        { href: '/admin/settings/sensitive-words', label: '敏感词设置' },
       ],
     },
     {
       label: '系统配置',
       children: [
         { href: '/admin/settings/email', label: '发送邮箱配置' },
+        { href: '/admin/settings/portal', label: '门户配置' },
+        { href: '/admin/settings/system', label: '系统控制' },
+      ],
+    },
+    {
+      label: '说书人认证',
+      children: [
+        { href: '/admin/storytellers', label: '说书人认证' },
       ],
     },
   ]

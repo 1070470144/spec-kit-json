@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 export default function SiteHeader() {
   const pathname = usePathname()
   if (pathname?.startsWith('/admin')) return null
-  const [me, setMe] = useState<{ id:string; email:string; nickname?:string|null; avatarUrl?:string|null }|null>(null)
+  const [me, setMe] = useState<{ id:string; email:string; nickname?:string|null; avatarUrl?:string|null; storytellerLevel?: number }|null>(null)
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement|null>(null)
   async function loadMe() {
@@ -35,6 +35,8 @@ export default function SiteHeader() {
       <nav className="mx-auto max-w-5xl px-4 py-3 flex items-center gap-5 text-sm">
         <Link className="font-medium text-gray-900 hover:text-blue-700" href="/">首页</Link>
         <Link className="text-gray-700 hover:text-blue-700" href="/scripts">剧本列表</Link>
+        {/* 单个入口：排行榜 */}
+        <Link className="text-gray-700 hover:text-blue-700" href="/leaderboard">排行榜</Link>
         <Link className="text-gray-700 hover:text-blue-700" href="/upload">上传</Link>
         <span className="ml-auto flex items-center gap-4">
           {!me && (
@@ -46,7 +48,12 @@ export default function SiteHeader() {
           {me && (
             <div className="relative" ref={menuRef}>
               <div className="flex items-center gap-2">
-                <span className="text-gray-800 select-none">{me.nickname || me.email}</span>
+                <span className="text-gray-800 select-none flex items-center gap-2">
+                  {me.nickname || me.email}
+                  {!!me?.storytellerLevel && me.storytellerLevel > 0 && (
+                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] rounded bg-yellow-100 text-yellow-800">说书人 {me.storytellerLevel}★</span>
+                  )}
+                </span>
                 <button type="button" onClick={()=>setOpen(o=>!o)} className="px-0.5 py-0.5 rounded-full hover:ring-2 hover:ring-blue-200">
                   {me.avatarUrl ? (
                     <img src={me.avatarUrl} alt="avatar" className="w-7 h-7 rounded-full border" />
@@ -59,6 +66,8 @@ export default function SiteHeader() {
                 <div className="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-md py-1 z-50">
                   <Link href="/profile" className="block px-3 py-2 text-sm hover:bg-slate-50">我的资料</Link>
                   <Link href="/my/uploads" className="block px-3 py-2 text-sm hover:bg-slate-50">我的上传</Link>
+                  <Link href="/profile/storyteller" className="block px-3 py-2 text-sm hover:bg-slate-50">认证说书人</Link>
+                  <Link href="/my/favorites" className="block px-3 py-2 text-sm hover:bg-slate-50">我的收藏</Link>
                   <button className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50" onClick={async()=>{ try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}; location.replace('/') }}>退出登录</button>
                 </div>
               )}

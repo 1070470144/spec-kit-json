@@ -20,5 +20,10 @@ export async function POST(req: Request) {
   const res = ok({ id: user.id, email: user.email, role: 'admin' })
   // 在响应上设置会话 Cookie，确保浏览器能接收并保存
   res.cookies.set('admin_session', token, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 7 * 24 * 3600 })
+  try {
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || ''
+    const ua = req.headers.get('user-agent') || ''
+    await prisma.auditLog.create({ data: { actorId: user.id, action: 'admin_login', objectType: 'user', objectId: user.id, result: 'ok', ip, userAgent: ua } })
+  } catch {}
   return res
 }
