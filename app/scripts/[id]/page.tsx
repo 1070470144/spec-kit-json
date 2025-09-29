@@ -18,7 +18,7 @@ export default async function ScriptDetailPage({ params }: { params: { id: strin
   const { data, base } = await fetchDetail(params.id)
   const images = data.images ?? []
   const cover = images.find(i=>i.isCover) || images[0]
-  const displayImages = images.slice(0, 3)
+  const displayImages = images
   const jsonPreview = data.json ? JSON.stringify(data.json, null, 2) : null
   return (
     <div className="container-page section">

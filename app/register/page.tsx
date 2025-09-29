@@ -18,6 +18,18 @@ export default function RegisterPage() {
     setTimeout(() => setToast(null), 3000)
   }
 
+  function zh(code?: string, fallback?: string) {
+    switch (code) {
+      case 'REGISTER_CLOSED': return '注册已关闭，请联系管理员。'
+      case 'EMAIL_EXISTS': return '该邮箱已注册，请直接登录。'
+      case 'NO_PENDING': return '未找到待验证记录，请先发送验证码。'
+      case 'INVALID_CODE': return '验证码错误，请检查后重新输入。'
+      case 'CODE_EXPIRED': return '验证码已过期，请重新发送。'
+      case 'USER_NOT_FOUND': return '用户不存在，请先注册发送验证码。'
+      default: return fallback || '操作失败，请稍后重试。'
+    }
+  }
+
   useEffect(() => {
     let aborted = false
     async function check() {
@@ -35,25 +47,34 @@ export default function RegisterPage() {
     setMsg('')
     const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, nickname }) })
     const data = await res.json().catch(() => ({}))
-    if (!res.ok) { showToast(data?.error?.message || data?.error?.code || '注册失败', 'error'); return }
+    if (!res.ok || data?.ok === false) { showToast(zh(data?.error?.code, data?.error?.message) || '注册失败', 'error'); return }
     setHasRegistered(true)
-    showToast('验证码已发送至邮箱', 'success')
+    showToast('验证码已发送至邮箱，请查收', 'success')
   }
 
   async function onVerify() {
     setMsg('')
     const res = await fetch('/api/auth/email/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code }) })
     const d = await res.json().catch(()=>({}))
-    if (!res.ok || d?.ok === false) { showToast(d?.error?.message || '验证码无效或已过期', 'error'); return }
+    if (!res.ok || d?.ok === false) { showToast(zh(d?.code, d?.error?.message) || '验证码无效或已过期', 'error'); return }
     setVerified(true)
-    showToast('验证成功，请前往登录', 'success')
+    showToast('验证成功，正在为你登录…', 'success')
+    // 自动登录
+    try {
+      const loginRes = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
+      const loginData = await loginRes.json().catch(()=>({}))
+      if (!loginRes.ok) { showToast(zh(loginData?.error?.code, loginData?.error?.message) || '自动登录失败，请手动登录', 'error'); return }
+      location.replace('/')
+    } catch {
+      showToast('自动登录失败，请手动登录', 'error')
+    }
   }
 
   async function onResend() {
     setMsg('')
     const res = await fetch('/api/auth/email/resend', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
     const d = await res.json().catch(()=>({}))
-    if (!res.ok) { showToast(d?.error?.message || '发送失败', 'error'); return }
+    if (!res.ok) { showToast(zh(d?.error?.code, d?.error?.message) || '发送失败', 'error'); return }
     showToast('验证码已发送，请查收邮箱', 'success')
   }
 

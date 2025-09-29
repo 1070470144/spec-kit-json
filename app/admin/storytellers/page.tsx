@@ -1,41 +1,54 @@
+import StorytellerLevelButtons from '../_components/StorytellerLevelButtons'
 import { headers, cookies } from 'next/headers'
 
-async function fetchApps() {
+async function fetchApps(status?: string) {
   const h = await headers()
   const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
   const proto = h.get('x-forwarded-proto') || 'http'
   const base = `${proto}://${host}`
   const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ')
-  const res = await fetch(`${base}/api/admin/storytellers`, { cache: 'no-store', headers: { cookie: cookieHeader } })
+  const qs = new URLSearchParams({ ...(status ? { status } : {}) })
+  const res = await fetch(`${base}/api/admin/storytellers?${qs.toString()}`, { cache: 'no-store', headers: { cookie: cookieHeader } })
   const j = await res.json().catch(()=>({}))
   return { items: j?.data?.items || j?.items || [] }
 }
 
-export default async function AdminStorytellersPage() {
-  const { items } = await fetchApps()
+export default async function AdminStorytellersPage({ searchParams }: { searchParams?: Promise<{ status?: string }> }) {
+  const sp = searchParams ? await searchParams : undefined
+  const status = sp?.status
+  const { items } = await fetchApps(status)
   return (
     <div className="container-page section">
       <div className="card">
         <div className="card-body">
           <div className="card-title">说书人认证</div>
+          <div className="mb-3 flex items-center gap-2">
+            <a className={`btn ${!status ? 'btn-primary' : 'btn-outline'}`} href="/admin/storytellers">全部</a>
+            <a className={`btn ${status==='pending' ? 'btn-primary' : 'btn-outline'}`} href="/admin/storytellers?status=pending">待审核</a>
+            <a className={`btn ${status==='approved' ? 'btn-primary' : 'btn-outline'}`} href="/admin/storytellers?status=approved">已通过</a>
+            <a className={`btn ${status==='rejected' ? 'btn-primary' : 'btn-outline'}`} href="/admin/storytellers?status=rejected">已拒绝</a>
+          </div>
           {(!items || items.length===0) && <div className="muted">暂无申请</div>}
           {!!items?.length && (
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-3">
               {items.map((it:any) => (
-                <div key={it.id} className="card">
-                  <div className="card-body">
-                    <div className="font-medium">{it.user?.email || '-'}</div>
-                    <img src={it.imageUrl} alt="申请图片" className="mt-2 w-full h-40 object-contain rounded border" />
-                    <div className="card-actions">
-                      <form action={`${it.approve1}`} method="post"><button className="btn btn-outline" type="submit">一星通过</button></form>
-                      <form action={`${it.approve2}`} method="post"><button className="btn btn-primary" type="submit">二星通过</button></form>
-                      <form action={`/api/admin/storytellers/reject`} method="post" className="flex items-center gap-2">
-                        <input className="input" name="reason" placeholder="拒绝原因" />
-                        <input type="hidden" name="id" value={it.id} />
-                        <button className="btn btn-danger" formAction={`/api/admin/storytellers/reject?id=${encodeURIComponent(it.id)}&reason=`} type="submit">拒绝</button>
-                      </form>
-                    </div>
+                <div key={it.id} className="border rounded-lg bg-white p-3 flex items-center gap-3">
+                  <img src={it.imageUrl} alt="申请图片" className="w-28 h-20 object-contain rounded border" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{it.user?.nickname || it.user?.email || '-'}</div>
+                    <div className="text-xs text-gray-600">状态：{it.status} · 等级：{it.level}</div>
                   </div>
+                  <StorytellerLevelButtons id={it.id} />
+                  <form action={`/api/admin/storytellers/reject`} method="post" className="flex items-center gap-2">
+                    <input className="input" name="reason" placeholder="拒绝原因" disabled={it.status==='rejected'} />
+                    <input type="hidden" name="id" value={it.id} />
+                    <button
+                      className={`btn btn-danger ${it.status==='rejected' ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      formAction={`/api/admin/storytellers/reject?id=${encodeURIComponent(it.id)}&reason=`}
+                      type="submit"
+                      disabled={it.status==='rejected'}
+                    >拒绝</button>
+                  </form>
                 </div>
               ))}
             </div>

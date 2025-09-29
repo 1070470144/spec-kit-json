@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   const session = await getAdminSession()
   if (!session) return unauthorized('NOT_ADMIN')
   const admin = await prisma.user.findUnique({ where: { id: session.userId }, select: { email: true, roles: { select: { key: true } } } })
-  const isSuper = (admin?.roles || []).some(r => r.key === 'superuser') || admin?.email === 'admin@example.com'
+  const isSuper = (admin?.roles || []).some(r => r.key === 'superuser')
   if (!isSuper) return forbidden('SUPERUSER_ONLY')
 
   let body: unknown

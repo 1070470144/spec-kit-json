@@ -59,7 +59,7 @@ export async function PUT(req: Request) {
   if (!body?.id) return badRequest('id required')
   const user = await prisma.user.findUnique({ where: { id: body.id }, select: { id: true, email: true, roles: { select: { key: true } } } })
   if (!user) return notFound('user not found')
-  const isSuper = user.roles.some(r => r.key === 'superuser') || user.email === 'admin@example.com'
+  const isSuper = user.roles.some(r => r.key === 'superuser')
   if (isSuper) return forbidden('SUPERUSER_IMMUTABLE')
   const data: any = { nickname: body.nickname ?? null, status: body.status ?? 'active', avatarUrl: body.avatarUrl ?? null }
   if (body.password) {
@@ -86,7 +86,7 @@ export async function DELETE(req: Request) {
   if (!id) return badRequest('id required')
   const user = await prisma.user.findUnique({ where: { id }, select: { id: true, email: true, roles: { select: { key: true } } } })
   if (!user) return notFound('user not found')
-  const isSuper = user.roles.some(r => r.key === 'superuser') || user.email === 'admin@example.com'
+  const isSuper = user.roles.some(r => r.key === 'superuser')
   if (isSuper) return forbidden('SUPERUSER_IMMUTABLE')
   await prisma.user.delete({ where: { id } })
   return ok({ id })

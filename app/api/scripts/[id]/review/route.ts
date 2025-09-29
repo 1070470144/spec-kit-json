@@ -16,6 +16,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   if (!admin) return unauthorized('NOT_ADMIN')
   if (decision === 'rejected' && !reason) return badRequest('REASON_REQUIRED')
 
+  // 防止重置数据库后旧的会话指向不存在的用户，导致外键报错
+  const adminUser = await prisma.user.findUnique({ where: { id: admin.userId }, select: { id: true } })
+  if (!adminUser) return unauthorized('STALE_SESSION')
+
   const { id } = await context.params
   const s = await prisma.script.findUnique({ where: { id } })
   if (!s) return notFound()

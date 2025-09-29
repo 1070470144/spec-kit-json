@@ -22,7 +22,7 @@ export default async function AdminUserEditPage({ params }: { params: { id: stri
 
   const u = await fetchUser(base, cookieHeader, params.id)
   const roleKeys = (u?.roles||[]).map((r:any)=>r.key)
-  const isSuper = roleKeys.includes('superuser') || u?.email === 'admin@example.com'
+  const isSuper = roleKeys.includes('superuser')
   const currentRole: 'admin' | 'user' = roleKeys.includes('admin') ? 'admin' : 'user'
 
   return (

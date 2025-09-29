@@ -9,6 +9,7 @@ export default function AdminScriptEditor({ id }: { id: string }) {
   const [authorName, setAuthorName] = useState('')
   const [jsonText, setJsonText] = useState('')
   const [message, setMessage] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     let aborted = false
@@ -26,25 +27,24 @@ export default function AdminScriptEditor({ id }: { id: string }) {
     return () => { aborted = true }
   }, [id])
 
-  async function saveBase() {
+  async function saveAll() {
     setMessage('')
-    const body: any = { title, authorName }
+    setSaving(true)
+    let obj: unknown | undefined = undefined
     try {
-      const res = await fetch(`/api/scripts/${id}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
-      if (!res.ok) { const j = await res.json().catch(()=>({})); setMessage(j?.error?.message || '保存失败'); return }
+      // 允许空 JSON，不解析
+      if (jsonText && jsonText.trim()) {
+        obj = JSON.parse(jsonText)
+      }
+    } catch { setSaving(false); setMessage('JSON 无法解析'); return }
+    try {
+      const payload: any = { title, authorName }
+      if (typeof obj !== 'undefined') payload.json = obj
+      const res = await fetch(`/api/scripts/${id}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+      if (!res.ok) { const j = await res.json().catch(()=>({})); setMessage(j?.error?.message || '保存失败'); setSaving(false); return }
       setMessage('已保存')
     } catch { setMessage('保存失败') }
-  }
-
-  async function saveJson() {
-    setMessage('')
-    let obj: unknown
-    try { obj = JSON.parse(jsonText) } catch { setMessage('JSON 无法解析'); return }
-    try {
-      const res = await fetch(`/api/scripts/${id}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ json: obj }) })
-      if (!res.ok) { const j = await res.json().catch(()=>({})); setMessage(j?.error?.message || '保存失败'); return }
-      setMessage('JSON 已保存为新版本')
-    } catch { setMessage('保存失败') }
+    finally { setSaving(false) }
   }
 
   async function addImages(files: FileList | null) {
@@ -79,14 +79,10 @@ export default function AdminScriptEditor({ id }: { id: string }) {
           <input className="input" value={authorName} onChange={e=>setAuthorName(e.target.value)} />
         </div>
       </div>
-      <div className="flex gap-2">
-        <button className="btn btn-primary" onClick={saveBase}>保存</button>
-      </div>
 
       <div className="space-y-2">
         <div className="text-sm">JSON 文件（粘贴内容保存为新版本）</div>
         <textarea className="textarea h-64" value={jsonText} onChange={e=>setJsonText(e.target.value)} />
-        <div className="flex gap-2"><button className="btn btn-outline" onClick={saveJson}>保存 JSON</button></div>
       </div>
 
       <div className="space-y-2">
@@ -105,6 +101,11 @@ export default function AdminScriptEditor({ id }: { id: string }) {
             新增图片
           </label>
         </div>
+      </div>
+
+      {/* 底部统一保存按钮：一次提交标题/作者/JSON */}
+      <div className="flex gap-2 pt-2 justify-end">
+        <button className="btn btn-primary" onClick={saveAll} disabled={saving}>保存更改</button>
       </div>
 
       {message && <div className="muted">{message}</div>}

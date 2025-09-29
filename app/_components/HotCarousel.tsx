@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 export type HotItem = { scriptId: string; title: string; cover?: string; downloads: number }
 
 export default function HotCarousel({ items }: { items: HotItem[] }) {
-  const data = (items || []).filter(it => !!it.cover)
+  const data = (items || [])
   const [idx, setIdx] = useState(0)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -29,7 +29,13 @@ export default function HotCarousel({ items }: { items: HotItem[] }) {
             href={`/scripts/${it.scriptId}`}
             className={`absolute inset-0 block transition-opacity duration-700 ${i === idx ? 'opacity-100' : 'opacity-0'}`}
           >
-            <img src={it.cover} alt={it.title} className="absolute inset-0 w-full h-full object-cover" />
+            {it.cover ? (
+              <img src={it.cover} alt={it.title} className="absolute inset-0 w-full h-full object-cover" />
+            ) : (
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-slate-200 to-slate-100 grid place-items-center text-slate-500 text-sm">
+                暂无封面
+              </div>
+            )}
             <div className="absolute inset-x-0 top-0 p-4 md:p-6 bg-gradient-to-b from-black/60 to-transparent text-white">
               <div className="text-lg md:text-xl font-semibold truncate">{it.title}</div>
               <div className="text-xs md:text-sm opacity-90">下载：{it.downloads}</div>

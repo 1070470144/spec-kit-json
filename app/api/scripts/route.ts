@@ -32,16 +32,21 @@ export async function GET(req: NextRequest) {
     where.versions = { some: { createdById: s.userId } }
   }
 
-  const [items, total] = await Promise.all([
+  const [itemsRaw, total] = await Promise.all([
     prisma.script.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       skip,
       take: pageSize,
-      select: { id: true, title: true, authorName: true, language: true, state: true, createdAt: true }
+      select: { id: true, title: true, authorName: true, language: true, state: true, createdAt: true, images: { select: { path: true, isCover: true, sortOrder: true }, take: 1, orderBy: { sortOrder: 'asc' } } }
     }),
     prisma.script.count({ where })
   ])
+
+  const items = itemsRaw.map(it => ({
+    ...it,
+    previewUrl: (it.images && it.images[0]?.path) ? `/api/files?path=${encodeURIComponent(it.images[0].path)}` : null,
+  }))
 
   return ok({ items, total, page, pageSize })
 }

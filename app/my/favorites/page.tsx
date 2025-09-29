@@ -1,21 +1,13 @@
-import { headers, cookies } from 'next/headers'
+import { getSession } from '@/src/auth/session'
+import { prisma } from '@/src/db/client'
 
 type Item = { id: string; title: string; authorName?: string|null }
 
-async function fetchMyFavorites() {
-  const h = await headers()
-  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
-  const proto = h.get('x-forwarded-proto') || 'http'
-  const base = `${proto}://${host}`
-  const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ')
-  const res = await fetch(`${base}/api/me/favorites`, { cache: 'no-store', headers: { cookie: cookieHeader } })
-  const j = await res.json().catch(()=>({}))
-  const items = (j?.data?.items ?? j?.items ?? []) as Item[]
-  return { items }
-}
-
 export default async function MyFavoritesPage() {
-  const { items } = await fetchMyFavorites()
+  const s = await getSession()
+  const items = s ? (await prisma.favorite.findMany({
+    where: { userId: s.userId }, orderBy: { createdAt: 'desc' }, select: { script: { select: { id: true, title: true, authorName: true } } }
+  })).map(i => i.script as unknown as Item) : []
   return (
     <div className="container-page section">
       <h1 className="text-2xl font-semibold">我的收藏</h1>

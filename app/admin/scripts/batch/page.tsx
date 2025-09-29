@@ -6,6 +6,8 @@ export default function AdminBatchUploadPage() {
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 })
+  const [success, setSuccess] = useState(0)
+  const [fails, setFails] = useState<{ name: string; reason: string }[]>([])
   const inputRef = useRef<HTMLInputElement|null>(null)
 
   // 让文件选择器支持目录选择（递归）
@@ -31,17 +33,29 @@ export default function AdminBatchUploadPage() {
     if (!files.length) { setMsg('请选择包含 JSON 的文件夹或 JSON 文件'); return }
     setLoading(true)
     setProgress({ done: 0, total: files.length })
+    setFails([])
+    setSuccess(0)
     try {
       for (const f of files) {
         const text = await f.text()
         let obj: unknown
-        try { obj = JSON.parse(text) } catch { setMsg(`文件 ${f.name} 不是合法 JSON`); setLoading(false); return }
+        try { obj = JSON.parse(text) } catch {
+          setFails(list => [...list, { name: f.name, reason: '非法 JSON 格式' }])
+          setProgress(p => ({ done: p.done + 1, total: p.total }))
+          continue
+        }
         const title = (f.name || 'untitled').replace(/\.json$/i, '')
         const res = await fetch('/api/scripts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, json: obj }) })
-        if (!res.ok) { const d = await res.json().catch(()=>({})); setMsg(`上传 ${f.name} 失败：${d?.error?.message||res.status}`); setLoading(false); return }
+        if (!res.ok) {
+          const d = await res.json().catch(()=>({}))
+          setFails(list => [...list, { name: f.name, reason: d?.error?.message || String(res.status) }])
+          setProgress(p => ({ done: p.done + 1, total: p.total }))
+          continue
+        }
+        setSuccess(n => n + 1)
         setProgress(p => ({ done: p.done + 1, total: p.total }))
       }
-      setMsg('全部上传完成')
+      setMsg(`上传完成：成功 ${success + 0} 个，失败 ${fails.length + 0} 个`)
     } finally {
       setLoading(false)
     }
@@ -64,6 +78,27 @@ export default function AdminBatchUploadPage() {
           </form>
           {(progress.total > 0) && (
             <div className="muted">进度：{progress.done}/{progress.total}</div>
+          )}
+          <div className="muted">成功：{success}，失败：{fails.length}</div>
+          {fails.length > 0 && (
+            <div className="border rounded-lg overflow-hidden">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50 text-left text-gray-600">
+                    <th className="px-3 py-2">文件名</th>
+                    <th className="px-3 py-2">失败原因</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fails.map((f, i) => (
+                    <tr key={i} className="border-t">
+                      <td className="px-3 py-2">{f.name}</td>
+                      <td className="px-3 py-2 text-red-600">{f.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           {msg && <div className="muted">{msg}</div>}
         </div>

@@ -16,9 +16,21 @@ export default function UserAnalyticsCharts({ topRegions, trend }: { topRegions:
 
   useEffect(() => {
     let cancelled = false
+    function loadScript(src: string) {
+      return new Promise<void>((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) return resolve()
+        const s = document.createElement('script')
+        s.src = src
+        s.async = true
+        s.onload = () => resolve()
+        s.onerror = () => reject(new Error('Chart.js load error'))
+        document.head.appendChild(s)
+      })
+    }
     async function draw() {
-      const mod = await import('chart.js/auto')
-      const Chart = (mod as any).default || (mod as any)
+      // use UMD build via CDN to avoid bundler interop issues
+      await loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js')
+      const Chart = (window as any).Chart
 
       if (pieChartRef.current) { pieChartRef.current.destroy(); pieChartRef.current = null }
       if (lineChartRef.current) { lineChartRef.current.destroy(); lineChartRef.current = null }

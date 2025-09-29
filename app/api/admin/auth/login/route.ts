@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   const user = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, passwordHash: true, roles: { select: { key: true } } } })
   if (!user || !verifyPassword(password, user.passwordHash)) return unauthorized('INVALID_CREDENTIALS')
   const roleKeys = (user.roles||[]).map(r=>r.key)
-  const isAdmin = roleKeys.includes('admin') || roleKeys.includes('superuser') || user.email === 'admin@example.com'
+  const isAdmin = roleKeys.includes('admin') || roleKeys.includes('superuser')
   if (!isAdmin) return forbidden('NOT_ADMIN')
   const token = signAdminSession({ userId: user.id, email: user.email, role: 'admin' })
   const res = ok({ id: user.id, email: user.email, role: 'admin' })

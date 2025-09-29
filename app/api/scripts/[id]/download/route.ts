@@ -1,10 +1,13 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/src/db/client'
-import { ok, notFound } from '@/src/api/http'
+import { notFound } from '@/src/api/http'
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params
-  const v = await prisma.scriptJSON.findFirst({ where: { scriptId: id }, orderBy: { createdAt: 'desc' } })
+  const [script, v] = await Promise.all([
+    prisma.script.findUnique({ where: { id }, select: { title: true } }),
+    prisma.scriptJSON.findFirst({ where: { scriptId: id }, orderBy: { createdAt: 'desc' } })
+  ])
   if (!v) return notFound()
   let obj: unknown = null
   try { obj = JSON.parse(v.content) } catch { obj = null }
@@ -12,5 +15,9 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
   const ua = req.headers.get('user-agent') || undefined
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || undefined
   prisma.downloadEvent.create({ data: { scriptId: id, ip, userAgent: ua } }).catch(()=>{})
-  return ok(obj)
+
+  const res = NextResponse.json(obj)
+  const filename = encodeURIComponent(((script?.title ?? 'script')) + '.json')
+  res.headers.set('Content-Disposition', `attachment; filename*=UTF-8''${filename}`)
+  return res
 }

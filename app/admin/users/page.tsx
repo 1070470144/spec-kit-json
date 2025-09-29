@@ -51,7 +51,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
               <tbody>
                 {items.map(u => {
                   const roleKeys = (u.roles||[]).map(r=>r.key)
-                  const isSuper = roleKeys.includes('superuser') || u.email === 'admin@example.com'
+                  const isSuper = roleKeys.includes('superuser')
                   const roleText = (((u.roles||[]).map(r => r.name || r.key).filter(Boolean)).join(', ')) || '用户'
                   return (
                     <tr key={u.id} className="border-t">
