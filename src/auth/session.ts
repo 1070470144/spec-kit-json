@@ -24,8 +24,8 @@ export function verifySessionToken(token: string | undefined): SessionPayload | 
   if (payload.exp < Math.floor(Date.now() / 1000)) return null
   return payload
 }
-export function setSessionCookie(token: string) {
-  cookies().set(COOKIE_NAME, token, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 7 * 24 * 3600 })
+export async function setSessionCookie(token: string) {
+  (await cookies()).set(COOKIE_NAME, token, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 7 * 24 * 3600 })
 }
-export function clearSessionCookie() { cookies().set(COOKIE_NAME, '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 }) }
-export function getSession(): SessionPayload | null { return verifySessionToken(cookies().get(COOKIE_NAME)?.value) }
+export async function clearSessionCookie() { (await cookies()).set(COOKIE_NAME, '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 }) }
+export async function getSession(): Promise<SessionPayload | null> { return verifySessionToken((await cookies()).get(COOKIE_NAME)?.value) }

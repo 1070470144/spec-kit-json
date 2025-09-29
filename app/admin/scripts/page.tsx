@@ -1,4 +1,5 @@
 import { headers, cookies } from 'next/headers'
+import AdminScriptItem from '../_components/AdminScriptItem'
 
 async function fetchScripts() {
   const h = await headers()
@@ -8,7 +9,7 @@ async function fetchScripts() {
   const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ')
   const res = await fetch(`${base}/api/scripts?page=1&pageSize=50`, { cache: 'no-store', headers: { cookie: cookieHeader } })
   const j = await res.json().catch(()=>({}))
-  const items = (j?.data?.items ?? j?.items ?? []) as { id:string; title:string; state?:string }[]
+  const items = (j?.data?.items ?? j?.items ?? []) as { id:string; title:string; state?:string; authorName?: string | null }[]
   return { items }
 }
 
@@ -23,16 +24,7 @@ export default async function AdminScriptsManagePage() {
         {!!items?.length && (
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {items.map(s => (
-                <div key={s.id} className="card">
-                  <div className="card-body">
-                    <div className="font-medium">{s.title}</div>
-                    <div className="muted">状态：{s.state || '-'}</div>
-                    <div className="card-actions">
-                      <a className="btn btn-outline" href={`/scripts/${s.id}`}>查看</a>
-                      <a className="btn btn-primary" href={`/admin/review`}>去审核</a>
-                    </div>
-                  </div>
-                </div>
+                <AdminScriptItem key={s.id} item={s} />
               ))}
             </div>
         )}

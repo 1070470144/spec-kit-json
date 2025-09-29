@@ -29,7 +29,6 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
         <form className="flex-1 max-w-md" action="/admin/users">
           <input className="input w-full" name="q" defaultValue={q} placeholder="搜索邮箱或昵称" />
         </form>
-        <a className="btn btn-primary" href="/admin/users/new">新建用户</a>
       </div>
 
       <div className="card">

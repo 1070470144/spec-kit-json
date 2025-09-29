@@ -1,10 +1,12 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/src/db/client'
-import { ok, notFound } from '@/src/api/http'
+import { ok, notFound, badRequest, unauthorized } from '@/src/api/http'
+import { getAdminSession } from '@/src/auth/adminSession'
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params
   const s = await prisma.script.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       images: { orderBy: { sortOrder: 'asc' } },
       versions: { orderBy: { createdAt: 'desc' }, take: 1 },
@@ -17,4 +19,27 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   try { json = s.versions[0] ? JSON.parse(s.versions[0].content) : null } catch { json = null }
   const author = s.authorName || s.author?.nickname || s.author?.email || null
   return ok({ id: s.id, title: s.title, author, state: s.state, images, json })
+}
+
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const admin = await getAdminSession()
+  if (!admin) return unauthorized('NOT_ADMIN')
+  const { id } = await context.params
+  const body = await req.json().catch(()=>null)
+  if (!body || typeof body !== 'object') return badRequest('INVALID_JSON')
+  const { title, authorName, json } = body as { title?: string; authorName?: string | null; json?: unknown }
+  const s = await prisma.script.findUnique({ where: { id }, select: { id: true } })
+  if (!s) return notFound()
+
+  // 更新基础信息
+  if (typeof title === 'string' || typeof authorName === 'string' || authorName === null) {
+    await prisma.script.update({ where: { id }, data: { title: typeof title === 'string' ? title : undefined, authorName: authorName === undefined ? undefined : authorName } })
+  }
+  // 新增新版本 JSON（如提供）
+  if (json !== undefined) {
+    const contentStr = JSON.stringify(json)
+    const hash = (await import('node:crypto')).createHash('sha256').update(contentStr).digest('hex')
+    await prisma.scriptJSON.create({ data: { scriptId: id, content: contentStr, contentHash: hash, schemaValid: true, version: 1 } })
+  }
+  return ok({ id })
 }

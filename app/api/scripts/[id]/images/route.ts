@@ -1,13 +1,17 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/src/db/client'
 import { LocalStorage } from '@/src/storage/local'
-import { ok, unsupportedMediaType, notFound, tooLarge, badRequest } from '@/src/api/http'
+import { ok, unsupportedMediaType, notFound, tooLarge, badRequest, unauthorized } from '@/src/api/http'
+import { getAdminSession } from '@/src/auth/adminSession'
 
 const ALLOWED = new Set(['image/jpeg','image/png','image/webp'])
 const MAX_SIZE = 10 * 1024 * 1024
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const script = await prisma.script.findUnique({ where: { id: params.id }, select: { id: true } })
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const admin = await getAdminSession()
+  if (!admin) return unauthorized('NOT_ADMIN')
+  const { id } = await context.params
+  const script = await prisma.script.findUnique({ where: { id }, select: { id: true } })
   if (!script) return notFound()
 
   const contentType = req.headers.get('content-type') || ''
@@ -48,4 +52,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   return ok({ items: created }, 201)
+}
+
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const admin = await getAdminSession()
+  if (!admin) return unauthorized('NOT_ADMIN')
+  const { id } = await context.params
+  const { searchParams } = new URL(req.url)
+  const imageId = searchParams.get('imageId') || ''
+  if (!imageId) return badRequest('MISSING_IMAGE_ID')
+  const img = await prisma.imageAsset.findFirst({ where: { id: imageId, scriptId: id }, select: { id: true } })
+  if (!img) return notFound()
+  await prisma.imageAsset.delete({ where: { id: img.id } })
+  return ok({ id: img.id })
 }

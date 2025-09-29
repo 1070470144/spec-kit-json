@@ -1,6 +1,7 @@
 'use client'
 import { usePathname } from 'next/navigation'
 import AdminSidebar from './_components/AdminSidebar'
+import AdminUserMenu from './_components/AdminUserMenu'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -27,8 +28,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <AdminSidebar />
         </div>
       </aside>
-      <section className="p-6 space-y-4" data-admin="true">
-        {children}
+      <section className="p-0" data-admin="true">
+        <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex items-center">
+          <div className="text-base font-semibold tracking-wide text-gray-800">控制台</div>
+          <AdminUserMenu />
+        </div>
+        <div className="p-6 space-y-4">
+          {children}
+        </div>
       </section>
     </div>
   )

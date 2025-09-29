@@ -20,6 +20,6 @@ export async function POST(req: Request) {
   }
   const role = user.email === 'admin@example.com' ? 'admin' : 'user'
   const token = signSession({ userId: user.id, email: user.email, role })
-  setSessionCookie(token)
+  await setSessionCookie(token)
   return ok({ id: user.id, email: user.email, role })
 }

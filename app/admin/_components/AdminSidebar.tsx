@@ -10,11 +10,18 @@ export default function AdminSidebar() {
   type NavSection = { label: string, href?: string, children?: NavItem[] }
 
   const sections: NavSection[] = [
-    { label: '用户管理', href: '/admin/users' },
+    {
+      label: '用户管理',
+      children: [
+        { href: '/admin/users', label: '用户列表' },
+        { href: '/admin/users/new', label: '新建用户' },
+      ],
+    },
     {
       label: '剧本管理',
       children: [
         { href: '/admin/scripts', label: '剧本列表' },
+        { href: '/admin/scripts/series', label: '系列管理' },
         { href: '/admin/review', label: '剧本审核' },
       ],
     },
@@ -30,7 +37,8 @@ export default function AdminSidebar() {
 
   const isActive = (href: string | undefined) => {
     if (!href) return false
-    return pathname === href || pathname?.startsWith(href + '/')
+    // 使用精确匹配，避免 '/admin/users/new' 时同时高亮 '/admin/users'
+    return pathname === href
   }
 
   const hasActiveChild = (children: NavItem[] | undefined) => {
