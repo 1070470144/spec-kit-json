@@ -23,7 +23,7 @@ export default function LoginPage() {
         return
       }
       setMsg('登录成功')
-      location.href = '/admin/review'
+      location.href = '/'
     } catch (error: any) {
       setMsg(`失败：${error?.message || '网络错误'}`)
     }

@@ -1,5 +1,12 @@
+import { headers, cookies } from 'next/headers'
+
 async function fetchUsers() {
-  const res = await fetch('http://localhost:3000/api/admin/users', { cache: 'no-store' })
+  const h = headers()
+  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
+  const proto = h.get('x-forwarded-proto') || 'http'
+  const base = `${proto}://${host}`
+  const cookieHeader = cookies().getAll().map(c => `${c.name}=${c.value}`).join('; ')
+  const res = await fetch(`${base}/api/admin/users`, { cache: 'no-store', headers: { cookie: cookieHeader } })
   const j = await res.json().catch(()=>({}))
   const items = (j?.data?.items ?? j?.items ?? []) as { id:string; email:string; nickname:string|null; status:string; createdAt:string; lastLoginAt:string|null; roles:{key:string;name:string}[] }[]
   return { items }
