@@ -36,7 +36,7 @@
 - 组件态：按钮/输入/卡片需具备 hover/focus/disabled/error 状态；错误提示统一样式
 - 间距：区块间距 16–24px；表单项垂直间距 ≥ 8px；列表项内边距 ≥ 12px
 - 可访问性：对比度 AA，表单控件 aria-label/aria-invalid；键盘可达
-- 导航调整：门户导航仅保留“首页/剧本列表/上传”；“审核”入口仅在管理员侧可见（登录后进入后台）
+- 导航调整：门户导航仅保留“首页/剧本列表/上传”；“审核”入口仅在管理员侧可见（登录后进入后台）。管理员登录入口在门户顶部导航中隐藏，仅通过直达链接 `/admin/login` 访问。管理员面板采用独立布局：左侧为功能列表（用户管理、剧本列表管理、审核），右侧为功能内容区。
 
 ## Constitution Check（门槛）
 - 安全与隐私：上传类型/大小校验、鉴权下载、管理员独立会话、邮件链接一次性与过期
@@ -50,7 +50,7 @@
 ## Project Structure（要点）
 - app/：
   - 门户：`/`、`/scripts/**`、`/upload`、`/login`、`/register`、`/forgot`、`/reset/[token]`
-  - 管理：`/admin/login`、`/admin/review`（“审核”仅在管理员侧导航中出现）
+  - 管理：`/admin/login`、`/admin/review`、`/admin/users`、`/admin/scripts`（管理员面板左侧菜单 + 右侧内容区）
 - src/：
   - `auth/`：密码/会话/邮件发送器
   - `api/`：响应与校验助手

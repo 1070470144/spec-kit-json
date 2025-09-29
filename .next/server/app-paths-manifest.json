@@ -1,9 +1,10 @@
 {
+  "/api/admin/auth/login/route": "app/api/admin/auth/login/route.js",
   "/api/scripts/route": "app/api/scripts/route.js",
-  "/page": "app/page.js",
-  "/admin/login/page": "app/admin/login/page.js",
+  "/api/admin/users/route": "app/api/admin/users/route.js",
+  "/api/scripts/[id]/route": "app/api/scripts/[id]/route.js",
   "/scripts/[id]/page": "app/scripts/[id]/page.js",
-  "/forgot/page": "app/forgot/page.js",
-  "/scripts/page": "app/scripts/page.js",
-  "/upload/page": "app/upload/page.js"
+  "/admin/review/page": "app/admin/review/page.js",
+  "/admin/users/page": "app/admin/users/page.js",
+  "/admin/scripts/page": "app/admin/scripts/page.js"
 }

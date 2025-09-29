@@ -26,14 +26,14 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="container-page section">
       <h1 className="text-2xl font-semibold">管理员登录</h1>
-      <form onSubmit={onSubmit} className="space-y-3">
-        <input className="w-full p-2 border rounded" value={email} onChange={e=>setEmail(e.target.value)} />
-        <input className="w-full p-2 border rounded" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-        <button className="px-4 py-2 bg-blue-600 text-white rounded" type="submit">登录</button>
+      <form onSubmit={onSubmit} className="space-y-3 max-w-md">
+        <input className="input" placeholder="邮箱" value={email} onChange={e=>setEmail(e.target.value)} />
+        <input className="input" type="password" placeholder="密码" value={password} onChange={e=>setPassword(e.target.value)} />
+        <button className="btn btn-primary" type="submit">登录</button>
       </form>
-      {msg && <div className="text-sm text-gray-700">{msg}</div>}
+      {msg && <div className="muted">{msg}</div>}
     </div>
   )
 }
