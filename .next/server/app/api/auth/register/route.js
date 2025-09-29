@@ -19,7 +19,7 @@ exports.modules = {
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   POST: () => (/* binding */ POST)\n/* harmony export */ });\n/* harmony import */ var zod__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! zod */ \"(rsc)/./node_modules/zod/v3/types.js\");\n/* harmony import */ var _src_db_client__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/src/db/client */ \"(rsc)/./src/db/client.ts\");\n/* harmony import */ var _src_api_validate__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/src/api/validate */ \"(rsc)/./src/api/validate.ts\");\n/* harmony import */ var _src_api_http__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/src/api/http */ \"(rsc)/./src/api/http.ts\");\n/* harmony import */ var _src_auth_password__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/src/auth/password */ \"(rsc)/./src/auth/password.ts\");\n/* harmony import */ var crypto__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! crypto */ \"crypto\");\n/* harmony import */ var crypto__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(crypto__WEBPACK_IMPORTED_MODULE_4__);\n/* harmony import */ var _src_auth_mailer__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @/src/auth/mailer */ \"(rsc)/./src/auth/mailer.ts\");\n\n\n\n\n\n\n\nconst schema = zod__WEBPACK_IMPORTED_MODULE_6__.object({\n    email: zod__WEBPACK_IMPORTED_MODULE_6__.string().email(),\n    password: zod__WEBPACK_IMPORTED_MODULE_6__.string().min(6),\n    nickname: zod__WEBPACK_IMPORTED_MODULE_6__.string().optional()\n});\nasync function POST(req) {\n    const parsed = await (0,_src_api_validate__WEBPACK_IMPORTED_MODULE_1__.parseJson)(req, schema);\n    if (!parsed.ok) return parsed.res;\n    const { email, password, nickname } = parsed.data;\n    const exist = await _src_db_client__WEBPACK_IMPORTED_MODULE_0__.prisma.user.findUnique({\n        where: {\n            email\n        }\n    });\n    if (exist) return (0,_src_api_http__WEBPACK_IMPORTED_MODULE_2__.badRequest)('EMAIL_EXISTS');\n    const user = await _src_db_client__WEBPACK_IMPORTED_MODULE_0__.prisma.user.create({\n        data: {\n            email,\n            passwordHash: (0,_src_auth_password__WEBPACK_IMPORTED_MODULE_3__.hashPassword)(password),\n            nickname\n        }\n    });\n    const token = crypto__WEBPACK_IMPORTED_MODULE_4___default().randomBytes(24).toString('hex');\n    const expiresAt = new Date(Date.now() + 24 * 3600 * 1000);\n    await _src_db_client__WEBPACK_IMPORTED_MODULE_0__.prisma.verificationToken.create({\n        data: {\n            userId: user.id,\n            token,\n            expiresAt\n        }\n    });\n    const base = process.env.APP_BASE_URL || 'http://localhost:3000';\n    const link = `${base}/verify/${token}`;\n    await (0,_src_auth_mailer__WEBPACK_IMPORTED_MODULE_5__.sendMail)({\n        to: email,\n        subject: '验证你的邮箱',\n        text: `点击链接验证：\\n${link}`\n    });\n    return (0,_src_api_http__WEBPACK_IMPORTED_MODULE_2__.ok)({\n        id: user.id\n    });\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9hcHAvYXBpL2F1dGgvcmVnaXN0ZXIvcm91dGUudHMiLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7O0FBQXVCO0FBQ2lCO0FBQ007QUFDQztBQUNHO0FBQ3ZCO0FBQ2lCO0FBRTVDLE1BQU1RLFNBQVNSLHVDQUFRLENBQUM7SUFBRVUsT0FBT1YsdUNBQVEsR0FBR1UsS0FBSztJQUFJRSxVQUFVWix1Q0FBUSxHQUFHYSxHQUFHLENBQUM7SUFBSUMsVUFBVWQsdUNBQVEsR0FBR2UsUUFBUTtBQUFHO0FBRTNHLGVBQWVDLEtBQUtDLEdBQVk7SUFDckMsTUFBTUMsU0FBUyxNQUFNaEIsNERBQVNBLENBQUNlLEtBQUtUO0lBQ3BDLElBQUksQ0FBQ1UsT0FBT2QsRUFBRSxFQUFFLE9BQU9jLE9BQU9DLEdBQUc7SUFDakMsTUFBTSxFQUFFVCxLQUFLLEVBQUVFLFFBQVEsRUFBRUUsUUFBUSxFQUFFLEdBQUdJLE9BQU9FLElBQUk7SUFFakQsTUFBTUMsUUFBUSxNQUFNcEIsa0RBQU1BLENBQUNxQixJQUFJLENBQUNDLFVBQVUsQ0FBQztRQUFFQyxPQUFPO1lBQUVkO1FBQU07SUFBRTtJQUM5RCxJQUFJVyxPQUFPLE9BQU9sQix5REFBVUEsQ0FBQztJQUU3QixNQUFNbUIsT0FBTyxNQUFNckIsa0RBQU1BLENBQUNxQixJQUFJLENBQUNHLE1BQU0sQ0FBQztRQUNwQ0wsTUFBTTtZQUFFVjtZQUFPZ0IsY0FBY3JCLGdFQUFZQSxDQUFDTztZQUFXRTtRQUFTO0lBQ2hFO0lBRUEsTUFBTWEsUUFBUXJCLHlEQUFrQixDQUFDLElBQUl1QixRQUFRLENBQUM7SUFDOUMsTUFBTUMsWUFBWSxJQUFJQyxLQUFLQSxLQUFLQyxHQUFHLEtBQUssS0FBSyxPQUFPO0lBQ3BELE1BQU0vQixrREFBTUEsQ0FBQ2dDLGlCQUFpQixDQUFDUixNQUFNLENBQUM7UUFBRUwsTUFBTTtZQUFFYyxRQUFRWixLQUFLYSxFQUFFO1lBQUVSO1lBQU9HO1FBQVU7SUFBRTtJQUVwRixNQUFNTSxPQUFPQyxRQUFRQyxHQUFHLENBQUNDLFlBQVksSUFBSTtJQUN6QyxNQUFNQyxPQUFPLEdBQUdKLEtBQUssUUFBUSxFQUFFVCxPQUFPO0lBQ3RDLE1BQU1wQiwwREFBUUEsQ0FBQztRQUFFa0MsSUFBSS9CO1FBQU9nQyxTQUFTO1FBQVVDLE1BQU0sQ0FBQyxTQUFTLEVBQUVILE1BQU07SUFBQztJQUV4RSxPQUFPcEMsaURBQUVBLENBQUM7UUFBRStCLElBQUliLEtBQUthLEVBQUU7SUFBQztBQUMxQiIsInNvdXJjZXMiOlsiRDpcXHh1ZVxcdGVzdC1zcGVjLXByb1xceHVlcmFuLWp1YmVuLXByb2plY3RcXGFwcFxcYXBpXFxhdXRoXFxyZWdpc3Rlclxccm91dGUudHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgeiB9IGZyb20gJ3pvZCdcclxuaW1wb3J0IHsgcHJpc21hIH0gZnJvbSAnQC9zcmMvZGIvY2xpZW50J1xyXG5pbXBvcnQgeyBwYXJzZUpzb24gfSBmcm9tICdAL3NyYy9hcGkvdmFsaWRhdGUnXHJcbmltcG9ydCB7IGJhZFJlcXVlc3QsIG9rIH0gZnJvbSAnQC9zcmMvYXBpL2h0dHAnXHJcbmltcG9ydCB7IGhhc2hQYXNzd29yZCB9IGZyb20gJ0Avc3JjL2F1dGgvcGFzc3dvcmQnXHJcbmltcG9ydCBjcnlwdG8gZnJvbSAnY3J5cHRvJ1xyXG5pbXBvcnQgeyBzZW5kTWFpbCB9IGZyb20gJ0Avc3JjL2F1dGgvbWFpbGVyJ1xyXG5cclxuY29uc3Qgc2NoZW1hID0gei5vYmplY3QoeyBlbWFpbDogei5zdHJpbmcoKS5lbWFpbCgpLCBwYXNzd29yZDogei5zdHJpbmcoKS5taW4oNiksIG5pY2tuYW1lOiB6LnN0cmluZygpLm9wdGlvbmFsKCkgfSlcclxuXHJcbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQT1NUKHJlcTogUmVxdWVzdCkge1xyXG4gIGNvbnN0IHBhcnNlZCA9IGF3YWl0IHBhcnNlSnNvbihyZXEsIHNjaGVtYSlcclxuICBpZiAoIXBhcnNlZC5vaykgcmV0dXJuIHBhcnNlZC5yZXNcclxuICBjb25zdCB7IGVtYWlsLCBwYXNzd29yZCwgbmlja25hbWUgfSA9IHBhcnNlZC5kYXRhXHJcblxyXG4gIGNvbnN0IGV4aXN0ID0gYXdhaXQgcHJpc21hLnVzZXIuZmluZFVuaXF1ZSh7IHdoZXJlOiB7IGVtYWlsIH0gfSlcclxuICBpZiAoZXhpc3QpIHJldHVybiBiYWRSZXF1ZXN0KCdFTUFJTF9FWElTVFMnKVxyXG5cclxuICBjb25zdCB1c2VyID0gYXdhaXQgcHJpc21hLnVzZXIuY3JlYXRlKHtcclxuICAgIGRhdGE6IHsgZW1haWwsIHBhc3N3b3JkSGFzaDogaGFzaFBhc3N3b3JkKHBhc3N3b3JkKSwgbmlja25hbWUgfVxyXG4gIH0pXHJcblxyXG4gIGNvbnN0IHRva2VuID0gY3J5cHRvLnJhbmRvbUJ5dGVzKDI0KS50b1N0cmluZygnaGV4JylcclxuICBjb25zdCBleHBpcmVzQXQgPSBuZXcgRGF0ZShEYXRlLm5vdygpICsgMjQgKiAzNjAwICogMTAwMClcclxuICBhd2FpdCBwcmlzbWEudmVyaWZpY2F0aW9uVG9rZW4uY3JlYXRlKHsgZGF0YTogeyB1c2VySWQ6IHVzZXIuaWQsIHRva2VuLCBleHBpcmVzQXQgfSB9KVxyXG5cclxuICBjb25zdCBiYXNlID0gcHJvY2Vzcy5lbnYuQVBQX0JBU0VfVVJMIHx8ICdodHRwOi8vbG9jYWxob3N0OjMwMDAnXHJcbiAgY29uc3QgbGluayA9IGAke2Jhc2V9L3ZlcmlmeS8ke3Rva2VufWBcclxuICBhd2FpdCBzZW5kTWFpbCh7IHRvOiBlbWFpbCwgc3ViamVjdDogJ+mqjOivgeS9oOeahOmCrueusScsIHRleHQ6IGDngrnlh7vpk77mjqXpqozor4HvvJpcXG4ke2xpbmt9YCB9KVxyXG5cclxuICByZXR1cm4gb2soeyBpZDogdXNlci5pZCB9KVxyXG59XHJcbiJdLCJuYW1lcyI6WyJ6IiwicHJpc21hIiwicGFyc2VKc29uIiwiYmFkUmVxdWVzdCIsIm9rIiwiaGFzaFBhc3N3b3JkIiwiY3J5cHRvIiwic2VuZE1haWwiLCJzY2hlbWEiLCJvYmplY3QiLCJlbWFpbCIsInN0cmluZyIsInBhc3N3b3JkIiwibWluIiwibmlja25hbWUiLCJvcHRpb25hbCIsIlBPU1QiLCJyZXEiLCJwYXJzZWQiLCJyZXMiLCJkYXRhIiwiZXhpc3QiLCJ1c2VyIiwiZmluZFVuaXF1ZSIsIndoZXJlIiwiY3JlYXRlIiwicGFzc3dvcmRIYXNoIiwidG9rZW4iLCJyYW5kb21CeXRlcyIsInRvU3RyaW5nIiwiZXhwaXJlc0F0IiwiRGF0ZSIsIm5vdyIsInZlcmlmaWNhdGlvblRva2VuIiwidXNlcklkIiwiaWQiLCJiYXNlIiwicHJvY2VzcyIsImVudiIsIkFQUF9CQVNFX1VSTCIsImxpbmsiLCJ0byIsInN1YmplY3QiLCJ0ZXh0Il0sImlnbm9yZUxpc3QiOltdLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///(rsc)/./app/api/auth/register/route.ts\n");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   POST: () => (/* binding */ POST)\n/* harmony export */ });\n/* harmony import */ var zod__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! zod */ \"(rsc)/./node_modules/zod/v3/types.js\");\n/* harmony import */ var _src_db_client__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/src/db/client */ \"(rsc)/./src/db/client.ts\");\n/* harmony import */ var _src_api_validate__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/src/api/validate */ \"(rsc)/./src/api/validate.ts\");\n/* harmony import */ var _src_api_http__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/src/api/http */ \"(rsc)/./src/api/http.ts\");\n/* harmony import */ var _src_auth_password__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/src/auth/password */ \"(rsc)/./src/auth/password.ts\");\n/* harmony import */ var _src_auth_mailer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @/src/auth/mailer */ \"(rsc)/./src/auth/mailer.ts\");\n\n\n\n\n\n\nconst schema = zod__WEBPACK_IMPORTED_MODULE_5__.object({\n    email: zod__WEBPACK_IMPORTED_MODULE_5__.string().email(),\n    password: zod__WEBPACK_IMPORTED_MODULE_5__.string().min(6),\n    nickname: zod__WEBPACK_IMPORTED_MODULE_5__.string().optional()\n});\nasync function POST(req) {\n    const parsed = await (0,_src_api_validate__WEBPACK_IMPORTED_MODULE_1__.parseJson)(req, schema);\n    if (!parsed.ok) return parsed.res;\n    const { email, password, nickname } = parsed.data;\n    const exist = await _src_db_client__WEBPACK_IMPORTED_MODULE_0__.prisma.user.findUnique({\n        where: {\n            email\n        }\n    });\n    if (exist) return (0,_src_api_http__WEBPACK_IMPORTED_MODULE_2__.badRequest)('EMAIL_EXISTS');\n    const user = await _src_db_client__WEBPACK_IMPORTED_MODULE_0__.prisma.user.create({\n        data: {\n            email,\n            passwordHash: (0,_src_auth_password__WEBPACK_IMPORTED_MODULE_3__.hashPassword)(password),\n            nickname\n        }\n    });\n    const code = String(Math.floor(100000 + Math.random() * 900000));\n    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);\n    await _src_db_client__WEBPACK_IMPORTED_MODULE_0__.prisma[\"verificationToken\"].create({\n        data: {\n            userId: user.id,\n            token: code,\n            expiresAt\n        }\n    });\n    await (0,_src_auth_mailer__WEBPACK_IMPORTED_MODULE_4__.sendMail)({\n        to: email,\n        subject: '验证你的邮箱',\n        text: `你的验证码是：${code}\\n10分钟内有效。`\n    });\n    return (0,_src_api_http__WEBPACK_IMPORTED_MODULE_2__.ok)({\n        id: user.id\n    });\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9hcHAvYXBpL2F1dGgvcmVnaXN0ZXIvcm91dGUudHMiLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7OztBQUF1QjtBQUNpQjtBQUNNO0FBQ0M7QUFDRztBQUNOO0FBRTVDLE1BQU1PLFNBQVNQLHVDQUFRLENBQUM7SUFBRVMsT0FBT1QsdUNBQVEsR0FBR1MsS0FBSztJQUFJRSxVQUFVWCx1Q0FBUSxHQUFHWSxHQUFHLENBQUM7SUFBSUMsVUFBVWIsdUNBQVEsR0FBR2MsUUFBUTtBQUFHO0FBRTNHLGVBQWVDLEtBQUtDLEdBQVk7SUFDckMsTUFBTUMsU0FBUyxNQUFNZiw0REFBU0EsQ0FBQ2MsS0FBS1Q7SUFDcEMsSUFBSSxDQUFDVSxPQUFPYixFQUFFLEVBQUUsT0FBT2EsT0FBT0MsR0FBRztJQUNqQyxNQUFNLEVBQUVULEtBQUssRUFBRUUsUUFBUSxFQUFFRSxRQUFRLEVBQUUsR0FBR0ksT0FBT0UsSUFBSTtJQUVqRCxNQUFNQyxRQUFRLE1BQU1uQixrREFBTUEsQ0FBQ29CLElBQUksQ0FBQ0MsVUFBVSxDQUFDO1FBQUVDLE9BQU87WUFBRWQ7UUFBTTtJQUFFO0lBQzlELElBQUlXLE9BQU8sT0FBT2pCLHlEQUFVQSxDQUFDO0lBRTdCLE1BQU1rQixPQUFPLE1BQU1wQixrREFBTUEsQ0FBQ29CLElBQUksQ0FBQ0csTUFBTSxDQUFDO1FBQ3BDTCxNQUFNO1lBQUVWO1lBQU9nQixjQUFjcEIsZ0VBQVlBLENBQUNNO1lBQVdFO1FBQVM7SUFDaEU7SUFFQSxNQUFNYSxPQUFPQyxPQUFPQyxLQUFLQyxLQUFLLENBQUMsU0FBU0QsS0FBS0UsTUFBTSxLQUFLO0lBQ3hELE1BQU1DLFlBQVksSUFBSUMsS0FBS0EsS0FBS0MsR0FBRyxLQUFLLEtBQUssS0FBSztJQUNsRCxNQUFNLGtEQUFlLENBQUMsb0JBQW9CLENBQUNULE1BQU0sQ0FBQztRQUFFTCxNQUFNO1lBQUVlLFFBQVFiLEtBQUtjLEVBQUU7WUFBRUMsT0FBT1Y7WUFBTUs7UUFBVTtJQUFFO0lBRXRHLE1BQU16QiwwREFBUUEsQ0FBQztRQUFFK0IsSUFBSTVCO1FBQU82QixTQUFTO1FBQVVDLE1BQU0sQ0FBQyxPQUFPLEVBQUViLEtBQUssVUFBVSxDQUFDO0lBQUM7SUFFaEYsT0FBT3RCLGlEQUFFQSxDQUFDO1FBQUUrQixJQUFJZCxLQUFLYyxFQUFFO0lBQUM7QUFDMUIiLCJzb3VyY2VzIjpbIkQ6XFx4dWVcXHRlc3Qtc3BlYy1wcm9cXHh1ZXJhbi1qdWJlbi1wcm9qZWN0XFxhcHBcXGFwaVxcYXV0aFxccmVnaXN0ZXJcXHJvdXRlLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHogfSBmcm9tICd6b2QnXHJcbmltcG9ydCB7IHByaXNtYSB9IGZyb20gJ0Avc3JjL2RiL2NsaWVudCdcclxuaW1wb3J0IHsgcGFyc2VKc29uIH0gZnJvbSAnQC9zcmMvYXBpL3ZhbGlkYXRlJ1xyXG5pbXBvcnQgeyBiYWRSZXF1ZXN0LCBvayB9IGZyb20gJ0Avc3JjL2FwaS9odHRwJ1xyXG5pbXBvcnQgeyBoYXNoUGFzc3dvcmQgfSBmcm9tICdAL3NyYy9hdXRoL3Bhc3N3b3JkJ1xyXG5pbXBvcnQgeyBzZW5kTWFpbCB9IGZyb20gJ0Avc3JjL2F1dGgvbWFpbGVyJ1xyXG5cclxuY29uc3Qgc2NoZW1hID0gei5vYmplY3QoeyBlbWFpbDogei5zdHJpbmcoKS5lbWFpbCgpLCBwYXNzd29yZDogei5zdHJpbmcoKS5taW4oNiksIG5pY2tuYW1lOiB6LnN0cmluZygpLm9wdGlvbmFsKCkgfSlcclxuXHJcbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQT1NUKHJlcTogUmVxdWVzdCkge1xyXG4gIGNvbnN0IHBhcnNlZCA9IGF3YWl0IHBhcnNlSnNvbihyZXEsIHNjaGVtYSlcclxuICBpZiAoIXBhcnNlZC5vaykgcmV0dXJuIHBhcnNlZC5yZXNcclxuICBjb25zdCB7IGVtYWlsLCBwYXNzd29yZCwgbmlja25hbWUgfSA9IHBhcnNlZC5kYXRhXHJcblxyXG4gIGNvbnN0IGV4aXN0ID0gYXdhaXQgcHJpc21hLnVzZXIuZmluZFVuaXF1ZSh7IHdoZXJlOiB7IGVtYWlsIH0gfSlcclxuICBpZiAoZXhpc3QpIHJldHVybiBiYWRSZXF1ZXN0KCdFTUFJTF9FWElTVFMnKVxyXG5cclxuICBjb25zdCB1c2VyID0gYXdhaXQgcHJpc21hLnVzZXIuY3JlYXRlKHtcclxuICAgIGRhdGE6IHsgZW1haWwsIHBhc3N3b3JkSGFzaDogaGFzaFBhc3N3b3JkKHBhc3N3b3JkKSwgbmlja25hbWUgfVxyXG4gIH0pXHJcblxyXG4gIGNvbnN0IGNvZGUgPSBTdHJpbmcoTWF0aC5mbG9vcigxMDAwMDAgKyBNYXRoLnJhbmRvbSgpICogOTAwMDAwKSlcclxuICBjb25zdCBleHBpcmVzQXQgPSBuZXcgRGF0ZShEYXRlLm5vdygpICsgMTAgKiA2MCAqIDEwMDApXHJcbiAgYXdhaXQgKHByaXNtYSBhcyBhbnkpW1widmVyaWZpY2F0aW9uVG9rZW5cIl0uY3JlYXRlKHsgZGF0YTogeyB1c2VySWQ6IHVzZXIuaWQsIHRva2VuOiBjb2RlLCBleHBpcmVzQXQgfSB9KVxyXG5cclxuICBhd2FpdCBzZW5kTWFpbCh7IHRvOiBlbWFpbCwgc3ViamVjdDogJ+mqjOivgeS9oOeahOmCrueusScsIHRleHQ6IGDkvaDnmoTpqozor4HnoIHmmK/vvJoke2NvZGV9XFxuMTDliIbpkp/lhoXmnInmlYjjgIJgIH0pXHJcblxyXG4gIHJldHVybiBvayh7IGlkOiB1c2VyLmlkIH0pXHJcbn1cclxuIl0sIm5hbWVzIjpbInoiLCJwcmlzbWEiLCJwYXJzZUpzb24iLCJiYWRSZXF1ZXN0Iiwib2siLCJoYXNoUGFzc3dvcmQiLCJzZW5kTWFpbCIsInNjaGVtYSIsIm9iamVjdCIsImVtYWlsIiwic3RyaW5nIiwicGFzc3dvcmQiLCJtaW4iLCJuaWNrbmFtZSIsIm9wdGlvbmFsIiwiUE9TVCIsInJlcSIsInBhcnNlZCIsInJlcyIsImRhdGEiLCJleGlzdCIsInVzZXIiLCJmaW5kVW5pcXVlIiwid2hlcmUiLCJjcmVhdGUiLCJwYXNzd29yZEhhc2giLCJjb2RlIiwiU3RyaW5nIiwiTWF0aCIsImZsb29yIiwicmFuZG9tIiwiZXhwaXJlc0F0IiwiRGF0ZSIsIm5vdyIsInVzZXJJZCIsImlkIiwidG9rZW4iLCJ0byIsInN1YmplY3QiLCJ0ZXh0Il0sImlnbm9yZUxpc3QiOltdLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///(rsc)/./app/api/auth/register/route.ts\n");
 
 /***/ }),
 
@@ -73,7 +73,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   sendMail: () => (/* binding */ sendMail)\n/* harmony export */ });\nasync function sendMail({ to, subject, text }) {\n    // 开发环境占位实现：输出到控制台\n    console.log('[MAIL] to=%s | subject=%s\\n%s', to, subject, text);\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9zcmMvYXV0aC9tYWlsZXIudHMiLCJtYXBwaW5ncyI6Ijs7OztBQUVPLGVBQWVBLFNBQVMsRUFBRUMsRUFBRSxFQUFFQyxPQUFPLEVBQUVDLElBQUksRUFBYztJQUM5RCxrQkFBa0I7SUFDbEJDLFFBQVFDLEdBQUcsQ0FBQyxpQ0FBaUNKLElBQUlDLFNBQVNDO0FBQzVEIiwic291cmNlcyI6WyJEOlxceHVlXFx0ZXN0LXNwZWMtcHJvXFx4dWVyYW4tanViZW4tcHJvamVjdFxcc3JjXFxhdXRoXFxtYWlsZXIudHMiXSwic291cmNlc0NvbnRlbnQiOlsiZXhwb3J0IHR5cGUgTWFpbFBhcmFtcyA9IHsgdG86IHN0cmluZzsgc3ViamVjdDogc3RyaW5nOyB0ZXh0OiBzdHJpbmc7IGh0bWw/OiBzdHJpbmcgfVxyXG5cclxuZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIHNlbmRNYWlsKHsgdG8sIHN1YmplY3QsIHRleHQgfTogTWFpbFBhcmFtcyk6IFByb21pc2U8dm9pZD4ge1xyXG4gIC8vIOW8gOWPkeeOr+Wig+WNoOS9jeWunueOsO+8mui+k+WHuuWIsOaOp+WItuWPsFxyXG4gIGNvbnNvbGUubG9nKCdbTUFJTF0gdG89JXMgfCBzdWJqZWN0PSVzXFxuJXMnLCB0bywgc3ViamVjdCwgdGV4dClcclxufVxyXG4iXSwibmFtZXMiOlsic2VuZE1haWwiLCJ0byIsInN1YmplY3QiLCJ0ZXh0IiwiY29uc29sZSIsImxvZyJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///(rsc)/./src/auth/mailer.ts\n");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   sendMail: () => (/* binding */ sendMail)\n/* harmony export */ });\nasync function sendMail({ to, subject, text, html }) {\n    // 仅使用管理端（数据库）配置\n    const { prisma } = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! @/src/db/client */ \"(rsc)/./src/db/client.ts\"));\n    const rows = await prisma[\"systemConfig\"].findMany({\n        where: {\n            key: {\n                in: [\n                    'smtp.host',\n                    'smtp.port',\n                    'smtp.user',\n                    'smtp.pass',\n                    'mail.from'\n                ]\n            }\n        }\n    });\n    const map = new Map();\n    for (const r of rows)map.set(r.key, r.value);\n    const host = (map.get('smtp.host') || '').trim() || undefined;\n    const portStr = (map.get('smtp.port') || '').trim() || undefined;\n    const user = (map.get('smtp.user') || '').trim() || undefined;\n    const pass = (map.get('smtp.pass') || '').trim() || undefined;\n    const from = (map.get('mail.from') || '').trim() || user || 'no-reply@example.com';\n    const port = portStr ? Number(portStr) : undefined;\n    if (!host || !port || !user || !pass) {\n        throw new Error('SMTP_CONFIG_MISSING');\n    }\n    if (host && port && user && pass) {\n        const nodemailer = await __webpack_require__.e(/*! import() */ \"vendor-chunks/nodemailer\").then(__webpack_require__.t.bind(__webpack_require__, /*! nodemailer */ \"(rsc)/./node_modules/nodemailer/lib/nodemailer.js\", 19));\n        const transporter = nodemailer.createTransport({\n            host,\n            port,\n            secure: port === 465,\n            auth: {\n                user,\n                pass\n            }\n        });\n        await transporter.sendMail({\n            from,\n            to,\n            subject,\n            text,\n            html\n        });\n        return;\n    }\n// 不再回退到 DRYRUN；上方缺失即抛错。\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9zcmMvYXV0aC9tYWlsZXIudHMiLCJtYXBwaW5ncyI6Ijs7OztBQUVPLGVBQWVBLFNBQVMsRUFBRUMsRUFBRSxFQUFFQyxPQUFPLEVBQUVDLElBQUksRUFBRUMsSUFBSSxFQUFjO0lBQ3BFLGdCQUFnQjtJQUNoQixNQUFNLEVBQUVDLE1BQU0sRUFBRSxHQUFHLE1BQU0sdUlBQXlCO0lBQ2xELE1BQU1DLE9BQU8sTUFBTSxNQUFlLENBQUMsZUFBZSxDQUFDQyxRQUFRLENBQUM7UUFBRUMsT0FBTztZQUFFQyxLQUFLO2dCQUFFQyxJQUFJO29CQUFDO29CQUFZO29CQUFZO29CQUFZO29CQUFZO2lCQUFZO1lBQUM7UUFBRTtJQUFFO0lBQ3BKLE1BQU1DLE1BQU0sSUFBSUM7SUFDaEIsS0FBSyxNQUFNQyxLQUFLUCxLQUFNSyxJQUFJRyxHQUFHLENBQUNELEVBQUVKLEdBQUcsRUFBRUksRUFBRUUsS0FBSztJQUU1QyxNQUFNQyxPQUFPLENBQUNMLElBQUlNLEdBQUcsQ0FBQyxnQkFBZ0IsRUFBQyxFQUFHQyxJQUFJLE1BQU1DO0lBQ3BELE1BQU1DLFVBQVUsQ0FBQ1QsSUFBSU0sR0FBRyxDQUFDLGdCQUFnQixFQUFDLEVBQUdDLElBQUksTUFBTUM7SUFDdkQsTUFBTUUsT0FBTyxDQUFDVixJQUFJTSxHQUFHLENBQUMsZ0JBQWdCLEVBQUMsRUFBR0MsSUFBSSxNQUFNQztJQUNwRCxNQUFNRyxPQUFPLENBQUNYLElBQUlNLEdBQUcsQ0FBQyxnQkFBZ0IsRUFBQyxFQUFHQyxJQUFJLE1BQU1DO0lBQ3BELE1BQU1JLE9BQU8sQ0FBRVosSUFBSU0sR0FBRyxDQUFDLGdCQUFnQixFQUFDLEVBQUdDLElBQUksTUFBT0csUUFBUTtJQUU5RCxNQUFNRyxPQUFPSixVQUFVSyxPQUFPTCxXQUFXRDtJQUV6QyxJQUFJLENBQUNILFFBQVEsQ0FBQ1EsUUFBUSxDQUFDSCxRQUFRLENBQUNDLE1BQU07UUFDcEMsTUFBTSxJQUFJSSxNQUFNO0lBQ2xCO0lBRUEsSUFBSVYsUUFBUVEsUUFBUUgsUUFBUUMsTUFBTTtRQUNoQyxNQUFNSyxhQUFhLE1BQU0sa01BQW9CO1FBQzdDLE1BQU1DLGNBQWNELFdBQVdFLGVBQWUsQ0FBQztZQUFFYjtZQUFNUTtZQUFNTSxRQUFRTixTQUFTO1lBQUtPLE1BQU07Z0JBQUVWO2dCQUFNQztZQUFLO1FBQUU7UUFDeEcsTUFBTU0sWUFBWTVCLFFBQVEsQ0FBQztZQUFFdUI7WUFBTXRCO1lBQUlDO1lBQVNDO1lBQU1DO1FBQUs7UUFDM0Q7SUFDRjtBQUNBLHdCQUF3QjtBQUMxQiIsInNvdXJjZXMiOlsiRDpcXHh1ZVxcdGVzdC1zcGVjLXByb1xceHVlcmFuLWp1YmVuLXByb2plY3RcXHNyY1xcYXV0aFxcbWFpbGVyLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCB0eXBlIE1haWxQYXJhbXMgPSB7IHRvOiBzdHJpbmc7IHN1YmplY3Q6IHN0cmluZzsgdGV4dDogc3RyaW5nOyBodG1sPzogc3RyaW5nIH1cclxuXHJcbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBzZW5kTWFpbCh7IHRvLCBzdWJqZWN0LCB0ZXh0LCBodG1sIH06IE1haWxQYXJhbXMpOiBQcm9taXNlPHZvaWQ+IHtcclxuICAvLyDku4Xkvb/nlKjnrqHnkIbnq6/vvIjmlbDmja7lupPvvInphY3nva5cclxuICBjb25zdCB7IHByaXNtYSB9ID0gYXdhaXQgaW1wb3J0KCdAL3NyYy9kYi9jbGllbnQnKVxyXG4gIGNvbnN0IHJvd3MgPSBhd2FpdCAocHJpc21hIGFzIGFueSlbXCJzeXN0ZW1Db25maWdcIl0uZmluZE1hbnkoeyB3aGVyZTogeyBrZXk6IHsgaW46IFsnc210cC5ob3N0Jywnc210cC5wb3J0Jywnc210cC51c2VyJywnc210cC5wYXNzJywnbWFpbC5mcm9tJ10gfSB9IH0pXHJcbiAgY29uc3QgbWFwID0gbmV3IE1hcDxzdHJpbmcsIHN0cmluZz4oKVxyXG4gIGZvciAoY29uc3QgciBvZiByb3dzKSBtYXAuc2V0KHIua2V5LCByLnZhbHVlKVxyXG5cclxuICBjb25zdCBob3N0ID0gKG1hcC5nZXQoJ3NtdHAuaG9zdCcpIHx8ICcnKS50cmltKCkgfHwgdW5kZWZpbmVkXHJcbiAgY29uc3QgcG9ydFN0ciA9IChtYXAuZ2V0KCdzbXRwLnBvcnQnKSB8fCAnJykudHJpbSgpIHx8IHVuZGVmaW5lZFxyXG4gIGNvbnN0IHVzZXIgPSAobWFwLmdldCgnc210cC51c2VyJykgfHwgJycpLnRyaW0oKSB8fCB1bmRlZmluZWRcclxuICBjb25zdCBwYXNzID0gKG1hcC5nZXQoJ3NtdHAucGFzcycpIHx8ICcnKS50cmltKCkgfHwgdW5kZWZpbmVkXHJcbiAgY29uc3QgZnJvbSA9ICgobWFwLmdldCgnbWFpbC5mcm9tJykgfHwgJycpLnRyaW0oKSkgfHwgdXNlciB8fCAnbm8tcmVwbHlAZXhhbXBsZS5jb20nXHJcblxyXG4gIGNvbnN0IHBvcnQgPSBwb3J0U3RyID8gTnVtYmVyKHBvcnRTdHIpIDogdW5kZWZpbmVkXHJcblxyXG4gIGlmICghaG9zdCB8fCAhcG9ydCB8fCAhdXNlciB8fCAhcGFzcykge1xyXG4gICAgdGhyb3cgbmV3IEVycm9yKCdTTVRQX0NPTkZJR19NSVNTSU5HJylcclxuICB9XHJcblxyXG4gIGlmIChob3N0ICYmIHBvcnQgJiYgdXNlciAmJiBwYXNzKSB7XHJcbiAgICBjb25zdCBub2RlbWFpbGVyID0gYXdhaXQgaW1wb3J0KCdub2RlbWFpbGVyJylcclxuICAgIGNvbnN0IHRyYW5zcG9ydGVyID0gbm9kZW1haWxlci5jcmVhdGVUcmFuc3BvcnQoeyBob3N0LCBwb3J0LCBzZWN1cmU6IHBvcnQgPT09IDQ2NSwgYXV0aDogeyB1c2VyLCBwYXNzIH0gfSlcclxuICAgIGF3YWl0IHRyYW5zcG9ydGVyLnNlbmRNYWlsKHsgZnJvbSwgdG8sIHN1YmplY3QsIHRleHQsIGh0bWwgfSlcclxuICAgIHJldHVyblxyXG4gIH1cclxuICAvLyDkuI3lho3lm57pgIDliLAgRFJZUlVO77yb5LiK5pa557y65aSx5Y2z5oqb6ZSZ44CCXHJcbn1cclxuIl0sIm5hbWVzIjpbInNlbmRNYWlsIiwidG8iLCJzdWJqZWN0IiwidGV4dCIsImh0bWwiLCJwcmlzbWEiLCJyb3dzIiwiZmluZE1hbnkiLCJ3aGVyZSIsImtleSIsImluIiwibWFwIiwiTWFwIiwiciIsInNldCIsInZhbHVlIiwiaG9zdCIsImdldCIsInRyaW0iLCJ1bmRlZmluZWQiLCJwb3J0U3RyIiwidXNlciIsInBhc3MiLCJmcm9tIiwicG9ydCIsIk51bWJlciIsIkVycm9yIiwibm9kZW1haWxlciIsInRyYW5zcG9ydGVyIiwiY3JlYXRlVHJhbnNwb3J0Iiwic2VjdXJlIiwiYXV0aCJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///(rsc)/./src/auth/mailer.ts\n");
 
 /***/ }),
 
@@ -164,6 +164,17 @@ module.exports = require("@prisma/client");
 
 /***/ }),
 
+/***/ "child_process":
+/*!********************************!*\
+  !*** external "child_process" ***!
+  \********************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("child_process");
+
+/***/ }),
+
 /***/ "crypto":
 /*!*************************!*\
   !*** external "crypto" ***!
@@ -172,6 +183,72 @@ module.exports = require("@prisma/client");
 
 "use strict";
 module.exports = require("crypto");
+
+/***/ }),
+
+/***/ "dns":
+/*!**********************!*\
+  !*** external "dns" ***!
+  \**********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("dns");
+
+/***/ }),
+
+/***/ "events":
+/*!*************************!*\
+  !*** external "events" ***!
+  \*************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("events");
+
+/***/ }),
+
+/***/ "fs":
+/*!*********************!*\
+  !*** external "fs" ***!
+  \*********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("fs");
+
+/***/ }),
+
+/***/ "http":
+/*!***********************!*\
+  !*** external "http" ***!
+  \***********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("http");
+
+/***/ }),
+
+/***/ "https":
+/*!************************!*\
+  !*** external "https" ***!
+  \************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("https");
+
+/***/ }),
+
+/***/ "net":
+/*!**********************!*\
+  !*** external "net" ***!
+  \**********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("net");
 
 /***/ }),
 
@@ -216,6 +293,83 @@ module.exports = require("next/dist/shared/lib/no-fallback-error.external");
 
 "use strict";
 module.exports = require("next/dist/shared/lib/router/utils/app-paths");
+
+/***/ }),
+
+/***/ "os":
+/*!*********************!*\
+  !*** external "os" ***!
+  \*********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("os");
+
+/***/ }),
+
+/***/ "path":
+/*!***********************!*\
+  !*** external "path" ***!
+  \***********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("path");
+
+/***/ }),
+
+/***/ "stream":
+/*!*************************!*\
+  !*** external "stream" ***!
+  \*************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("stream");
+
+/***/ }),
+
+/***/ "tls":
+/*!**********************!*\
+  !*** external "tls" ***!
+  \**********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("tls");
+
+/***/ }),
+
+/***/ "url":
+/*!**********************!*\
+  !*** external "url" ***!
+  \**********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("url");
+
+/***/ }),
+
+/***/ "util":
+/*!***********************!*\
+  !*** external "util" ***!
+  \***********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("util");
+
+/***/ }),
+
+/***/ "zlib":
+/*!***********************!*\
+  !*** external "zlib" ***!
+  \***********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("zlib");
 
 /***/ })
 

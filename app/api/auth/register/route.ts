@@ -3,7 +3,6 @@ import { prisma } from '@/src/db/client'
 import { parseJson } from '@/src/api/validate'
 import { badRequest, ok } from '@/src/api/http'
 import { hashPassword } from '@/src/auth/password'
-import crypto from 'crypto'
 import { sendMail } from '@/src/auth/mailer'
 
 const schema = z.object({ email: z.string().email(), password: z.string().min(6), nickname: z.string().optional() })
@@ -20,13 +19,11 @@ export async function POST(req: Request) {
     data: { email, passwordHash: hashPassword(password), nickname }
   })
 
-  const token = crypto.randomBytes(24).toString('hex')
-  const expiresAt = new Date(Date.now() + 24 * 3600 * 1000)
-  await prisma.verificationToken.create({ data: { userId: user.id, token, expiresAt } })
+  const code = String(Math.floor(100000 + Math.random() * 900000))
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
+  await (prisma as any)["verificationToken"].create({ data: { userId: user.id, token: code, expiresAt } })
 
-  const base = process.env.APP_BASE_URL || 'http://localhost:3000'
-  const link = `${base}/verify/${token}`
-  await sendMail({ to: email, subject: '验证你的邮箱', text: `点击链接验证：\n${link}` })
+  await sendMail({ to: email, subject: '验证你的邮箱', text: `你的验证码是：${code}\n10分钟内有效。` })
 
   return ok({ id: user.id })
 }

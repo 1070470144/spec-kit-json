@@ -13,11 +13,25 @@ function hashPassword(password) {
 const prisma = new PrismaClient()
 
 async function main() {
+  // roles
+  const [rSuper, rAdmin, rUser] = await Promise.all([
+    prisma.role.upsert({ where: { key: 'superuser' }, update: {}, create: { key: 'superuser', name: '超级用户', permissionsJson: '{}' } }),
+    prisma.role.upsert({ where: { key: 'admin' }, update: {}, create: { key: 'admin', name: '管理员', permissionsJson: '{}' } }),
+    prisma.role.upsert({ where: { key: 'user' }, update: {}, create: { key: 'user', name: '用户', permissionsJson: '{}' } }),
+  ])
+
   const adminEmail = 'admin@example.com'
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {},
     create: { email: adminEmail, passwordHash: hashPassword('admin123'), status: 'active' }
+  })
+  // bind roles to admin
+  await prisma.user.update({
+    where: { id: admin.id },
+    data: {
+      roles: { set: [{ id: rSuper.id }, { id: rAdmin.id }, { id: rUser.id }] }
+    }
   })
 
   const contentStr = JSON.stringify({ name: 'botc-demo' })
@@ -29,7 +43,7 @@ async function main() {
     }
   })
 
-  console.log('Seed done:', { admin: admin.email })
+  console.log('Seed done:', { admin: admin.email, roles: ['superuser','admin','user'] })
 }
 
 main().catch((e) => { console.error(e); process.exit(1) }).finally(async () => { await prisma.$disconnect() })

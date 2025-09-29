@@ -15,6 +15,9 @@ export async function POST(req: Request) {
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return unauthorized('INVALID_CREDENTIALS')
   }
+  if (!user.emailVerifiedAt) {
+    return unauthorized('EMAIL_NOT_VERIFIED')
+  }
   const role = user.email === 'admin@example.com' ? 'admin' : 'user'
   const token = signSession({ userId: user.id, email: user.email, role })
   setSessionCookie(token)

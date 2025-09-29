@@ -19,12 +19,17 @@
 
 @layer components {
   .container-page { @apply mx-auto max-w-5xl p-6; }
+  [data-admin] .container-page { @apply max-w-none px-0 w-full mx-0; }
   .card { @apply bg-[var(--m3-surface)] border border-[var(--m3-border)] rounded-xl shadow-sm; }
   .card-body { @apply p-4 md:p-6; }
   .card-title { @apply text-lg font-semibold mb-2 text-[var(--m3-text)]; }
+  .card-actions { @apply mt-3 flex gap-2; }
   .muted { @apply text-sm text-[var(--m3-muted)]; }
 
-  .btn { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors border border-transparent; }
+  /* 卡片提升与悬浮反馈 */
+  .card:hover { @apply shadow-md; }
+
+  .btn { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-200 active:scale-[0.99]; }
   .btn-primary { @apply bg-[var(--m3-primary)] text-[var(--m3-primary-foreground)] hover:bg-blue-600 active:bg-blue-700; }
   .btn-outline { @apply border-[var(--m3-border)] text-[var(--m3-text)] hover:bg-slate-50; }
   .btn-danger { @apply bg-[var(--m3-error)] text-white hover:bg-red-700; }
@@ -37,4 +42,26 @@
 
   .section { @apply space-y-4; }
   .grid-cards { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4; }
+
+  /* 管理表格：斑马纹与悬浮高亮 */
+  .table-admin { @apply min-w-full text-sm; }
+  .table-admin thead tr { @apply text-left text-gray-600; }
+  .table-admin tbody tr { @apply border-t; }
+  .table-admin tbody tr:nth-child(2n) { @apply bg-gray-50/60; }
+  .table-admin tbody tr:hover { @apply bg-blue-50/50; }
+
+  /* Auth hero & glass style */
+  .auth-hero { @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-6; }
+  .glass-card { @apply bg-white/40 border-white/60 backdrop-blur-md rounded-2xl shadow-[0_10px_30px_rgba(2,6,23,0.08)] ring-1 ring-white/40; }
+  .subtitle { @apply text-sm text-[var(--m3-muted)]; }
+}
+
+/* 让根布局的 main 在包含管理员区域时全屏铺满，移除居中与最大宽度 */
+main:has([data-admin]) {
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  width: 100% !important;
 }

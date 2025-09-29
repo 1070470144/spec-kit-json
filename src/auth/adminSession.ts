@@ -24,8 +24,8 @@ export function verifyAdminSessionToken(token: string | undefined): AdminSession
   if (payload.exp < Math.floor(Date.now() / 1000)) return null
   return payload
 }
-export function setAdminSessionCookie(token: string) {
-  cookies().set(COOKIE_NAME, token, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 7 * 24 * 3600 })
+export async function setAdminSessionCookie(token: string) {
+  (await cookies()).set(COOKIE_NAME, token, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 7 * 24 * 3600 })
 }
-export function clearAdminSessionCookie() { cookies().set(COOKIE_NAME, '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 }) }
-export function getAdminSession(): AdminSessionPayload | null { return verifyAdminSessionToken(cookies().get(COOKIE_NAME)?.value) }
+export async function clearAdminSessionCookie() { (await cookies()).set(COOKIE_NAME, '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 }) }
+export async function getAdminSession(): Promise<AdminSessionPayload | null> { const token = (await cookies()).get(COOKIE_NAME)?.value; return verifyAdminSessionToken(token) }
