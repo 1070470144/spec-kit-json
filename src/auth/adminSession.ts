@@ -1,4 +1,4 @@
-import crypto from 'node:crypto'
+import crypto from 'crypto'
 import { cookies } from 'next/headers'
 
 const SECRET = process.env.NEXTAUTH_SECRET || 'dev-secret'

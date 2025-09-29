@@ -1,4 +1,4 @@
-import crypto from 'node:crypto'
+import crypto from 'crypto'
 
 const SECRET = process.env.NEXTAUTH_SECRET || 'dev-secret'
 const ALG = 'sha256'
