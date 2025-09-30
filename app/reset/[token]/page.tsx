@@ -1,7 +1,9 @@
 'use client'
 import { useState } from 'react'
+import { useParams } from 'next/navigation'
 
-export default function ResetPage({ params }: { params: { token: string } }) {
+export default function ResetPage() {
+  const params = useParams<{ token: string }>()
   const [password, setPassword] = useState('')
   const [msg, setMsg] = useState('')
 
