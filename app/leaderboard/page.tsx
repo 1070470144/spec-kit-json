@@ -36,54 +36,72 @@ export default async function LeaderboardPage({ searchParams }: { searchParams?:
   const icon = type==='likes' ? '👍' : type==='favorites' ? '⭐' : '⬇️'
   return (
     <div className="container-page section">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">排行榜</h1>
-        <div>
-          <a className={`btn ${type==='likes'?'btn-primary':'btn-outline'}`} href="/leaderboard?type=likes">按点赞</a>
-          <a className={`btn ml-2 ${type==='favorites'?'btn-primary':'btn-outline'}`} href="/leaderboard?type=favorites">按收藏</a>
-          <a className={`btn ml-2 ${type==='downloads'?'btn-primary':'btn-outline'}`} href="/leaderboard?type=downloads">按下载</a>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <h1 className="text-headline-small text-surface-on">排行榜</h1>
+        <div className="inline-flex rounded-sm border border-outline overflow-hidden">
+          <a 
+            className={`m3-segmented-btn ${type==='likes'?'m3-segmented-btn-active':''}`} 
+            href="/leaderboard?type=likes"
+          >
+            按点赞
+          </a>
+          <a 
+            className={`m3-segmented-btn ${type==='favorites'?'m3-segmented-btn-active':''}`} 
+            href="/leaderboard?type=favorites"
+          >
+            按收藏
+          </a>
+          <a 
+            className={`m3-segmented-btn ${type==='downloads'?'m3-segmented-btn-active':''}`} 
+            href="/leaderboard?type=downloads"
+          >
+            按下载
+          </a>
         </div>
       </div>
-      <div className="card mt-3">
-        <div className="card-body">
-          <div className="card-title">{titleMap[type]}</div>
-          {!list.length && <div className="muted">暂无数据</div>}
+      <div className="m3-card-elevated">
+        <div className="p-6">
+          <div className="text-title-large mb-4 text-surface-on">{titleMap[type]}</div>
+          {!list.length && <div className="text-body-medium text-surface-on-variant">暂无数据</div>}
           {!!list.length && (
-            <div className="divide-y">
+            <div className="divide-y divide-outline-variant">
               {list.map((s, idx) => {
                 const rank = idx + 1
                 const isTop1 = idx === 0
                 const isTop2 = idx === 1
                 const isTop3 = idx === 2
                 const rowCls = isTop1
-                  ? 'bg-amber-50 hover:bg-amber-100 border-amber-200'
+                  ? 'bg-amber-50 hover:bg-amber-100'
                   : isTop2
                   ? 'bg-slate-50 hover:bg-slate-100'
                   : isTop3
-                  ? 'bg-stone-50 hover:bg-stone-100'
-                  : 'hover:bg-slate-50'
+                  ? 'bg-orange-50 hover:bg-orange-100'
+                  : 'hover:bg-surface-variant'
                 const badgeCls = isTop1
-                  ? 'bg-amber-500 text-white'
+                  ? 'bg-amber-500 text-white shadow-elevation-2'
                   : isTop2
-                  ? 'bg-gray-400 text-white'
+                  ? 'bg-gray-400 text-white shadow-elevation-1'
                   : isTop3
                   ? 'bg-orange-400 text-white'
-                  : 'bg-blue-100 text-blue-700 group-hover:bg-blue-200'
-                const sizeCls = isTop1 ? 'h-8 w-8 text-sm' : 'h-7 w-7 text-xs'
-                const countCls = isTop1 ? 'border-amber-300' : isTop2 ? 'border-gray-300' : isTop3 ? 'border-orange-300' : 'group-hover:border-blue-300'
+                  : 'bg-surface border border-outline text-surface-on'
+                const sizeCls = isTop1 ? 'h-9 w-9 text-label-large' : 'h-8 w-8 text-label-medium'
                 const medal = isTop1 ? '🥇' : isTop2 ? '🥈' : isTop3 ? '🥉' : ''
                 return (
-                  <a key={s.id} href={`/scripts/${s.id}`} className={`group flex items-center justify-between gap-3 py-2 rounded-lg px-2 ${rowCls}`}>
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className={`inline-flex items-center justify-center rounded-full font-medium ${badgeCls} ${sizeCls}`}>{rank}</span>
-                      <div className="min-w-0">
-                        <div className="font-medium truncate max-w-[36rem]">{medal} {s.title}</div>
-                        <div className="muted">作者：{s.authorName || '-'}</div>
+                  <a 
+                    key={s.id} 
+                    href={`/scripts/${s.id}`} 
+                    className={`group flex items-center justify-between gap-4 py-3 rounded-sm px-3 transition-all duration-standard ${rowCls}`}
+                  >
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <span className={`m3-rank-badge ${badgeCls} ${sizeCls}`}>{rank}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-title-medium truncate">{medal} {s.title}</div>
+                        <div className="text-body-small text-surface-on-variant">作者：{s.authorName || '-'}</div>
                       </div>
                     </div>
-                    <span className={`inline-flex items-center gap-1 text-sm border rounded-lg px-2 py-1 text-gray-700 ${countCls}`}>
+                    <span className="inline-flex items-center gap-2 text-body-medium border border-outline rounded-sm px-3 py-1.5 text-surface-on bg-surface">
                       <span>{icon}</span>
-                      <span>{s.count}</span>
+                      <span className="font-medium">{s.count}</span>
                     </span>
                   </a>
                 )

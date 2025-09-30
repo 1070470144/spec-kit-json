@@ -8,10 +8,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isLogin = pathname === '/admin/login'
   if (isLogin) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--m3-bg)]">
-        <div className="w-full max-w-md card">
-          <div className="card-body">
-            <div className="card-title">管理员登录</div>
+      <div className="auth-hero">
+        <div className="w-full max-w-md glass-card">
+          <div className="p-8">
+            <h1 className="text-display-small font-semibold text-surface-on mb-2 text-center">
+              管理员后台
+            </h1>
             {children}
           </div>
         </div>
@@ -19,21 +21,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     )
   }
   return (
-    <div className="min-h-screen grid md:grid-cols-[260px_1fr]">
-      <aside className="border-r bg-white sticky top-0 h-screen">
-        <div className="p-4 border-b">
-          <div className="text-base font-semibold tracking-wide text-gray-800">管理员面板</div>
+    <div className="min-h-screen grid md:grid-cols-[260px_1fr] bg-[var(--m3-bg)]">
+      <aside className="border-r border-[var(--m3-border)] bg-white sticky top-0 h-screen overflow-y-auto">
+        <div className="p-4 border-b border-[var(--m3-border)]">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+              <span className="text-primary-on text-sm font-bold">管</span>
+            </div>
+            <div>
+              <div className="text-title-medium font-semibold text-surface-on">管理后台</div>
+              <div className="text-body-small text-surface-on-variant">Admin Panel</div>
+            </div>
+          </div>
         </div>
         <div className="p-3">
           <AdminSidebar />
         </div>
       </aside>
       <section className="p-0" data-admin="true">
-        <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex items-center">
-          <div className="text-base font-semibold tracking-wide text-gray-800">控制台</div>
-          <AdminUserMenu />
+        <div className="sticky top-0 z-10 bg-white border-b border-[var(--m3-border)] px-6 py-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="text-headline-small font-semibold text-surface-on">控制台</div>
+            <AdminUserMenu />
+          </div>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-6">
           {children}
         </div>
       </section>

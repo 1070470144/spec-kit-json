@@ -18,7 +18,13 @@ export async function POST(req: Request) {
     const token = crypto.randomBytes(24).toString('hex')
     const expiresAt = new Date(Date.now() + 2 * 3600 * 1000)
     await prisma.passwordResetToken.create({ data: { userId: user.id, token, expiresAt } })
-    const base = process.env.APP_BASE_URL || 'http://localhost:3000'
+    
+    // 获取 Base URL，自动添加协议前缀
+    let base = process.env.APP_BASE_URL || 'http://localhost:3000'
+    if (base && !base.startsWith('http://') && !base.startsWith('https://')) {
+      base = `https://${base}`
+    }
+    
     const link = `${base}/reset/${token}`
     await sendMail({ to: email, subject: '重置密码', text: `点击链接重置：\n${link}` })
   }

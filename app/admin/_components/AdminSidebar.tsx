@@ -69,7 +69,7 @@ export default function AdminSidebar() {
   }
 
   return (
-    <nav className="flex flex-col space-y-1">
+    <nav className="flex flex-col space-y-1" role="navigation" aria-label="管理员导航">
       {sections.map(section => {
         if (section.href && !section.children) {
           const active = isActive(section.href)
@@ -77,9 +77,10 @@ export default function AdminSidebar() {
             <Link
               key={section.label}
               href={section.href}
-              className={`relative px-3 py-2 rounded-lg transition-colors hover:bg-blue-50/60 focus:outline-none focus:ring-2 focus:ring-blue-200 ${active ? 'bg-blue-100 text-blue-800 font-medium' : 'text-gray-700'}`}
+              className={`relative px-3 py-2.5 rounded-lg text-body-medium transition-all duration-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-primary/20 ${active ? 'bg-blue-100 text-blue-800 font-semibold shadow-sm' : 'text-surface-on hover:text-primary'}`}
+              aria-current={active ? 'page' : undefined}
             >
-              {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 bg-[var(--m3-primary)] rounded-r" />}
+              {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-primary rounded-r" />}
               {section.label}
             </Link>
           )
@@ -93,23 +94,33 @@ export default function AdminSidebar() {
             <button
               type="button"
               onClick={() => setOpenSections(s => ({ ...s, [section.label]: !open }))}
-              className={`relative w-full text-left px-3 py-2 rounded-lg transition-colors hover:bg-blue-50/60 focus:outline-none focus:ring-2 focus:ring-blue-200 flex items-center justify-between ${activeChild ? 'bg-blue-100 text-blue-800 font-medium' : 'text-gray-700'}`}
+              className={`relative w-full text-left px-3 py-2.5 rounded-lg text-body-medium transition-all duration-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-primary/20 flex items-center justify-between ${activeChild ? 'bg-blue-100 text-blue-800 font-semibold shadow-sm' : 'text-surface-on hover:text-primary'}`}
+              aria-expanded={open}
+              aria-label={`${section.label} 菜单`}
             >
-              {activeChild && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 bg-[var(--m3-primary)] rounded-r" />}
-              <span>{section.label}</span>
-              <span className="ml-2 text-gray-500">{open ? '▾' : '▸'}</span>
+              {activeChild && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-primary rounded-r" />}
+              <span className="font-medium">{section.label}</span>
+              <svg 
+                className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-90' : ''}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
             {open && (
-              <div className="ml-2 mt-1 flex flex-col space-y-1 border-l border-[var(--m3-border)] pl-2">
+              <div className="ml-3 mt-1 flex flex-col space-y-0.5 border-l-2 border-blue-100 pl-3">
                 {section.children?.map(child => {
                   const childActive = isActive(child.href)
                   return (
                     <Link
                       key={child.href}
                       href={child.href}
-                      className={`relative px-3 py-2 rounded-lg transition-colors hover:bg-blue-50/60 focus:outline-none focus:ring-2 focus:ring-blue-200 ${childActive ? 'bg-blue-100 text-blue-800 font-medium' : 'text-gray-700'}`}
+                      className={`relative px-3 py-2 rounded-lg text-body-small transition-all duration-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-primary/20 ${childActive ? 'bg-blue-100 text-blue-800 font-semibold' : 'text-surface-on-variant hover:text-primary'}`}
+                      aria-current={childActive ? 'page' : undefined}
                     >
-                      {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-1 bg-[var(--m3-primary)] rounded-r" />}
+                      {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 bg-primary rounded-r" />}
                       {child.label}
                     </Link>
                   )

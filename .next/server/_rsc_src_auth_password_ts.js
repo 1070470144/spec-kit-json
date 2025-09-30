@@ -1,0 +1,25 @@
+"use strict";
+/*
+ * ATTENTION: An "eval-source-map" devtool has been used.
+ * This devtool is neither made for production nor for readable output files.
+ * It uses "eval()" calls to create a separate source file with attached SourceMaps in the browser devtools.
+ * If you are trying to read the output file, select a different devtool (https://webpack.js.org/configuration/devtool/)
+ * or disable the default devtool with "devtool: false".
+ * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
+ */
+exports.id = "_rsc_src_auth_password_ts";
+exports.ids = ["_rsc_src_auth_password_ts"];
+exports.modules = {
+
+/***/ "(rsc)/./src/auth/password.ts":
+/*!******************************!*\
+  !*** ./src/auth/password.ts ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   hashPassword: () => (/* binding */ hashPassword),\n/* harmony export */   verifyPassword: () => (/* binding */ verifyPassword)\n/* harmony export */ });\n/* harmony import */ var crypto__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! crypto */ \"crypto\");\n/* harmony import */ var crypto__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(crypto__WEBPACK_IMPORTED_MODULE_0__);\n\nconst ITERATIONS = 100000;\nconst KEYLEN = 32;\nconst DIGEST = 'sha256';\nfunction hashPassword(password) {\n    const salt = crypto__WEBPACK_IMPORTED_MODULE_0___default().randomBytes(16);\n    const derived = crypto__WEBPACK_IMPORTED_MODULE_0___default().pbkdf2Sync(password, salt, ITERATIONS, KEYLEN, DIGEST);\n    return `${ITERATIONS}.${salt.toString('hex')}.${derived.toString('hex')}`;\n}\nfunction verifyPassword(password, stored) {\n    const [iterStr, saltHex, hashHex] = stored.split('.');\n    const iterations = Number(iterStr);\n    const salt = Buffer.from(saltHex, 'hex');\n    const expected = Buffer.from(hashHex, 'hex');\n    const derived = crypto__WEBPACK_IMPORTED_MODULE_0___default().pbkdf2Sync(password, salt, iterations, expected.length, DIGEST);\n    return crypto__WEBPACK_IMPORTED_MODULE_0___default().timingSafeEqual(derived, expected);\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9zcmMvYXV0aC9wYXNzd29yZC50cyIsIm1hcHBpbmdzIjoiOzs7Ozs7O0FBQTJCO0FBRTNCLE1BQU1DLGFBQWE7QUFDbkIsTUFBTUMsU0FBUztBQUNmLE1BQU1DLFNBQVM7QUFFUixTQUFTQyxhQUFhQyxRQUFnQjtJQUMzQyxNQUFNQyxPQUFPTix5REFBa0IsQ0FBQztJQUNoQyxNQUFNUSxVQUFVUix3REFBaUIsQ0FBQ0ssVUFBVUMsTUFBTUwsWUFBWUMsUUFBUUM7SUFDdEUsT0FBTyxHQUFHRixXQUFXLENBQUMsRUFBRUssS0FBS0ksUUFBUSxDQUFDLE9BQU8sQ0FBQyxFQUFFRixRQUFRRSxRQUFRLENBQUMsUUFBUTtBQUMzRTtBQUVPLFNBQVNDLGVBQWVOLFFBQWdCLEVBQUVPLE1BQWM7SUFDN0QsTUFBTSxDQUFDQyxTQUFTQyxTQUFTQyxRQUFRLEdBQUdILE9BQU9JLEtBQUssQ0FBQztJQUNqRCxNQUFNQyxhQUFhQyxPQUFPTDtJQUMxQixNQUFNUCxPQUFPYSxPQUFPQyxJQUFJLENBQUNOLFNBQVM7SUFDbEMsTUFBTU8sV0FBV0YsT0FBT0MsSUFBSSxDQUFDTCxTQUFTO0lBQ3RDLE1BQU1QLFVBQVVSLHdEQUFpQixDQUFDSyxVQUFVQyxNQUFNVyxZQUFZSSxTQUFTQyxNQUFNLEVBQUVuQjtJQUMvRSxPQUFPSCw2REFBc0IsQ0FBQ1EsU0FBU2E7QUFDekMiLCJzb3VyY2VzIjpbIkQ6XFx4dWVcXHRlc3Qtc3BlYy1wcm9cXHh1ZXJhbi1qdWJlbi1wcm9qZWN0XFxzcmNcXGF1dGhcXHBhc3N3b3JkLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBjcnlwdG8gZnJvbSAnY3J5cHRvJ1xyXG5cclxuY29uc3QgSVRFUkFUSU9OUyA9IDEwMF8wMDBcclxuY29uc3QgS0VZTEVOID0gMzJcclxuY29uc3QgRElHRVNUID0gJ3NoYTI1NidcclxuXHJcbmV4cG9ydCBmdW5jdGlvbiBoYXNoUGFzc3dvcmQocGFzc3dvcmQ6IHN0cmluZyk6IHN0cmluZyB7XHJcbiAgY29uc3Qgc2FsdCA9IGNyeXB0by5yYW5kb21CeXRlcygxNilcclxuICBjb25zdCBkZXJpdmVkID0gY3J5cHRvLnBia2RmMlN5bmMocGFzc3dvcmQsIHNhbHQsIElURVJBVElPTlMsIEtFWUxFTiwgRElHRVNUKVxyXG4gIHJldHVybiBgJHtJVEVSQVRJT05TfS4ke3NhbHQudG9TdHJpbmcoJ2hleCcpfS4ke2Rlcml2ZWQudG9TdHJpbmcoJ2hleCcpfWBcclxufVxyXG5cclxuZXhwb3J0IGZ1bmN0aW9uIHZlcmlmeVBhc3N3b3JkKHBhc3N3b3JkOiBzdHJpbmcsIHN0b3JlZDogc3RyaW5nKTogYm9vbGVhbiB7XHJcbiAgY29uc3QgW2l0ZXJTdHIsIHNhbHRIZXgsIGhhc2hIZXhdID0gc3RvcmVkLnNwbGl0KCcuJylcclxuICBjb25zdCBpdGVyYXRpb25zID0gTnVtYmVyKGl0ZXJTdHIpXHJcbiAgY29uc3Qgc2FsdCA9IEJ1ZmZlci5mcm9tKHNhbHRIZXgsICdoZXgnKVxyXG4gIGNvbnN0IGV4cGVjdGVkID0gQnVmZmVyLmZyb20oaGFzaEhleCwgJ2hleCcpXHJcbiAgY29uc3QgZGVyaXZlZCA9IGNyeXB0by5wYmtkZjJTeW5jKHBhc3N3b3JkLCBzYWx0LCBpdGVyYXRpb25zLCBleHBlY3RlZC5sZW5ndGgsIERJR0VTVClcclxuICByZXR1cm4gY3J5cHRvLnRpbWluZ1NhZmVFcXVhbChkZXJpdmVkLCBleHBlY3RlZClcclxufVxyXG4iXSwibmFtZXMiOlsiY3J5cHRvIiwiSVRFUkFUSU9OUyIsIktFWUxFTiIsIkRJR0VTVCIsImhhc2hQYXNzd29yZCIsInBhc3N3b3JkIiwic2FsdCIsInJhbmRvbUJ5dGVzIiwiZGVyaXZlZCIsInBia2RmMlN5bmMiLCJ0b1N0cmluZyIsInZlcmlmeVBhc3N3b3JkIiwic3RvcmVkIiwiaXRlclN0ciIsInNhbHRIZXgiLCJoYXNoSGV4Iiwic3BsaXQiLCJpdGVyYXRpb25zIiwiTnVtYmVyIiwiQnVmZmVyIiwiZnJvbSIsImV4cGVjdGVkIiwibGVuZ3RoIiwidGltaW5nU2FmZUVxdWFsIl0sImlnbm9yZUxpc3QiOltdLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///(rsc)/./src/auth/password.ts\n");
+
+/***/ })
+
+};
+;

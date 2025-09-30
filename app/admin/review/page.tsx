@@ -21,39 +21,88 @@ export default async function ReviewPage({ searchParams }: { searchParams?: Prom
   const pageSize = 50
   const { items: pending, total } = await fetchByState('pending', page, pageSize)
   return (
-    <div className="container-page section">
+    <div className="space-y-6">
       <div className="card">
         <div className="card-body">
-          <div className="card-title">剧本审核</div>
-          <div className="mb-3">
-            <form action={async () => {
-              'use server'
-              const h = await headers()
-              const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
-              const proto = h.get('x-forwarded-proto') || 'http'
-              const base = `${proto}://${host}`
-              const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ')
-              await fetch(`${base}/api/admin/review/approve-all`, { method: 'POST', headers: { cookie: cookieHeader } })
-              revalidatePath('/admin/review')
-            }}>
-              <button className={`btn ${pending && pending.length ? 'btn-primary' : 'btn-outline'} `} type="submit" disabled={!pending || pending.length === 0}>一键通过全部待审核</button>
-            </form>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-headline-medium font-semibold text-surface-on">剧本审核</h1>
+              <p className="text-body-small text-surface-on-variant mt-1">
+                审核用户提交的剧本，决定是否发布
+              </p>
+            </div>
+            {pending && pending.length > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                <span className="text-body-small font-medium text-blue-800">
+                  {pending.length} 个待审核
+                </span>
+              </div>
+            )}
           </div>
-          {(!pending || pending.length === 0) && (
-            <div className="muted">暂无待审核的剧本</div>
-          )}
+
           {pending && pending.length > 0 && (
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mb-4">
+              <form action={async () => {
+                'use server'
+                const h = await headers()
+                const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
+                const proto = h.get('x-forwarded-proto') || 'http'
+                const base = `${proto}://${host}`
+                const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ')
+                await fetch(`${base}/api/admin/review/approve-all`, { method: 'POST', headers: { cookie: cookieHeader } })
+                revalidatePath('/admin/review')
+              }}>
+                <button className="m3-btn-outlined" type="submit">
+                  一键通过全部待审核
+                </button>
+              </form>
+            </div>
+          )}
+
+          {(!pending || pending.length === 0) && (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-50 flex items-center justify-center">
+                <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div className="text-title-medium font-medium text-surface-on mb-1">
+                全部审核完成
+              </div>
+              <div className="text-body-small text-surface-on-variant">
+                暂无待审核的剧本
+              </div>
+            </div>
+          )}
+
+          {pending && pending.length > 0 && (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {pending.map(i => (
                 <ReviewItem key={i.id} id={i.id} title={i.title} author={(i as any).authorName} />
               ))}
             </div>
           )}
+
           {total > pageSize && (
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <a className={`btn btn-outline ${page<=1?'opacity-60 pointer-events-none':''}`} href={`/admin/review?page=${Math.max(1,page-1)}`}>上一页</a>
-              <span className="muted">第 {page} 页 / 共 {Math.ceil(total/pageSize)} 页</span>
-              <a className={`btn btn-outline ${page>=Math.ceil(total/pageSize)?'opacity-60 pointer-events-none':''}`} href={`/admin/review?page=${page+1}`}>下一页</a>
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <a 
+                className={`m3-btn-outlined ${page<=1?'opacity-60 pointer-events-none':''}`} 
+                href={`/admin/review?page=${Math.max(1,page-1)}`}
+                aria-label="上一页"
+              >
+                上一页
+              </a>
+              <span className="text-body-medium text-surface-on-variant px-4">
+                第 {page} / {Math.ceil(total/pageSize)} 页
+              </span>
+              <a 
+                className={`m3-btn-outlined ${page>=Math.ceil(total/pageSize)?'opacity-60 pointer-events-none':''}`} 
+                href={`/admin/review?page=${page+1}`}
+                aria-label="下一页"
+              >
+                下一页
+              </a>
             </div>
           )}
         </div>

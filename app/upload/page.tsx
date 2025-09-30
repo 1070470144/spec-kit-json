@@ -70,59 +70,93 @@ export default function UploadPage() {
   return (
     <div className="container-page section">
       <div className="max-w-3xl">
-        <h1 className="text-2xl font-semibold">上传剧本</h1>
-        <p className="subtitle mt-1">支持 JSON 文件与 0–3 张图片（JPG/PNG/WebP）。</p>
+        <h1 className="text-headline-small mb-2 text-surface-on">上传剧本</h1>
+        <p className="text-body-medium text-surface-on-variant">支持 JSON 文件与 0–3 张图片（JPG/PNG/WebP）。</p>
       </div>
 
-      <div className="glass-card max-w-3xl">
-        <div className="card-body space-y-5">
+      <div className="m3-card-elevated max-w-3xl mt-6">
+        <div className="p-6 space-y-6">
           {toast && (
-            <div className={`rounded-lg border px-3 py-2 text-sm ${
+            <div className={`rounded-sm border px-4 py-3 text-body-small ${
               toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' : toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'
             }`}>
               {toast.text}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex items-center gap-4">
-              <label className="w-28 text-sm text-gray-700">名字（标题）</label>
-              <input className="input flex-1" placeholder="例如：隐舟暗渡" value={title} onChange={e=>setTitle(e.target.value)} />
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <label htmlFor="title" className="sm:w-32 text-body-medium text-surface-on font-medium">名字（标题）<span className="text-error">*</span></label>
+              <input 
+                id="title"
+                className="input flex-1" 
+                placeholder="例如：隐舟暗渡" 
+                value={title} 
+                onChange={e=>setTitle(e.target.value)}
+                required
+              />
             </div>
-            <div className="flex items-center gap-4">
-              <label className="w-28 text-sm text-gray-700">作者（可选）</label>
-              <input className="input flex-1" placeholder="作者名" value={authorName} onChange={e=>setAuthorName(e.target.value)} />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <label htmlFor="author" className="sm:w-32 text-body-medium text-surface-on font-medium">作者（可选）</label>
+              <input 
+                id="author"
+                className="input flex-1" 
+                placeholder="作者名" 
+                value={authorName} 
+                onChange={e=>setAuthorName(e.target.value)} 
+              />
             </div>
-            <div className="flex items-center gap-4">
-              <label className="w-28 text-sm text-gray-700">剧本 JSON</label>
-              <div className="flex items-center gap-2 flex-1">
-                <input ref={jsonRef} className="hidden" type="file" accept="application/json" onChange={onPickJson} />
-                <button type="button" className="btn btn-outline" onClick={() => jsonRef.current?.click()}>选择文件</button>
-                <span className="muted truncate">{jsonFile ? jsonFile.name : '未选择'}</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <label htmlFor="json-file" className="sm:w-32 text-body-medium text-surface-on font-medium">剧本 JSON<span className="text-error">*</span></label>
+              <div className="flex items-center gap-3 flex-1">
+                <input 
+                  ref={jsonRef} 
+                  id="json-file"
+                  className="hidden" 
+                  type="file" 
+                  accept="application/json" 
+                  onChange={onPickJson} 
+                />
+                <button type="button" className="m3-btn-outlined" onClick={() => jsonRef.current?.click()}>选择文件</button>
+                <span className="text-body-small text-surface-on-variant truncate flex-1">
+                  {jsonFile ? jsonFile.name : '未选择'}
+                </span>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <label className="w-28 text-sm text-gray-700 mt-2">图片（0–3）</label>
+            <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+              <label htmlFor="images-file" className="sm:w-32 text-body-medium text-surface-on font-medium sm:mt-2">图片（0–3）</label>
               <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <input ref={imagesRef} className="hidden" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={onPickImages} />
-                  <button type="button" className="btn btn-outline" onClick={() => imagesRef.current?.click()}>选择图片</button>
-                  <span className="muted">{images.length ? `已选 ${images.length} 张` : '未选择'}</span>
+                <div className="flex items-center gap-3">
+                  <input 
+                    ref={imagesRef} 
+                    id="images-file"
+                    className="hidden" 
+                    type="file" 
+                    accept="image/jpeg,image/png,image/webp" 
+                    multiple 
+                    onChange={onPickImages} 
+                  />
+                  <button type="button" className="m3-btn-outlined" onClick={() => imagesRef.current?.click()}>选择图片</button>
+                  <span className="text-body-small text-surface-on-variant">
+                    {images.length ? `已选 ${images.length} 张` : '未选择'}
+                  </span>
                 </div>
                 {!!imgPreviews.length && (
-                  <div className="grid grid-cols-3 gap-3 mt-2">
+                  <div className="grid grid-cols-3 gap-3 mt-4">
                     {imgPreviews.map((src, i) => (
-                      <img key={i} src={src} alt="预览" className="rounded border bg-white object-cover w-full h-24" />
+                      <div key={i} className="m3-card-elevated overflow-hidden">
+                        <img src={src} alt={`预览 ${i+1}`} className="object-cover w-full h-24" />
+                      </div>
                     ))}
                   </div>
                 )}
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <button className="btn btn-primary" type="submit" disabled={!title || !jsonFile || loading}>
+            <div className="flex justify-end gap-3 pt-4">
+              <a className="m3-btn-text" href="/scripts">返回列表</a>
+              <button className="m3-btn-filled" type="submit" disabled={!title || !jsonFile || loading}>
                 {loading ? '提交中…' : '提交'}
               </button>
-              <a className="btn btn-outline" href="/scripts">返回列表</a>
             </div>
           </form>
         </div>

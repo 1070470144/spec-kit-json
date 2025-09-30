@@ -111,26 +111,46 @@ export default function ScriptCardActions({ id, initial }: { id: string; initial
   }
 
   return (
-    <div id={`script-actions-${id}`} className="flex flex-col gap-2">
+    <div id={`script-actions-${id}`} className="flex flex-col gap-3">
       {toast && (
-        <div className={`rounded-lg border px-3 py-2 text-sm ${
+        <div className={`rounded-sm border px-3 py-2 text-body-small ${
           toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' : toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'
         }`}>
           {toast.text}
         </div>
       )}
-      <div className="flex items-center justify-between">
-        <a className="btn btn-outline" href={`/scripts/${id}`}>查看详情</a>
-        <div className="flex items-center gap-2">
-          <button className={`btn ${stats?.liked ? 'btn-primary' : 'btn-outline'}`} onClick={toggleLike} disabled={loading}>
-            👍 {stats?.likes ?? ''}
+      <div className="flex items-center justify-between gap-2">
+        <a className="m3-btn-outlined flex-1 text-center" href={`/scripts/${id}`}>查看详情</a>
+        <div className="flex items-center gap-1">
+          <button 
+            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-sm text-body-small transition-all duration-standard ${
+              stats?.liked 
+                ? 'bg-primary text-primary-on' 
+                : 'border border-outline text-surface-on hover:bg-surface-variant'
+            }`}
+            onClick={toggleLike} 
+            disabled={loading}
+            aria-label={stats?.liked ? '取消点赞' : '点赞'}
+          >
+            <span>👍</span>
+            <span>{stats?.likes ?? 0}</span>
           </button>
-          <button className={`btn ${stats?.favorited ? 'btn-primary' : 'btn-outline'}`} onClick={toggleFav} disabled={loading}>
-            ⭐ {stats?.favorites ?? ''}
+          <button 
+            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-sm text-body-small transition-all duration-standard ${
+              stats?.favorited 
+                ? 'bg-primary text-primary-on' 
+                : 'border border-outline text-surface-on hover:bg-surface-variant'
+            }`}
+            onClick={toggleFav} 
+            disabled={loading}
+            aria-label={stats?.favorited ? '取消收藏' : '收藏'}
+          >
+            <span>⭐</span>
+            <span>{stats?.favorites ?? 0}</span>
           </button>
         </div>
       </div>
-      {msg && <div className="muted">{msg}</div>}
+      {msg && <div className="text-body-small text-error">{msg}</div>}
     </div>
   )
 }

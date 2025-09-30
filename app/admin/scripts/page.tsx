@@ -23,34 +23,91 @@ export default async function AdminScriptsManagePage({ searchParams }: { searchP
   const { items, total, page, pageSize } = await fetchScripts(state, pageNum)
   const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize))
   const makeHref = (p: number) => `/admin/scripts?${new URLSearchParams({ ...(state ? { state } : {}), page: String(p) }).toString()}`
+  
   return (
-    <div className="container-page section">
+    <div className="space-y-6">
       <div className="card">
         <div className="card-body">
-          <div className="card-title flex items-center justify-between">
-            <span>剧本列表</span>
-            {/* 客户端按钮处理确认与请求 */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-headline-medium font-semibold text-surface-on">剧本列表</h1>
+              <p className="text-body-small text-surface-on-variant mt-1">
+                管理所有剧本，查看已发布和已废弃的剧本
+              </p>
+            </div>
             <DeleteAllScriptsButton />
           </div>
-          <div className="mb-3 flex items-center gap-2">
-            <a className={`btn ${!state ? 'btn-primary' : 'btn-outline'}`} href="/admin/scripts">已发布</a>
-            <a className={`btn ${state==='abandoned' ? 'btn-primary' : 'btn-outline'}`} href="/admin/scripts?state=abandoned">仅已废弃</a>
+
+          <div className="mb-4 inline-flex rounded-lg border border-outline overflow-hidden" role="group" aria-label="状态筛选">
+            <a 
+              className={`px-4 py-2 text-label-large transition-colors ${
+                !state 
+                  ? 'bg-primary text-primary-on font-medium' 
+                  : 'bg-surface text-surface-on hover:bg-surface-variant'
+              }`} 
+              href="/admin/scripts"
+            >
+              已发布
+            </a>
+            <a 
+              className={`px-4 py-2 text-label-large border-l border-outline transition-colors ${
+                state==='abandoned' 
+                  ? 'bg-primary text-primary-on font-medium' 
+                  : 'bg-surface text-surface-on hover:bg-surface-variant'
+              }`} 
+              href="/admin/scripts?state=abandoned"
+            >
+              已废弃
+            </a>
           </div>
-        {!items?.length && <div className="muted">暂无剧本</div>}
-        {!!items?.length && (
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+
+          {!items?.length && (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-50 flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div className="text-title-medium font-medium text-surface-on mb-1">
+                暂无剧本
+              </div>
+              <div className="text-body-small text-surface-on-variant">
+                {state === 'abandoned' ? '没有已废弃的剧本' : '还没有已发布的剧本'}
+              </div>
+            </div>
+          )}
+
+          {!!items?.length && (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {items.map(s => (
                 <AdminScriptItem key={s.id} item={s} />
               ))}
             </div>
-        )}
-        {totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <a className="btn btn-outline" href={makeHref(Math.max(1, page-1))} aria-disabled={page<=1}>上一页</a>
-            <span className="text-sm text-gray-600">第 {page} / {totalPages} 页（共 {total} 条）</span>
-            <a className="btn btn-outline" href={makeHref(Math.min(totalPages, page+1))} aria-disabled={page>=totalPages}>下一页</a>
-          </div>
-        )}
+          )}
+
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <a 
+                className={`m3-btn-outlined ${page<=1?'opacity-60 pointer-events-none':''}`} 
+                href={makeHref(Math.max(1, page-1))}
+                aria-label="上一页"
+                aria-disabled={page<=1}
+              >
+                上一页
+              </a>
+              <span className="text-body-medium text-surface-on-variant px-4">
+                第 {page} / {totalPages} 页 · 共 {total} 条
+              </span>
+              <a 
+                className={`m3-btn-outlined ${page>=totalPages?'opacity-60 pointer-events-none':''}`} 
+                href={makeHref(Math.min(totalPages, page+1))}
+                aria-label="下一页"
+                aria-disabled={page>=totalPages}
+              >
+                下一页
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

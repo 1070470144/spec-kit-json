@@ -99,57 +99,90 @@ export default function RegisterPage() {
   return (
     <div className="auth-hero">
       <div className="glass-card w-full max-w-xl">
-        <div className="card-body space-y-7">
+        <div className="p-6 space-y-6">
           {toast && (
-            <div className={`rounded-lg border px-3 py-2 text-sm ${
+            <div className={`rounded-sm border px-4 py-3 text-body-small ${
               toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' : toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'
             }`}>
               {toast.text}
             </div>
           )}
           <div>
-            <h1 className="text-3xl font-semibold">创建账户</h1>
-            <p className="subtitle mt-1">输入邮箱与密码，提交后输入邮箱验证码完成验证。</p>
+            <h1 className="text-display-small text-surface-on mb-2">创建账户</h1>
+            <p className="text-body-medium text-surface-on-variant">输入邮箱与密码，提交后输入邮箱验证码完成验证。</p>
           </div>
           {closed && (
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 text-yellow-800 px-3 py-2 text-sm">注册已关闭，请联系管理员开启。</div>
+            <div className="rounded-sm border border-yellow-200 bg-yellow-50 text-yellow-800 px-4 py-3 text-body-small">
+              注册已关闭，请联系管理员开启。
+            </div>
           )}
-          <div className="space-y-4 opacity-100">
+          <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium mb-1">邮箱</label>
-              <input className="input" placeholder="name@example.com" value={email} onChange={e=>setEmail(e.target.value)} />
-              <p className="subtitle mt-1">我们会向该邮箱发送 6 位验证码。</p>
+              <label htmlFor="email" className="block text-body-medium font-medium text-surface-on mb-2">邮箱</label>
+              <input 
+                id="email"
+                className="input" 
+                type="email"
+                placeholder="name@example.com" 
+                value={email} 
+                onChange={e=>setEmail(e.target.value)}
+                autoComplete="email"
+              />
+              <p className="text-body-small text-surface-on-variant mt-1.5">我们会向该邮箱发送 6 位验证码。</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">密码</label>
-              <input className="input" type="password" placeholder="至少 6 位" value={password} onChange={e=>setPassword(e.target.value)} />
+              <label htmlFor="password" className="block text-body-medium font-medium text-surface-on mb-2">密码</label>
+              <input 
+                id="password"
+                className="input" 
+                type="password" 
+                placeholder="至少 6 位" 
+                value={password} 
+                onChange={e=>setPassword(e.target.value)}
+                autoComplete="new-password"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">昵称（可选）</label>
-              <input className="input" placeholder="你的昵称" value={nickname} onChange={e=>setNickname(e.target.value)} />
+              <label htmlFor="nickname" className="block text-body-medium font-medium text-surface-on mb-2">昵称（可选）</label>
+              <input 
+                id="nickname"
+                className="input" 
+                placeholder="你的昵称" 
+                value={nickname} 
+                onChange={e=>setNickname(e.target.value)}
+                autoComplete="nickname"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">验证码</label>
+              <label htmlFor="code" className="block text-body-medium font-medium text-surface-on mb-2">验证码</label>
               <div className="flex gap-2">
-                <input className="input flex-1" placeholder="6 位数字" value={code} onChange={e=>setCode(e.target.value)} />
+                <input 
+                  id="code"
+                  className="input flex-1" 
+                  placeholder="6 位数字" 
+                  value={code} 
+                  onChange={e=>setCode(e.target.value)}
+                  maxLength={6}
+                />
                 {!verified ? (
-                  <button className="btn btn-outline" type="button" onClick={onSendCode} disabled={cooldownSec > 0 || !!closed}>
+                  <button className="m3-btn-outlined whitespace-nowrap" type="button" onClick={onSendCode} disabled={cooldownSec > 0 || !!closed}>
                     {cooldownSec > 0 ? `${cooldownSec}s` : '发送验证码'}
                   </button>
                 ) : (
-                  <span className="muted px-2 self-center">已验证</span>
+                  <span className="text-body-small text-surface-on-variant px-2 self-center">已验证</span>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 pt-2">
-            <button className="btn btn-primary" type="button" onClick={onVerify} disabled={!email || code.length !== 6 || !!closed}>注册</button>
-            <a className="btn" href="/login">去登录</a>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <button className="m3-btn-filled" type="button" onClick={onVerify} disabled={!email || code.length !== 6 || !!closed}>
+              注册
+            </button>
+            <a className="m3-btn-text" href="/login">去登录</a>
           </div>
         </div>
       </div>
-      {/* 统一使用顶部 Toast 提示，移除页面底部提示 */}
     </div>
   )
 }

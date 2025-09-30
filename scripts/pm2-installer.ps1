@@ -95,7 +95,8 @@ function Step-Build($cfg){
   T 'INSTALL & BUILD'
   Push-Location $cfg.DeployDir
   npm ci
-  npx prisma migrate deploy
+  npx prisma db push  # 只同步结构，不清空数据（替代 migrate deploy）
+  npx prisma generate
   npm run build
   Pop-Location
   OK 'build done'
@@ -125,6 +126,23 @@ function Step-Start($cfg){
 function Step-Restart($cfg){ T 'RESTART PM2'; npx pm2 restart juben; OK 'pm2 restarted' }
 function Step-Stop($cfg){ T 'STOP PM2'; npx pm2 stop juben; OK 'pm2 stopped' }
 function Step-Logs($cfg){ T 'LOGS (Ctrl+C to exit)'; npx pm2 logs juben }
+
+function Step-OneKeyUpdate($cfg){
+  T 'ONE-KEY UPDATE (7->9->3->4->6)'
+  Info 'Steps: Stop -> Backup -> Pull -> Build -> Restart'
+  $confirm = Read-Host 'Continue? (y/n)'
+  if($confirm -ne 'y'){ Info 'Cancelled'; return }
+  
+  Step-Stop $cfg
+  Step-Backup $cfg
+  Step-CheckTools
+  Step-CloneOrPull $cfg
+  Step-Build $cfg
+  Step-Restart $cfg
+  
+  OK 'Update completed successfully!'
+  Info 'Check logs via menu option 8 if needed'
+}
 
 function Step-Backup($cfg){
   T 'BACKUP uploads & SQLite'
@@ -196,6 +214,7 @@ function Menu(){
     Write-Host '9) backup uploads/sqlite'
     Write-Host '10) enable portproxy 80 -> APP_PORT'
     Write-Host '11) disable portproxy 80'
+    Write-Host '12) one-key update (7->9->3->4->6)' -ForegroundColor Green
     Write-Host '0) exit'
     $sel = Read-Host 'select'
     switch($sel){
@@ -210,6 +229,7 @@ function Menu(){
       '9' { Step-Backup $cfg; continue }
       '10' { Step-EnablePortProxy $cfg; continue }
       '11' { Step-DisablePortProxy; continue }
+      '12' { Step-OneKeyUpdate $cfg; continue }
       '0' { break }
       default { Info 'invalid option'; Start-Sleep -Seconds 1 }
     }

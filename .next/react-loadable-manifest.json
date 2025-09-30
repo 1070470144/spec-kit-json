@@ -1,4 +1,10 @@
 {
+  "app\\admin\\_components\\ScriptsAnalyticsCharts.tsx -> chart.js/auto": {
+    "id": "app\\admin\\_components\\ScriptsAnalyticsCharts.tsx -> chart.js/auto",
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_chart_js_auto_auto_js.js"
+    ]
+  },
   "node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": {
     "id": "node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts",
     "files": [

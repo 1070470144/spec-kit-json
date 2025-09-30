@@ -35,38 +35,56 @@ export default async function ScriptsPage({ searchParams }: { searchParams?: Pro
   const makeHref = (p: number) => `/scripts?${new URLSearchParams({ page: String(p), ...(q ? { q } : {}) }).toString()}`
   return (
     <div className="container-page section">
-      <h1 className="text-2xl font-semibold">剧本列表</h1>
-      <form className="flex gap-2" action="/scripts" method="get">
-        <input className="input" name="q" placeholder="搜索剧本标题..." defaultValue={q} />
+      <h1 className="text-headline-small mb-6 text-surface-on">剧本列表</h1>
+      <form className="flex gap-3 mb-6" action="/scripts" method="get">
+        <input 
+          className="input flex-1" 
+          name="q" 
+          placeholder="搜索剧本标题..." 
+          defaultValue={q}
+          aria-label="搜索剧本"
+        />
         {/* 重置到第 1 页 */}
         <input type="hidden" name="page" value="1" />
-        <button className="btn btn-primary" type="submit">搜索</button>
-        {q && <a className="btn btn-outline" href="/scripts">清除</a>}
+        <button className="m3-btn-filled" type="submit">搜索</button>
+        {q && <a className="m3-btn-text" href="/scripts">清除</a>}
       </form>
-      <div className="grid-cards">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* 预取当前页所有脚本的统计，子组件从缓存读取，避免 N 次独立请求 */}
         <script
           dangerouslySetInnerHTML={{ __html: `window.dispatchEvent(new CustomEvent('scripts:prefetch-stats',{ detail:{ ids:${JSON.stringify(items.map(i=>i.id))} }}));` }}
         />
         {items.map(i => (
-          <div key={i.id} className="card">
+          <div key={i.id} className="m3-card-elevated overflow-hidden">
             {/* 缩略图轮播 */}
             <ClientCarouselWrapper id={i.id} />
-            <div className="card-body">
-              <div className="card-title">{i.title}</div>
-              <div className="muted">作者：{i.authorName || '-'}</div>
-              <div className="mt-3">
-                <ClientActionsWrapper id={i.id} initial={statsMap[i.id]} />
-              </div>
+            <div className="p-4">
+              <div className="text-title-large mb-1 text-surface-on">{i.title}</div>
+              <div className="text-body-small text-surface-on-variant mb-3">作者：{i.authorName || '-'}</div>
+              <ClientActionsWrapper id={i.id} initial={statsMap[i.id]} />
             </div>
           </div>
         ))}
       </div>
       {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2">
-          <a className="btn btn-outline" href={makeHref(Math.max(1, page-1))} aria-disabled={page<=1}>上一页</a>
-          <span className="text-sm text-gray-600">第 {page} / {totalPages} 页（共 {total} 条）</span>
-          <a className="btn btn-outline" href={makeHref(Math.min(totalPages, page+1))} aria-disabled={page>=totalPages}>下一页</a>
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <a 
+            className={`m3-btn-outlined ${page<=1 ? 'opacity-60 pointer-events-none' : ''}`}
+            href={makeHref(Math.max(1, page-1))} 
+            aria-disabled={page<=1}
+          >
+            上一页
+          </a>
+          <span className="text-body-medium text-surface-on-variant">
+            第 {page} / {totalPages} 页（共 {total} 条）
+          </span>
+          <a 
+            className={`m3-btn-outlined ${page>=totalPages ? 'opacity-60 pointer-events-none' : ''}`}
+            href={makeHref(Math.min(totalPages, page+1))} 
+            aria-disabled={page>=totalPages}
+          >
+            下一页
+          </a>
         </div>
       )}
     </div>
