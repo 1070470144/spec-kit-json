@@ -300,6 +300,21 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/scripts/[id]/page.js"
+    ],
+    "/admin/comments/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/comments/page.js"
+    ],
+    "/api/admin/comments/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/admin/comments/route.js"
+    ],
+    "/api/scripts/[id]/images/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/scripts/[id]/images/route.js"
     ]
   }
 }

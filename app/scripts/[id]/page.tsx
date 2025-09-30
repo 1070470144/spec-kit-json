@@ -1,5 +1,6 @@
 import { headers } from 'next/headers'
 import CenteredImagesWithLightbox from '../_components/CenteredImagesWithLightbox'
+import JsonPreview from './JsonPreview'
 
 type Detail = { id: string; title: string; author?: string | null; state: string; images: { id: string; url: string; isCover?: boolean }[]; json?: unknown }
 
@@ -22,9 +23,9 @@ export default async function ScriptDetailPage({ params }: { params: Promise<{ i
   const jsonPreview = data.json ? JSON.stringify(data.json, null, 2) : null
   
   return (
-    <div className="container-page section space-y-6">
+    <div className="container-page space-y-8 py-8">
       {/* 面包屑导航 */}
-      <nav className="flex items-center gap-2 text-base text-surface-on-variant">
+      <nav className="flex items-center gap-2 text-sm text-surface-on-variant">
         <a href="/" className="hover:text-sky-600 transition-colors">首页</a>
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -36,38 +37,40 @@ export default async function ScriptDetailPage({ params }: { params: Promise<{ i
         <span className="text-surface-on font-medium truncate max-w-md">{data.title}</span>
       </nav>
 
-      {/* 图片展示区 */}
-      <div className="card">
-        <div className="card-body">
-          <CenteredImagesWithLightbox images={displayImages} title={data.title} />
-        </div>
-      </div>
-
-      {/* 剧本信息区 */}
-      <div className="card">
-        <div className="card-body">
-          <div className="mb-6">
-            <h1 className="text-headline-large font-bold text-surface-on mb-3">
+      {/* 主要内容区 - 整合设计 */}
+      <div className="relative overflow-hidden rounded-3xl bg-white border border-gray-100 shadow-2xl">
+        {/* 顶部装饰条 */}
+        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500"></div>
+        
+        <div className="p-8 md:p-12">
+          {/* 图片展示 */}
+          {displayImages.length > 0 && (
+            <div className="mb-8">
+              <CenteredImagesWithLightbox images={displayImages} title={data.title} />
+            </div>
+          )}
+          
+          {/* 标题和信息 */}
+          <div className="mb-8">
+            <h1 className="text-5xl md:text-6xl font-bold text-surface-on mb-4 leading-tight">
               {data.title}
             </h1>
-            <div className="flex items-center gap-4 text-body-medium text-surface-on-variant">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>作者：<span className="text-surface-on font-medium">{data.author || '未知'}</span></span>
-              </div>
+            <div className="flex items-center gap-2 text-lg text-surface-on-variant">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>作者：<span className="text-surface-on font-semibold">{data.author || '未知'}</span></span>
             </div>
           </div>
 
           {/* 操作按钮组 */}
-          <div className="flex items-center gap-3 pb-6 border-b border-outline">
+          <div className="flex flex-wrap items-center gap-4 pb-8 border-b border-gray-200">
             <a 
-              className="m3-btn-filled inline-flex items-center gap-2" 
+              className="m3-btn-filled inline-flex items-center gap-2 text-lg px-10 py-4" 
               href={`${base}/api/scripts/${data.id}/download`} 
               download
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
               下载 JSON
@@ -82,38 +85,25 @@ export default async function ScriptDetailPage({ params }: { params: Promise<{ i
               返回列表
             </a>
           </div>
-        </div>
-      </div>
 
-      {/* JSON 预览区 */}
-      <div className="card">
-        <div className="card-body">
-          <div className="mb-4">
-            <h2 className="text-title-large font-semibold text-surface-on">JSON 内容</h2>
-            <p className="text-body-small text-surface-on-variant mt-1">
-              剧本的 JSON 数据内容预览
-            </p>
-          </div>
-          
-          {jsonPreview ? (
-            <pre className="text-body-small font-mono bg-gray-50 border border-outline rounded-lg p-4 overflow-auto max-h-[32rem] whitespace-pre-wrap break-words">
-              {jsonPreview}
-            </pre>
-          ) : (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-50 flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          {/* JSON 预览 */}
+          <div className="mt-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500/10 to-cyan-500/20 flex items-center justify-center">
+                <svg className="w-6 h-6 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
               </div>
-              <div className="text-title-medium font-medium text-surface-on mb-1">
-                暂无 JSON 内容
-              </div>
-              <div className="text-body-small text-surface-on-variant">
-                该剧本还未上传 JSON 数据
+              <div>
+                <h2 className="text-2xl font-bold text-surface-on">JSON 数据</h2>
+                <p className="text-sm text-surface-on-variant">
+                  剧本的完整 JSON 内容
+                </p>
               </div>
             </div>
-          )}
+            
+            <JsonPreview jsonPreview={jsonPreview} />
+          </div>
         </div>
       </div>
 

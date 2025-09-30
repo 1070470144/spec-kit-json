@@ -18,8 +18,16 @@ export default async function AdminScriptsAnalyticsPage() {
   const likes = data?.topLikes || []
   const favs = data?.topFavorites || []
   return (
-    <div className="container-page section">
-      {/* Client component */}
+    <div className="space-y-6">
+      {/* 页面标题 */}
+      <div>
+        <h1 className="text-headline-medium font-semibold text-surface-on mb-1">剧本分析</h1>
+        <p className="text-body-small text-surface-on-variant">
+          查看最受欢迎的剧本：下载、点赞和收藏排行榜
+        </p>
+      </div>
+
+      {/* 图表组件 */}
       <ScriptsAnalyticsCharts downloads={dls} likes={likes} favorites={favs} />
     </div>
   )

@@ -61,29 +61,71 @@ export default function ScriptsAnalyticsCharts({
   }, [downloads, likes, favorites])
 
   return (
-    <div className="grid gap-6 md:grid-cols-3">
+    <div className="space-y-6">
+      {/* 下载 Top10 - 全宽 */}
       <div className="card">
         <div className="card-body">
-          <div className="card-title">下载 Top10</div>
-          {downloads.length === 0 ? <div className="muted">暂无数据</div> : (
-            <div className="h-72"><canvas ref={dlRef} className="w-full h-full" /></div>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-title-large font-semibold text-surface-on mb-1">下载量排行榜</h3>
+              <p className="text-body-small text-surface-on-variant">最受欢迎的剧本（按下载次数）</p>
+            </div>
+            <div className="px-4 py-2 bg-sky-50 border border-sky-200 rounded-full">
+              <span className="text-sm font-semibold text-sky-700">Top 10</span>
+            </div>
+          </div>
+          {downloads.length === 0 ? (
+            <div className="text-center py-12 text-surface-on-variant">暂无下载数据</div>
+          ) : (
+            <div className="h-96">
+              <canvas ref={dlRef} className="w-full h-full" />
+            </div>
           )}
         </div>
       </div>
-      <div className="card">
-        <div className="card-body">
-          <div className="card-title">点赞 Top10</div>
-          {likes.length === 0 ? <div className="muted">暂无数据</div> : (
-            <div className="h-72"><canvas ref={likeRef} className="w-full h-full" /></div>
-          )}
+
+      {/* 点赞和收藏 - 并排 */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="card">
+          <div className="card-body">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-title-large font-semibold text-surface-on mb-1">点赞排行榜</h3>
+                <p className="text-body-small text-surface-on-variant">最受喜爱的剧本</p>
+              </div>
+              <div className="px-4 py-2 bg-cyan-50 border border-cyan-200 rounded-full">
+                <span className="text-sm font-semibold text-cyan-700">Top 10</span>
+              </div>
+            </div>
+            {likes.length === 0 ? (
+              <div className="text-center py-12 text-surface-on-variant">暂无点赞数据</div>
+            ) : (
+              <div className="h-80">
+                <canvas ref={likeRef} className="w-full h-full" />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      <div className="card">
-        <div className="card-body">
-          <div className="card-title">收藏 Top10</div>
-          {favorites.length === 0 ? <div className="muted">暂无数据</div> : (
-            <div className="h-72"><canvas ref={favRef} className="w-full h-full" /></div>
-          )}
+
+        <div className="card">
+          <div className="card-body">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-title-large font-semibold text-surface-on mb-1">收藏排行榜</h3>
+                <p className="text-body-small text-surface-on-variant">最多收藏的剧本</p>
+              </div>
+              <div className="px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-full">
+                <span className="text-sm font-semibold text-emerald-700">Top 10</span>
+              </div>
+            </div>
+            {favorites.length === 0 ? (
+              <div className="text-center py-12 text-surface-on-variant">暂无收藏数据</div>
+            ) : (
+              <div className="h-80">
+                <canvas ref={favRef} className="w-full h-full" />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
