@@ -24,16 +24,16 @@ export default async function ScriptDetailPage({ params }: { params: Promise<{ i
   return (
     <div className="container-page section space-y-6">
       {/* 面包屑导航 */}
-      <nav className="flex items-center gap-2 text-body-small text-surface-on-variant">
-        <a href="/" className="hover:text-primary transition-colors">首页</a>
+      <nav className="flex items-center gap-2 text-base text-surface-on-variant">
+        <a href="/" className="hover:text-sky-600 transition-colors">首页</a>
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
-        <a href="/scripts" className="hover:text-primary transition-colors">剧本列表</a>
+        <a href="/scripts" className="hover:text-sky-600 transition-colors">剧本列表</a>
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
-        <span className="text-surface-on font-medium">{data.title}</span>
+        <span className="text-surface-on font-medium truncate max-w-md">{data.title}</span>
       </nav>
 
       {/* 图片展示区 */}

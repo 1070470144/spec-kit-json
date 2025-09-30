@@ -225,6 +225,21 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/scripts/[id]/like/route.js"
+    ],
+    "/admin/users/new/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/users/new/page.js"
+    ],
+    "/admin/scripts/batch/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/scripts/batch/page.js"
+    ],
+    "/admin/settings/sensitive-words/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/settings/sensitive-words/page.js"
     ]
   }
 }

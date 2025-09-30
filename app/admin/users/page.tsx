@@ -115,7 +115,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
                           </span>
                         </td>
                         <td className="px-3 py-3">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-body-small font-medium">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-body-small font-medium">
                             {roleText}
                           </span>
                         </td>

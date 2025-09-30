@@ -45,17 +45,24 @@ async function fetchHot() {
 export default async function HomePage() {
   const hot = await fetchHot()
   return (
-    <div className="space-y-8 md:space-y-12">
+    <div className="space-y-20 md:space-y-32">
       <HeroSection />
       
       {!!hot.length && (
-        <div className="container-page">
-          <h2 className="text-headline-small mb-6 text-surface-on">热门剧本</h2>
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-surface-on mb-4">
+              热门剧本
+            </h2>
+            <p className="text-lg text-surface-on-variant max-w-2xl mx-auto">
+              探索近期最受欢迎的剧本内容
+            </p>
+          </div>
           <HotCarousel items={hot} />
         </div>
       )}
       
-      <div className="container-page">
+      <div className="mx-auto max-w-7xl px-6 pb-20">
         <FeaturesGrid />
       </div>
     </div>

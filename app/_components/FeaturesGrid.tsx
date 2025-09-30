@@ -35,28 +35,55 @@ const features = [
 
 export default function FeaturesGrid() {
   return (
-    <section className="py-8">
-      <h2 className="text-headline-small text-center mb-8 text-surface-on">
-        核心功能
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {features.map((feature) => (
+    <section className="py-12">
+      <div className="text-center mb-16">
+        <h2 className="text-4xl md:text-5xl font-bold text-surface-on mb-4">
+          核心功能
+        </h2>
+        <p className="text-lg text-surface-on-variant max-w-2xl mx-auto">
+          为您提供完整的剧本管理和分享解决方案
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {features.map((feature, index) => (
           <Link
             key={feature.href}
             href={feature.href}
-            className="m3-card-outlined group block"
+            className="group relative overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
           >
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-4 p-3 rounded-full bg-primary-container">
+            {/* 渐变光泽 */}
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-sky-500/5 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            
+            {/* 顶部装饰条 */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500"></div>
+            
+            {/* 内容 */}
+            <div className="relative p-8 md:p-10">
+              {/* 图标背景 */}
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-500/10 to-cyan-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                 {feature.icon}
               </div>
-              <h3 className="text-title-medium mb-2 text-surface-on">
+              
+              <h3 className="text-2xl font-bold mb-3 text-surface-on group-hover:text-sky-600 transition-colors duration-300">
                 {feature.title}
               </h3>
-              <p className="text-body-medium text-surface-on-variant">
+              
+              <p className="text-body-medium text-surface-on-variant leading-relaxed">
                 {feature.description}
               </p>
+              
+              {/* 箭头指示 */}
+              <div className="mt-6 flex items-center gap-2 text-sky-600 font-medium group-hover:gap-4 transition-all duration-300">
+                <span>了解更多</span>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
             </div>
+            
+            {/* 悬浮边框效果 */}
+            <div className="absolute inset-0 border-2 border-sky-500/0 group-hover:border-sky-500/20 rounded-2xl transition-all duration-500"></div>
           </Link>
         ))}
       </div>

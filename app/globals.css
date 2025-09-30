@@ -7,7 +7,9 @@
   --m3-surface: #ffffff;
   --m3-text: #0f172a;
   --m3-muted: #475569;
-  --m3-primary: #2563eb;
+  --m3-primary: #0ea5e9;
+  --m3-primary-dark: #0284c7;
+  --m3-accent: #06b6d4;
   --m3-primary-foreground: #ffffff;
   --m3-border: #e2e8f0;
   --m3-error: #dc2626;
@@ -18,21 +20,22 @@
 }
 
 @layer components {
-  .container-page { @apply mx-auto max-w-5xl p-6; }
+  .container-page { @apply mx-auto max-w-7xl p-6; }
   [data-admin] .container-page { @apply max-w-none px-0 w-full mx-0; }
-  .card { @apply bg-[var(--m3-surface)] border border-[var(--m3-border)] rounded-xl shadow-sm; }
-  .card-body { @apply p-4 md:p-6; }
-  .card-title { @apply text-lg font-semibold mb-2 text-[var(--m3-text)]; }
-  .card-actions { @apply mt-3 flex gap-2; }
+  .card { @apply bg-[var(--m3-surface)] border border-gray-100 rounded-2xl shadow-lg; }
+  .card-body { @apply p-6 md:p-10; }
+  .card-title { @apply text-xl md:text-2xl font-bold mb-3 text-[var(--m3-text)]; }
+  .card-actions { @apply mt-4 flex gap-3; }
   .muted { @apply text-sm text-[var(--m3-muted)]; }
 
   /* 卡片提升与悬浮反馈 */
-  .card:hover { @apply shadow-md; }
+  .card:hover { @apply shadow-2xl -translate-y-1; }
+  .card { @apply transition-all duration-300; }
 
-  .btn { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-200 active:scale-[0.99]; }
-  .btn-primary { @apply bg-[var(--m3-primary)] text-[var(--m3-primary-foreground)] hover:bg-blue-600 active:bg-blue-700; }
-  .btn-outline { @apply border-[var(--m3-border)] text-[var(--m3-text)] hover:bg-slate-50; }
-  .btn-danger { @apply bg-[var(--m3-error)] text-white hover:bg-red-700; }
+  .btn { @apply inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-300 border border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-200 active:scale-[0.98]; }
+  .btn-primary { @apply bg-gradient-to-r from-sky-500 to-cyan-600 text-white shadow-lg hover:shadow-xl hover:from-sky-400 hover:to-cyan-500; }
+  .btn-outline { @apply border-2 border-gray-200 text-[var(--m3-text)] hover:bg-gray-50 hover:border-gray-300; }
+  .btn-danger { @apply bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg hover:shadow-xl hover:from-red-500 hover:to-pink-500; }
   .btn:disabled { @apply opacity-60 cursor-not-allowed; }
 
   .input { @apply w-full rounded-lg border border-[var(--m3-border)] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400; }
@@ -63,10 +66,11 @@
   
   /* M3 Filled Button */
   .m3-btn-filled {
-    @apply inline-flex items-center justify-center rounded-sm px-6 py-3 text-label-large;
-    @apply bg-primary text-primary-on hover:shadow-elevation-1;
-    @apply transition-all duration-standard;
-    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply inline-flex items-center justify-center rounded-xl px-8 py-3 text-base font-semibold;
+    @apply bg-gradient-to-r from-sky-500 to-cyan-600 text-white shadow-lg;
+    @apply hover:shadow-xl hover:from-sky-400 hover:to-cyan-500 hover:scale-105;
+    @apply transition-all duration-300;
+    @apply focus:outline-none focus:ring-2 focus:ring-sky-300 focus:ring-offset-2;
     @apply active:scale-[0.98];
   }
   
@@ -124,18 +128,18 @@
   
   /* M3 Text Button */
   .m3-btn-text {
-    @apply inline-flex items-center justify-center rounded-sm px-4 py-2 text-label-large;
-    @apply text-primary hover:bg-primary/10;
-    @apply transition-all duration-standard;
-    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-base font-medium;
+    @apply text-sky-600 hover:bg-sky-50;
+    @apply transition-all duration-300;
+    @apply focus:outline-none focus:ring-2 focus:ring-sky-300 focus:ring-offset-2;
   }
   
   /* M3 Outlined Button */
   .m3-btn-outlined {
-    @apply inline-flex items-center justify-center rounded-sm px-6 py-3 text-label-large;
-    @apply border border-outline text-surface-on bg-surface hover:bg-surface-variant;
-    @apply transition-all duration-standard;
-    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply inline-flex items-center justify-center rounded-xl px-6 py-2.5 text-base font-semibold;
+    @apply border-2 border-gray-200 text-surface-on bg-white hover:bg-gray-50 hover:border-gray-300;
+    @apply transition-all duration-300 shadow-sm hover:shadow-md;
+    @apply focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-offset-2;
   }
 }
 

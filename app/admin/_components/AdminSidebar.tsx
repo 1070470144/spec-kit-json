@@ -77,7 +77,7 @@ export default function AdminSidebar() {
             <Link
               key={section.label}
               href={section.href}
-              className={`relative px-3 py-2.5 rounded-lg text-body-medium transition-all duration-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-primary/20 ${active ? 'bg-blue-100 text-blue-800 font-semibold shadow-sm' : 'text-surface-on hover:text-primary'}`}
+              className={`relative px-3 py-2.5 rounded-lg text-body-medium transition-all duration-200 hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-primary/20 ${active ? 'bg-sky-100 text-sky-800 font-semibold shadow-sm' : 'text-surface-on hover:text-primary'}`}
               aria-current={active ? 'page' : undefined}
             >
               {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-primary rounded-r" />}
@@ -94,7 +94,7 @@ export default function AdminSidebar() {
             <button
               type="button"
               onClick={() => setOpenSections(s => ({ ...s, [section.label]: !open }))}
-              className={`relative w-full text-left px-3 py-2.5 rounded-lg text-body-medium transition-all duration-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-primary/20 flex items-center justify-between ${activeChild ? 'bg-blue-100 text-blue-800 font-semibold shadow-sm' : 'text-surface-on hover:text-primary'}`}
+              className={`relative w-full text-left px-3 py-2.5 rounded-lg text-body-medium transition-all duration-200 hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-primary/20 flex items-center justify-between ${activeChild ? 'bg-sky-100 text-sky-800 font-semibold shadow-sm' : 'text-surface-on hover:text-primary'}`}
               aria-expanded={open}
               aria-label={`${section.label} 菜单`}
             >
@@ -110,14 +110,14 @@ export default function AdminSidebar() {
               </svg>
             </button>
             {open && (
-              <div className="ml-3 mt-1 flex flex-col space-y-0.5 border-l-2 border-blue-100 pl-3">
+              <div className="ml-3 mt-1 flex flex-col space-y-0.5 border-l-2 border-sky-100 pl-3">
                 {section.children?.map(child => {
                   const childActive = isActive(child.href)
                   return (
                     <Link
                       key={child.href}
                       href={child.href}
-                      className={`relative px-3 py-2 rounded-lg text-body-small transition-all duration-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-primary/20 ${childActive ? 'bg-blue-100 text-blue-800 font-semibold' : 'text-surface-on-variant hover:text-primary'}`}
+                      className={`relative px-3 py-2 rounded-lg text-body-small transition-all duration-200 hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-primary/20 ${childActive ? 'bg-sky-100 text-sky-800 font-semibold' : 'text-surface-on-variant hover:text-primary'}`}
                       aria-current={childActive ? 'page' : undefined}
                     >
                       {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 bg-primary rounded-r" />}
