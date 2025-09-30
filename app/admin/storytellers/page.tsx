@@ -13,8 +13,8 @@ async function fetchApps(status?: string) {
   return { items: j?.data?.items || j?.items || [] }
 }
 
-export default async function AdminStorytellersPage({ searchParams }: { searchParams?: { status?: string } }) {
-  const sp = searchParams
+export default async function AdminStorytellersPage({ searchParams }: { searchParams?: Promise<{ status?: string }> }) {
+  const sp = searchParams ? await searchParams : undefined
   const status = sp?.status
   const { items } = await fetchApps(status)
   return (
