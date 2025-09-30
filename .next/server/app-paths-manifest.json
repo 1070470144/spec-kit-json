@@ -1,18 +1,18 @@
 {
   "/api/scripts/route": "app/api/scripts/route.js",
-  "/api/scripts/stats-batch/route": "app/api/scripts/stats-batch/route.js",
-  "/api/scripts/[id]/route": "app/api/scripts/[id]/route.js",
   "/api/admin/auth/me/route": "app/api/admin/auth/me/route.js",
-  "/api/admin/users/route": "app/api/admin/users/route.js",
-  "/api/admin/analytics/users/route": "app/api/admin/analytics/users/route.js",
-  "/page": "app/page.js",
+  "/api/me/route": "app/api/me/route.js",
+  "/api/site-config/route": "app/api/site-config/route.js",
+  "/api/files/route": "app/api/files/route.js",
+  "/api/scripts/[id]/route": "app/api/scripts/[id]/route.js",
+  "/api/scripts/[id]/review/route": "app/api/scripts/[id]/review/route.js",
+  "/api/scripts/[id]/delete/route": "app/api/scripts/[id]/delete/route.js",
   "/forgot/page": "app/forgot/page.js",
+  "/my/uploads/page": "app/my/uploads/page.js",
   "/scripts/page": "app/scripts/page.js",
-  "/my/favorites/page": "app/my/favorites/page.js",
   "/upload/page": "app/upload/page.js",
-  "/admin/users/new/page": "app/admin/users/new/page.js",
-  "/admin/users/page": "app/admin/users/page.js",
   "/admin/scripts/batch/page": "app/admin/scripts/batch/page.js",
-  "/admin/settings/sensitive-words/page": "app/admin/settings/sensitive-words/page.js",
-  "/admin/analytics/users/page": "app/admin/analytics/users/page.js"
+  "/admin/scripts/page": "app/admin/scripts/page.js",
+  "/admin/review/page": "app/admin/review/page.js",
+  "/admin/scripts/[id]/page": "app/admin/scripts/[id]/page.js"
 }

@@ -5,16 +5,28 @@ type Detail = { id: string; title: string; author?: string | null; images: { id:
 
 export default function ReviewDetailModal({ id, open, onClose, onApproved, onRejected }: { id: string; open: boolean; onClose: () => void; onApproved: () => void; onRejected: (reason: string) => void }) {
   const [detail, setDetail] = useState<Detail | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
   const [reason, setReason] = useState('')
 
   useEffect(() => {
     if (!open) return
     let aborted = false
+    setLoading(true)
+    setDetail(null)
+    
     async function load() {
-      const res = await fetch(`/api/scripts/${id}`, { cache: 'no-store' })
-      const j = await res.json()
-      const d = (j?.data ?? j) as Detail
-      if (!aborted) setDetail(d)
+      try {
+        const res = await fetch(`/api/scripts/${id}`, { cache: 'no-store' })
+        const j = await res.json()
+        const d = (j?.data ?? j) as Detail
+        if (!aborted) setDetail(d)
+      } catch (error) {
+        console.error('加载剧本详情失败:', error)
+      } finally {
+        if (!aborted) setLoading(false)
+      }
     }
     load()
     return () => { aborted = true }
@@ -23,33 +35,112 @@ export default function ReviewDetailModal({ id, open, onClose, onApproved, onRej
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-4xl bg-white rounded-xl shadow-xl" onClick={e=>e.stopPropagation()}>
-        <div className="px-6 py-4 border-b flex items-center justify-between">
-          <div className="text-lg font-semibold">剧本详情</div>
-          <button className="btn btn-outline" onClick={onClose}>关闭</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="m3-dialog w-full max-w-4xl" onClick={e=>e.stopPropagation()}>
+        <div className="dialog-header">
+          <h2 className="text-title-large text-surface-on">剧本详情</h2>
+          <button 
+            className="m3-icon-btn text-surface-on" 
+            onClick={onClose}
+            aria-label="关闭"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-        <div className="p-6 grid md:grid-cols-2 gap-6 max-h-[70vh] overflow-auto">
-          <div className="space-y-3">
-            <div className="text-base font-medium">{detail?.title || '...'}</div>
-            <div className="muted">作者：{detail?.author || '-'}</div>
-            <div className="grid grid-cols-2 gap-2">
-              {detail?.images?.map(img => (
-                <img key={img.id} src={img.url} alt="img" className="rounded border bg-white" />
-              ))}
+        
+        {loading && (
+          <div className="dialog-content">
+            <div className="flex items-center justify-center py-16">
+              <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
             </div>
           </div>
-          <div className="space-y-2">
-            <div className="text-sm font-medium">JSON</div>
-            <pre className="text-xs bg-slate-50 border rounded p-3 overflow-auto max-h-64">{JSON.stringify(detail?.json, null, 2)}</pre>
-            <div className="text-sm font-medium">拒绝理由</div>
-            <textarea className="textarea" placeholder="填写拒绝理由（拒绝时必填）" value={reason} onChange={e=>setReason(e.target.value)} />
-            <div className="flex gap-2 pt-2">
-              <button className="btn btn-primary" onClick={onApproved}>通过</button>
-              <button className="btn btn-outline" onClick={()=>onRejected(reason)}>拒绝</button>
+        )}
+        
+        {!loading && detail && (
+          <div className="dialog-content grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-title-medium mb-1 text-surface-on">{detail.title}</h3>
+                <p className="text-body-small text-surface-on-variant">作者：{detail.author || '-'}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {detail.images?.map(img => (
+                  <div key={img.id} className="m3-card-elevated overflow-hidden">
+                    <img src={img.url} alt="剧本图片" className="w-full h-32 object-cover" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-body-medium font-medium text-surface-on mb-2">JSON</label>
+                <pre className="text-xs bg-slate-50 border border-outline rounded-sm p-4 overflow-auto max-h-64">
+                  {JSON.stringify(detail.json, null, 2)}
+                </pre>
+              </div>
+              <div>
+                <label htmlFor="reject-reason" className="block text-body-medium font-medium text-surface-on mb-2">拒绝理由</label>
+                <textarea 
+                  id="reject-reason"
+                  className="textarea" 
+                  placeholder="填写拒绝理由（拒绝时必填）" 
+                  value={reason} 
+                  onChange={e=>setReason(e.target.value)}
+                  rows={3}
+                />
+              </div>
+              {error && (
+                <div className="rounded-sm border border-red-200 bg-red-50 text-red-700 px-4 py-2 text-body-small">
+                  {error}
+                </div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button 
+                  className="m3-btn-filled flex-1" 
+                  onClick={async () => {
+                    setSubmitting(true)
+                    setError('')
+                    try {
+                      await onApproved()
+                      onClose()
+                    } catch (err) {
+                      setError('操作失败')
+                    } finally {
+                      setSubmitting(false)
+                    }
+                  }}
+                  disabled={submitting}
+                >
+                  {submitting ? '处理中...' : '通过'}
+                </button>
+                <button 
+                  className="m3-btn-outlined flex-1" 
+                  onClick={async () => {
+                    setError('')
+                    if (!reason.trim()) {
+                      setError('请填写拒绝理由')
+                      return
+                    }
+                    setSubmitting(true)
+                    try {
+                      await onRejected(reason)
+                      onClose()
+                    } catch (err) {
+                      setError('操作失败')
+                    } finally {
+                      setSubmitting(false)
+                    }
+                  }}
+                  disabled={submitting}
+                >
+                  {submitting ? '处理中...' : '拒绝'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

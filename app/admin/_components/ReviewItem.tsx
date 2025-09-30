@@ -1,19 +1,21 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import ReviewDetailModal from './ReviewDetailModal'
 
 export default function ReviewItem({ id, title, author }: { id: string; title: string; author?: string | null }) {
   const [open, setOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const router = useRouter()
 
   async function approve() {
     const res = await fetch(`/api/scripts/${id}/review`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ decision: 'approved' }) })
-    if (res.ok) location.reload()
+    if (res.ok) router.refresh()
   }
   async function reject(reason: string) {
     if (!reason.trim()) return
     const res = await fetch(`/api/scripts/${id}/review`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ decision: 'rejected', reason }) })
-    if (res.ok) location.reload()
+    if (res.ok) router.refresh()
   }
 
   async function onDelete() {
@@ -22,20 +24,20 @@ export default function ReviewItem({ id, title, author }: { id: string; title: s
     try {
       const res = await fetch(`/api/scripts/${id}`, { method: 'DELETE' })
       if (!res.ok) { alert('删除失败'); return }
-      location.reload()
+      router.refresh()
     } finally { setDeleting(false) }
   }
 
   return (
-    <div className="card">
-      <button className="card-body text-left w-full" onClick={()=>setOpen(true)}>
-        <div className="card-title">{title}</div>
-        <div className="muted">作者：{author || '-'}</div>
+    <div className="m3-card-elevated cursor-pointer hover:shadow-elevation-3 transition-all duration-300 overflow-hidden">
+      <button className="p-6 text-left w-full" onClick={()=>setOpen(true)}>
+        <div className="text-title-large mb-1 text-surface-on">{title}</div>
+        <div className="text-body-small text-surface-on-variant">作者：{author || '-'}</div>
       </button>
-      <div className="card-body pt-0">
-        <div className="card-actions">
-          <button className="btn btn-danger" onClick={onDelete} disabled={deleting}>删除</button>
-        </div>
+      <div className="px-6 pb-6">
+        <button className="m3-btn-filled-tonal-error w-full" onClick={onDelete} disabled={deleting}>
+          {deleting ? '删除中...' : '删除'}
+        </button>
       </div>
       <ReviewDetailModal id={id} open={open} onClose={()=>setOpen(false)} onApproved={approve} onRejected={reject} />
     </div>

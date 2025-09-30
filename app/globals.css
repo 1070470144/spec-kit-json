@@ -29,8 +29,8 @@
   .muted { @apply text-sm text-[var(--m3-muted)]; }
 
   /* 卡片提升与悬浮反馈 */
-  .card:hover { @apply shadow-2xl -translate-y-1; }
-  .card { @apply transition-all duration-300; }
+  .card:hover { @apply shadow-2xl; }
+  .card { @apply transition-shadow duration-300; }
 
   .btn { @apply inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-300 border border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-200 active:scale-[0.98]; }
   .btn-primary { @apply bg-gradient-to-r from-sky-500 to-cyan-600 text-white shadow-lg hover:shadow-xl hover:from-sky-400 hover:to-cyan-500; }
@@ -140,6 +140,48 @@
     @apply border-2 border-gray-200 text-surface-on bg-white hover:bg-gray-50 hover:border-gray-300;
     @apply transition-all duration-300 shadow-sm hover:shadow-md;
     @apply focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-offset-2;
+  }
+  
+  /* M3 Dialog - 审核详情弹窗 */
+  .m3-dialog {
+    @apply bg-gradient-to-br from-white via-sky-50/30 to-indigo-50/40 rounded-2xl shadow-2xl;
+    @apply border border-white/60;
+    animation: dialogIn 0.2s ease-out;
+  }
+  
+  @keyframes dialogIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .dialog-header {
+    @apply px-6 py-5 border-b border-gray-100;
+    @apply flex items-center justify-between;
+    @apply bg-white/80 backdrop-blur-sm;
+  }
+  
+  .dialog-content {
+    @apply p-6;
+  }
+  
+  /* M3 Badge - 待审核徽章 */
+  .m3-badge-pending {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full;
+    @apply bg-sky-50 text-sky-800 border border-sky-200;
+  }
+  
+  /* M3 Filled Tonal Button - 删除按钮 */
+  .m3-btn-filled-tonal-error {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold;
+    @apply bg-red-50 text-red-700 hover:bg-red-100 border border-red-100;
+    @apply transition-all duration-300;
+    @apply focus:outline-none focus:ring-2 focus:ring-red-300 focus:ring-offset-2;
   }
 }
 

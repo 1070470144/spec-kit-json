@@ -31,6 +31,11 @@ export default function UserAnalyticsCharts({ topRegions, trend }: { topRegions:
       // use UMD build via CDN to avoid bundler interop issues
       await loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js')
       const Chart = (window as any).Chart
+      
+      if (!Chart || typeof Chart !== 'function') {
+        console.error('Chart.js not loaded')
+        return
+      }
 
       if (pieChartRef.current) { pieChartRef.current.destroy(); pieChartRef.current = null }
       if (lineChartRef.current) { lineChartRef.current.destroy(); lineChartRef.current = null }
@@ -49,8 +54,8 @@ export default function UserAnalyticsCharts({ topRegions, trend }: { topRegions:
           data: {
             labels: lineLabels,
             datasets: [
-              { label: '登录', data: lineLogin, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', tension: 0.3 },
-              { label: '注册', data: lineRegister, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.2)', tension: 0.3 }
+              { label: '登录', data: lineLogin, borderColor: '#0ea5e9', backgroundColor: 'rgba(14,165,233,0.2)', tension: 0.3 },
+              { label: '注册', data: lineRegister, borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.2)', tension: 0.3 }
             ]
           },
           options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
@@ -96,6 +101,6 @@ export default function UserAnalyticsCharts({ topRegions, trend }: { topRegions:
   )
 }
 
-const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+const colors = ['#0ea5e9', '#06b6d4', '#10b981', '#f59e0b', '#ef4444']
 
 

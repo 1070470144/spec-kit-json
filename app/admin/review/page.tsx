@@ -32,9 +32,9 @@ export default async function ReviewPage({ searchParams }: { searchParams?: Prom
               </p>
             </div>
             {pending && pending.length > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 border border-sky-200">
+              <div className="m3-badge-pending">
                 <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></div>
-                <span className="text-body-small font-medium text-sky-800">
+                <span className="text-label-medium font-medium">
                   {pending.length} 个待审核
                 </span>
               </div>

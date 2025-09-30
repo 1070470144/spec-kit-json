@@ -240,6 +240,66 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/settings/sensitive-words/page.js"
+    ],
+    "/admin/users/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/users/[id]/page.js"
+    ],
+    "/admin/review/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/review/page.js"
+    ],
+    "/api/scripts/[id]/review/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/scripts/[id]/review/route.js"
+    ],
+    "/api/scripts/[id]/favorite/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/scripts/[id]/favorite/route.js"
+    ],
+    "/api/scripts/[id]/delete/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/scripts/[id]/delete/route.js"
+    ],
+    "/api/auth/register/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/register/route.js"
+    ],
+    "/api/auth/email/verify/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/email/verify/route.js"
+    ],
+    "/api/admin/auth/logout/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/admin/auth/logout/route.js"
+    ],
+    "/admin/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/login/page.js"
+    ],
+    "/api/admin/auth/login/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/admin/auth/login/route.js"
+    ],
+    "/api/profile/avatar/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/profile/avatar/route.js"
+    ],
+    "/admin/scripts/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/scripts/[id]/page.js"
     ]
   }
 }

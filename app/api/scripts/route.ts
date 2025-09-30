@@ -27,9 +27,11 @@ export async function GET(req: NextRequest) {
   if (mine) {
     const s = await getSession()
     if (!s) {
+      console.log('[List] Mine mode but no session')
       return ok({ items: [], total: 0, page, pageSize })
     }
     where.createdById = s.userId
+    console.log('[List] Mine mode - userId:', s.userId, 'Where:', JSON.stringify(where))
   }
 
   const [itemsRaw, total] = await Promise.all([
@@ -47,6 +49,8 @@ export async function GET(req: NextRequest) {
     ...it,
     previewUrl: (it.images && it.images[0]?.path) ? `/api/files?path=${encodeURIComponent(it.images[0].path)}` : null,
   }))
+  
+  console.log('[List] Returning:', items.length, 'items, Total:', total, 'Mine:', mine)
 
   return ok({ items, total, page, pageSize })
 }
@@ -84,8 +88,13 @@ export async function POST(req: Request) {
       const storage = new LocalStorage()
       const contentStr = JSON.stringify(json)
       const hash = (await import('node:crypto')).createHash('sha256').update(contentStr).digest('hex')
-      const [session, admin] = await Promise.all([getSession(), getAdminSession()])
-      const ownerId = admin?.userId || session?.userId || null
+      
+      // 前台上传只使用普通用户 session，不使用 admin session
+      // 这样确保用户在"我的上传"中能看到自己的剧本
+      const session = await getSession()
+      const ownerId = session?.userId || null
+      
+      console.log('[Upload] Session userId:', session?.userId, 'OwnerId:', ownerId)
 
       // 不再按标题合并系列：始终创建新剧本
       const created = await prisma.script.create({
@@ -107,6 +116,8 @@ export async function POST(req: Request) {
         select: { id: true }
       })
       const scriptId = created.id
+      
+      console.log('[Upload] Created script:', scriptId, 'for user:', ownerId)
 
       let sortOrder = 0
       for (const f of images) {
@@ -150,8 +161,10 @@ export async function POST(req: Request) {
 
   const contentStr = JSON.stringify(json)
   const hash = (await import('node:crypto')).createHash('sha256').update(contentStr).digest('hex')
-  const [session, admin] = await Promise.all([getSession(), getAdminSession()])
-  const ownerId = admin?.userId || session?.userId || null
+  
+  // 前台上传只使用普通用户 session
+  const session = await getSession()
+  const ownerId = session?.userId || null
   try {
     const created = await prisma.script.create({
       data: {

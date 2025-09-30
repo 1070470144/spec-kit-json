@@ -63,8 +63,10 @@ export default function UploadPage() {
       return
     }
     const id = data?.data?.id || data?.id
-    showToast('创建成功，已进入待审核', 'success')
-    location.href = `/scripts`
+    showToast('创建成功，已进入待审核，正在跳转...', 'success')
+    setTimeout(() => {
+      location.href = `/my/uploads`
+    }, 1000)
   }
 
   return (

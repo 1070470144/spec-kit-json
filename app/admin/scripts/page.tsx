@@ -18,11 +18,21 @@ async function fetchScripts(state?: string, page = 1, pageSize = 24) {
 
 export default async function AdminScriptsManagePage({ searchParams }: { searchParams?: Promise<{ state?: string; page?: string }> }) {
   const sp = searchParams ? await searchParams : undefined
-  const state = sp?.state
+  const state = sp?.state || 'pending'  // 默认显示待审核
   const pageNum = Math.max(1, Number(sp?.page || '1'))
   const { items, total, page, pageSize } = await fetchScripts(state, pageNum)
   const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize))
-  const makeHref = (p: number) => `/admin/scripts?${new URLSearchParams({ ...(state ? { state } : {}), page: String(p) }).toString()}`
+  const makeHref = (p: number) => `/admin/scripts?${new URLSearchParams({ state, page: String(p) }).toString()}`
+  
+  // 状态配置
+  const states = [
+    { value: 'pending', label: '待审核', emptyText: '暂无待审核的剧本' },
+    { value: 'published', label: '已通过', emptyText: '还没有已发布的剧本' },
+    { value: 'rejected', label: '已拒绝', emptyText: '没有已拒绝的剧本' },
+    { value: 'abandoned', label: '已废弃', emptyText: '没有已废弃的剧本' },
+  ]
+  
+  const currentState = states.find(s => s.value === state) || states[0]
   
   return (
     <div className="space-y-6">
@@ -32,33 +42,23 @@ export default async function AdminScriptsManagePage({ searchParams }: { searchP
             <div>
               <h1 className="text-headline-medium font-semibold text-surface-on">剧本列表</h1>
               <p className="text-body-small text-surface-on-variant mt-1">
-                管理所有剧本，查看已发布和已废弃的剧本
+                管理所有剧本，查看不同状态的剧本
               </p>
             </div>
             <DeleteAllScriptsButton />
           </div>
 
-          <div className="mb-4 inline-flex rounded-lg border border-outline overflow-hidden" role="group" aria-label="状态筛选">
-            <a 
-              className={`px-4 py-2 text-label-large transition-colors ${
-                !state 
-                  ? 'bg-primary text-primary-on font-medium' 
-                  : 'bg-surface text-surface-on hover:bg-surface-variant'
-              }`} 
-              href="/admin/scripts"
-            >
-              已发布
-            </a>
-            <a 
-              className={`px-4 py-2 text-label-large border-l border-outline transition-colors ${
-                state==='abandoned' 
-                  ? 'bg-primary text-primary-on font-medium' 
-                  : 'bg-surface text-surface-on hover:bg-surface-variant'
-              }`} 
-              href="/admin/scripts?state=abandoned"
-            >
-              已废弃
-            </a>
+          <div className="mb-6 inline-flex rounded-sm border border-outline overflow-hidden" role="group" aria-label="状态筛选">
+            {states.map((s, idx) => (
+              <a 
+                key={s.value}
+                className={`m3-segmented-btn ${state === s.value ? 'm3-segmented-btn-active' : ''}`}
+                href={`/admin/scripts?state=${s.value}`}
+                aria-current={state === s.value ? 'page' : undefined}
+              >
+                {s.label}
+              </a>
+            ))}
           </div>
 
           {!items?.length && (
@@ -72,7 +72,7 @@ export default async function AdminScriptsManagePage({ searchParams }: { searchP
                 暂无剧本
               </div>
               <div className="text-body-small text-surface-on-variant">
-                {state === 'abandoned' ? '没有已废弃的剧本' : '还没有已发布的剧本'}
+                {currentState.emptyText}
               </div>
             </div>
           )}

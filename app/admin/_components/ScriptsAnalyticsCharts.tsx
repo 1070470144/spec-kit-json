@@ -31,7 +31,7 @@ export default function ScriptsAnalyticsCharts({
       destroyAll()
 
       const build = (ref: HTMLCanvasElement | null, rows: RankRow[], color: string) => {
-        if (!ref || rows.length === 0) return
+        if (!ref || rows.length === 0 || !Chart || typeof Chart !== 'function') return
         const labels = rows.map(r => r.title)
         const data = rows.map(r => r.count)
         const cfg = {
@@ -48,9 +48,9 @@ export default function ScriptsAnalyticsCharts({
         return new Chart(ref.getContext('2d'), cfg as any)
       }
 
-      dlChart.current = build(dlRef.current, downloads, '#3b82f6')
-      likeChart.current = build(likeRef.current, likes, '#10b981')
-      favChart.current = build(favRef.current, favorites, '#f59e0b')
+      dlChart.current = build(dlRef.current, downloads, '#0ea5e9')
+      likeChart.current = build(likeRef.current, likes, '#06b6d4')
+      favChart.current = build(favRef.current, favorites, '#10b981')
     }
     draw()
     return () => {
