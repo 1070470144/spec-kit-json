@@ -14,7 +14,6 @@ export default async function MyFavoritesPage() {
       <div className="grid-cards">
         {(!items || items.length === 0) && <div className="muted">暂无收藏</div>}
         {items && items.length > 0 && items.map(s => (
-          // @ts-expect-error client component wrapper
           <FavCardWrapper key={s.id} id={s.id} title={s.title} authorName={s.authorName} />
         ))}
       </div>

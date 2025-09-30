@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
 
-export default function ResetPage({ params }: { params: { token: string } }) {
+export default function ResetPage(props: any) {
+  const params = props?.params as { token: string }
   const [password, setPassword] = useState('')
   const [msg, setMsg] = useState('')
 

@@ -4,7 +4,7 @@ import { ok, unauthorized, badRequest } from '@/src/api/http'
 import { verifyPassword, hashPassword } from '@/src/auth/password'
 
 export async function POST(req: Request) {
-  const s = getSession()
+  const s = await getSession()
   if (!s) return unauthorized()
   const b = await req.json().catch(()=>null) as { oldPassword?: string; newPassword?: string }
   if (!b?.oldPassword || !b?.newPassword) return badRequest('MISSING_FIELDS')

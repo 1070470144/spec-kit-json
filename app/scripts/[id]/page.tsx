@@ -52,7 +52,7 @@ export default async function ScriptDetailPage(props: any) {
       </div>
 
       {/* 评论区域 */}
-      {/* @ts-expect-error Server Component boundary */}
+      {/* Server Component boundary */}
       <ClientCommentsWrapper id={p.id} />
     </div>
   )

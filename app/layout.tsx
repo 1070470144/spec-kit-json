@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} min-h-screen bg-gray-50 text-gray-900 flex flex-col`}>
         <SiteHeader />
         <main className="mx-auto max-w-5xl p-6 w-full flex-1">{children}</main>
-        {/* @ts-expect-error client component */}
+        {/* client component */}
         <Toaster />
         <Footer />
       </body>

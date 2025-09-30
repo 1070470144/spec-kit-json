@@ -39,13 +39,13 @@ export default async function ScriptsPage({ searchParams }: { searchParams?: { p
         {items.map(i => (
           <div key={i.id} className="card">
             {/* 缩略图轮播 */}
-            {/* @ts-expect-error Server Component boundary */}
+            {/* Server Component boundary */}
             <ClientCarouselWrapper id={i.id} />
             <div className="card-body">
               <div className="card-title">{i.title}</div>
               <div className="muted">作者：{i.authorName || '-'}</div>
               <div className="mt-3">
-                {/* @ts-expect-error Server-Client boundary */}
+                {/* Server-Client boundary */}
                 <ClientActionsWrapper id={i.id} initial={statsMap[i.id]} />
               </div>
             </div>

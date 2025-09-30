@@ -19,7 +19,7 @@ export default async function AdminScriptsAnalyticsPage() {
   const favs = data?.topFavorites || []
   return (
     <div className="container-page section">
-      {/* @ts-expect-error Client component */}
+      {/* Client component */}
       <ScriptsAnalyticsCharts downloads={dls} likes={likes} favorites={favs} />
     </div>
   )

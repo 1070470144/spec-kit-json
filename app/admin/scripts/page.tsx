@@ -17,8 +17,8 @@ async function fetchScripts(state?: string, page = 1, pageSize = 24) {
   return { items, total, page, pageSize }
 }
 
-export default async function AdminScriptsManagePage({ searchParams }: { searchParams?: { state?: string; page?: string } }) {
-  const sp = searchParams
+export default async function AdminScriptsManagePage({ searchParams }: { searchParams?: Promise<{ state?: string; page?: string }> }) {
+  const sp = searchParams ? await searchParams : undefined
   const state = sp?.state
   const pageNum = Math.max(1, Number(sp?.page || '1'))
   const { items, total, page, pageSize } = await fetchScripts(state, pageNum)
