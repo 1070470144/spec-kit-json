@@ -1,11 +1,10 @@
 {
-  "/api/auth/register/route": "app/api/auth/register/route.js",
-  "/api/auth/email/verify/route": "app/api/auth/email/verify/route.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/api/me/route": "app/api/me/route.js",
-  "/api/site-config/route": "app/api/site-config/route.js",
   "/api/admin/users/route": "app/api/admin/users/route.js",
-  "/register/page": "app/register/page.js",
+  "/api/scripts/route": "app/api/scripts/route.js",
+  "/api/scripts/stats-batch/route": "app/api/scripts/stats-batch/route.js",
+  "/api/scripts/[id]/route": "app/api/scripts/[id]/route.js",
   "/page": "app/page.js",
+  "/scripts/page": "app/scripts/page.js",
+  "/leaderboard/page": "app/leaderboard/page.js",
   "/admin/users/page": "app/admin/users/page.js"
 }
