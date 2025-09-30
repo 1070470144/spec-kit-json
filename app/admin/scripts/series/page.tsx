@@ -1,5 +1,6 @@
 async function fetchSeries() {
-  const res = await fetch('http://localhost:3000/api/admin/scripts/series', { cache: 'no-store' })
+  const base = process.env.APP_BASE_URL || ''
+  const res = await fetch(`${base}/api/admin/scripts/series`, { cache: 'no-store' })
   const j = await res.json().catch(()=>({}))
   const items = (j?.data?.items ?? j?.items ?? []) as { id: string; title: string; state: string; versions: number; images: number }[]
   return { items }

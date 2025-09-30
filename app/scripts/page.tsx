@@ -1,6 +1,7 @@
 async function fetchList(page = 1, pageSize = 24, q?: string) {
   const qs = new URLSearchParams({ state: 'published', page: String(page), pageSize: String(pageSize), ...(q ? { q } : {}) })
-  const res = await fetch(`http://localhost:3000/api/scripts?${qs.toString()}`, { cache: 'no-store' })
+  const base = process.env.APP_BASE_URL || ''
+  const res = await fetch(`${base}/api/scripts?${qs.toString()}`, { cache: 'no-store' })
   const j = await res.json()
   const items = (j?.data?.items ?? j?.items ?? []) as { id: string; title: string; authorName?: string|null }[]
   const total = Number(j?.data?.total ?? j?.total ?? 0)

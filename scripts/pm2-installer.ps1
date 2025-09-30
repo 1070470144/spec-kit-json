@@ -158,6 +158,101 @@ function Step-QuickExpose(){
   Info '如果在云厂商上，请确认安全组也放行 10080。'
 }
 
+# Enable Windows portproxy: 80 -> 127.0.0.1:APP_PORT
+function Step-EnablePortProxy($cfg){
+  T 'ENABLE PORTPROXY 80 -> APP_PORT'
+  try { sc config iphlpsvc start= auto | Out-Null } catch {}
+  try { net start iphlpsvc | Out-Null } catch {}
+  try { netsh advfirewall firewall add rule name="HTTP 80" dir=in action=allow protocol=TCP localport=80 | Out-Null } catch {}
+  # remove existing rule if any
+  try { netsh interface portproxy delete v4tov4 listenaddress=0.0.0.0 listenport=80 | Out-Null } catch {}
+  try { netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=80 connectaddress=127.0.0.1 connectport=$($cfg.APP_PORT) | Out-Null } catch {}
+  netsh interface portproxy show v4tov4 | Out-String | % { $_ }
+  OK ("portproxy enabled: 80 -> 127.0.0.1:{0}. 请在 Cloudflare: DNS 使用 A 记录到服务器IP并保持橙云代理，SSL/TLS 模式设 Flexible。" -f $cfg.APP_PORT)
+}
+
+# Disable Windows portproxy: remove 80 mapping
+function Step-DisablePortProxy(){
+  T 'DISABLE PORTPROXY 80'
+  try { netsh interface portproxy delete v4tov4 listenaddress=0.0.0.0 listenport=80 | Out-Null } catch {}
+  netsh interface portproxy show v4tov4 | Out-String | % { $_ }
+  OK 'portproxy (80) disabled'
+}
+
+# Ensure cloudflared.exe exists
+function Ensure-Cloudflared(){
+  $dir = 'C:\cloudflared'
+  if(!(Test-Path $dir)){ New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+  $exe = Join-Path $dir 'cloudflared.exe'
+  if(Test-Path $exe){ return $exe }
+  T 'DOWNLOAD CLOUDFLARE TUNNEL (cloudflared)'
+  $url = 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe'
+  Invoke-WebRequest -Uri $url -OutFile $exe -UseBasicParsing
+  OK 'cloudflared.exe ready'
+  return $exe
+}
+
+# One-click Cloudflare Tunnel: domain -> 127.0.0.1:APP_PORT (no open ports required)
+function Step-EnableCloudflare($cfg){
+  T 'ENABLE CLOUDFLARE TUNNEL (domain -> localhost)'
+  $exe = Ensure-Cloudflared
+  $domain = $cfg.APP_BASE_URL -replace '^https?://',''
+  $domain = $domain -replace '/.*$',''
+  if([string]::IsNullOrWhiteSpace($domain)) { Err 'APP_BASE_URL 未设置或不合法，请在 1) config 中填写 https://你的域名'; return }
+
+  # Login (interactive once) to get cert
+  $certPath = Join-Path $env:USERPROFILE '.cloudflared\cert.json'
+  if(!(Test-Path $certPath)){
+    Info '将打开一个 URL 进行 Cloudflare 登录绑定（或在终端显示 URL），完成后回到此窗口继续。'
+    try { & $exe tunnel login } catch {}
+    Read-Host '完成浏览器登录后按回车继续'
+    if(!(Test-Path $certPath)){ Err '未检测到证书文件 ~/.cloudflared/cert.json，请重试登录'; return }
+  }
+
+  # Create or reuse tunnel
+  $tunnelName = 'juben'
+  $existing = (& $exe tunnel list 2>$null) -join "`n"
+  if(-not ($existing -match "\b$tunnelName\b")){
+    & $exe tunnel create $tunnelName | Out-Null
+  }
+  $list = (& $exe tunnel list) -join "`n"
+  $idMatch = [regex]::Match($list, "(?im)^([0-9a-f-]{36})\s+$tunnelName\b")
+  if(-not $idMatch.Success){ Err '未能获取 tunnel ID，请确认已登录并成功创建隧道'; return }
+  $tunnelId = $idMatch.Groups[1].Value
+
+  # Write config.yml
+  $cfgDirUser = Join-Path $env:USERPROFILE '.cloudflared'
+  $cfgDirSvc = 'C:\Windows\System32\config\systemprofile\.cloudflared'
+  if(!(Test-Path $cfgDirUser)){ New-Item -ItemType Directory -Force -Path $cfgDirUser | Out-Null }
+  if(!(Test-Path $cfgDirSvc)){ New-Item -ItemType Directory -Force -Path $cfgDirSvc | Out-Null }
+  $credFile = Join-Path $cfgDirUser ("{0}.json" -f $tunnelId)
+  if(!(Test-Path $credFile)){
+    # 导出证书为隧道凭据（若创建未生成）
+    try { & $exe tunnel credentials $tunnelName } catch {}
+  }
+  $config = @"
+tunnel: $tunnelId
+credentials-file: $credFile
+ingress:
+  - hostname: $domain
+    service: http://127.0.0.1:$($cfg.APP_PORT)
+  - service: http_status:404
+"@
+  $userCfg = Join-Path $cfgDirUser 'config.yml'
+  $svcCfg = Join-Path $cfgDirSvc 'config.yml'
+  $config | Out-File -Encoding ASCII $userCfg
+  $config | Out-File -Encoding ASCII $svcCfg
+
+  # Route DNS (创建 CNAME 到隧道)
+  try { & $exe tunnel route dns $tunnelName $domain } catch {}
+
+  # Install and start as Windows service
+  try { & $exe service install } catch {}
+  $svc = Get-Service -Name 'cloudflared' -ErrorAction SilentlyContinue
+  if($svc){ if($svc.Status -ne 'Running'){ Start-Service 'cloudflared' } }
+
+  OK ("Cloudflare Tunnel 已启动。请将域名托管在 Cloudflare，并确保 $domain 已接入。访问: https://{0}" -f $domain)
+}
 function Menu(){
   $cfg = LoadCfg
   while($true){
@@ -173,7 +268,8 @@ function Menu(){
     Write-Host '7) stop (pm2)'
     Write-Host '8) logs (pm2)'
     Write-Host '9) backup uploads/sqlite'
-    Write-Host '10) quick expose 10080 and show URL'
+    Write-Host '10) enable portproxy 80 -> APP_PORT'
+    Write-Host '11) disable portproxy 80'
     Write-Host '0) exit'
     $sel = Read-Host 'select'
     switch($sel){
@@ -186,7 +282,8 @@ function Menu(){
       '7' { Step-Stop $cfg; continue }
       '8' { Step-Logs $cfg; continue }
       '9' { Step-Backup $cfg; continue }
-      '10' { Step-QuickExpose; continue }
+      '10' { Step-EnablePortProxy $cfg; continue }
+      '11' { Step-DisablePortProxy; continue }
       '0' { break }
       default { Info 'invalid option'; Start-Sleep -Seconds 1 }
     }

@@ -1,5 +1,6 @@
 async function verifyToken(token: string) {
-  const res = await fetch(`http://localhost:3000/api/auth/email/verify?token=${encodeURIComponent(token)}`, { cache: 'no-store' })
+  const base = process.env.APP_BASE_URL || ''
+  const res = await fetch(`${base}/api/auth/email/verify?token=${encodeURIComponent(token)}`, { cache: 'no-store' })
   const data = await res.json().catch(() => ({}))
   return { ok: res.ok, data }
 }
