@@ -18,8 +18,8 @@ async function removeUser(base: string, cookieHeader: string, id: string) {
   await fetch(`${base}/api/admin/users?id=${id}`, { method: 'DELETE', headers: { cookie: cookieHeader } })
 }
 
-export default async function AdminUsersPage({ searchParams }: { searchParams?: Promise<{ q?: string }> }) {
-  const sp = searchParams ? await searchParams : undefined
+export default async function AdminUsersPage({ searchParams }: { searchParams?: { q?: string } }) {
+  const sp = searchParams
   const q = sp?.q || ''
   const { items, base, cookieHeader } = await fetchUsers(q)
   return (

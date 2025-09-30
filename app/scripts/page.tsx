@@ -7,8 +7,8 @@ async function fetchList(page = 1, pageSize = 24, q?: string) {
   return { items, total, page, pageSize }
 }
 
-export default async function ScriptsPage({ searchParams }: { searchParams?: Promise<{ page?: string; q?: string }> }) {
-  const sp = searchParams ? await searchParams : undefined
+export default async function ScriptsPage({ searchParams }: { searchParams?: { page?: string; q?: string } }) {
+  const sp = searchParams
   const pageNum = Math.max(1, Number(sp?.page || '1'))
   const q = sp?.q?.trim() || ''
   const { items, total, page, pageSize } = await fetchList(pageNum, 24, q)
