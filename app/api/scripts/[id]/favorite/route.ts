@@ -2,8 +2,8 @@ import { prisma } from '@/src/db/client'
 import { ok, unauthorized } from '@/src/api/http'
 import { getSession } from '@/src/auth/session'
 
-export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const p = await params
+export async function POST(_req: Request, { params }: { params: { id: string } }) {
+  const p = params
   const s = await getSession()
   if (!s) return unauthorized()
   try { await prisma.favorite.create({ data: { scriptId: p.id, userId: s.userId } }) } catch {}
@@ -11,8 +11,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   return ok({ favorited: true, count })
 }
 
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const p = await params
+export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+  const p = params
   const s = await getSession()
   if (!s) return unauthorized()
   await prisma.favorite.deleteMany({ where: { scriptId: p.id, userId: s.userId } })
