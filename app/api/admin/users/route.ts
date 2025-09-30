@@ -88,6 +88,35 @@ export async function DELETE(req: Request) {
   if (!user) return notFound('user not found')
   const isSuper = user.roles.some(r => r.key === 'superuser')
   if (isSuper) return forbidden('SUPERUSER_IMMUTABLE')
-  await prisma.user.delete({ where: { id } })
+  
+  // 使用事务删除用户及其所有关联数据
+  await prisma.$transaction(async (tx) => {
+    // 删除用户的所有关联数据
+    await tx.like.deleteMany({ where: { userId: id } })
+    await tx.favorite.deleteMany({ where: { userId: id } })
+    await tx.comment.deleteMany({ where: { authorId: id } })
+    await tx.storytellerApplication.deleteMany({ where: { userId: id } })
+    
+    // 注意：不删除用户创建的剧本，只解除关联
+    // 将用户创建的剧本的 createdById 设为 null
+    await tx.script.updateMany({ where: { createdById: id }, data: { createdById: null } })
+    
+    // 将用户作为作者的剧本的 authorId 设为 null
+    await tx.script.updateMany({ where: { authorId: id }, data: { authorId: null } })
+    
+    // 将用户创建的 ScriptJSON 的 createdById 设为 null
+    await tx.scriptJSON.updateMany({ where: { createdById: id }, data: { createdById: null } })
+    
+    // 将用户创建的 ImageAsset 的 createdById 设为 null
+    await tx.imageAsset.updateMany({ where: { createdById: id }, data: { createdById: null } })
+    
+    // 删除用户的审核记录（如果需要保留审核历史，考虑软删除方案）
+    await tx.review.deleteMany({ where: { reviewerId: id } })
+    
+    // 最后删除用户
+    await tx.user.delete({ where: { id } })
+  })
+  
+  console.log('[Delete User] Successfully deleted user:', id)
   return ok({ id })
 }

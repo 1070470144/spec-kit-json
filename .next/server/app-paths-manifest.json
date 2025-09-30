@@ -1,14 +1,11 @@
 {
-  "/api/scripts/[id]/route": "app/api/scripts/[id]/route.js",
-  "/api/me/route": "app/api/me/route.js",
-  "/api/site-config/route": "app/api/site-config/route.js",
-  "/api/scripts/[id]/comments/route": "app/api/scripts/[id]/comments/route.js",
-  "/api/files/route": "app/api/files/route.js",
-  "/api/scripts/route": "app/api/scripts/route.js",
-  "/api/scripts/stats-batch/route": "app/api/scripts/stats-batch/route.js",
-  "/my/uploads/page": "app/my/uploads/page.js",
-  "/scripts/[id]/page": "app/scripts/[id]/page.js",
-  "/scripts/page": "app/scripts/page.js",
+  "/api/admin/users/route": "app/api/admin/users/route.js",
+  "/api/admin/settings/system/route": "app/api/admin/settings/system/route.js",
+  "/api/admin/auth/me/route": "app/api/admin/auth/me/route.js",
+  "/api/auth/register/route": "app/api/auth/register/route.js",
+  "/api/admin/settings/email/route": "app/api/admin/settings/email/route.js",
+  "/register/page": "app/register/page.js",
+  "/admin/review/page": "app/admin/review/page.js",
   "/admin/users/page": "app/admin/users/page.js",
-  "/admin/scripts/[id]/page": "app/admin/scripts/[id]/page.js"
+  "/admin/settings/email/page": "app/admin/settings/email/page.js"
 }

@@ -1,5 +1,6 @@
 import { headers, cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import DeleteUserButton from '../_components/DeleteUserButton'
 
 async function fetchUsers(q?: string) {
   const h = await headers()
@@ -15,7 +16,14 @@ async function fetchUsers(q?: string) {
 }
 
 async function removeUser(base: string, cookieHeader: string, id: string) {
-  await fetch(`${base}/api/admin/users?id=${id}`, { method: 'DELETE', headers: { cookie: cookieHeader } })
+  const res = await fetch(`${base}/api/admin/users?id=${id}`, { method: 'DELETE', headers: { cookie: cookieHeader } })
+  console.log('[Delete User] ID:', id, 'Status:', res.status)
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    console.error('[Delete User] Error:', data)
+    throw new Error(data?.error?.message || '删除失败')
+  }
+  return res
 }
 
 export default async function AdminUsersPage({ searchParams }: { searchParams?: Promise<{ q?: string }> }) {
@@ -124,21 +132,16 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
                             <a className="m3-btn-outlined text-body-small px-3 py-1.5" href={`/admin/users/${u.id}`}>
                               编辑
                             </a>
-                            <form className="inline" action={async () => {
-                              'use server'
-                              if (isSuper) return
-                              await removeUser(base, cookieHeader, u.id)
-                              revalidatePath('/admin/users')
-                            }}>
-                              <button 
-                                className={`btn-danger text-body-small px-3 py-1.5 ${isSuper ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                disabled={isSuper} 
-                                type="submit"
-                                title={isSuper ? '超级用户不能删除' : '删除用户'}
-                              >
-                                删除
-                              </button>
-                            </form>
+                            <DeleteUserButton 
+                              userId={u.id}
+                              userEmail={u.email}
+                              isSuper={isSuper}
+                              onDelete={async (userId: string) => {
+                                'use server'
+                                await removeUser(base, cookieHeader, userId)
+                                revalidatePath('/admin/users')
+                              }}
+                            />
                           </div>
                         </td>
                       </tr>
