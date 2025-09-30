@@ -73,20 +73,54 @@ function Step-CloneOrPull($cfg){
     # backup local-only files to avoid rebase blocking
     $bk = Join-Path $cfg.DeployDir '.deploy_backup'
     if(!(Test-Path $bk)){ New-Item -ItemType Directory -Force -Path $bk | Out-Null }
-    $toBackup = @('.env','uploads','prisma\prisma\dev.db')
-    foreach($p in $toBackup){ if(Test-Path $p){ Move-Item -Force -Path $p -Destination (Join-Path $bk ([IO.Path]::GetFileName($p))) } }
+    
+    # 使用 Copy 而不是 Move，保持原文件
+    $toBackup = @(
+      @{Path='.env'; Name='env'},
+      @{Path='uploads'; Name='uploads'},
+      @{Path='prisma\prisma\dev.db'; Name='dev.db'}
+    )
+    
+    Info "开始备份生产数据..."
+    foreach($item in $toBackup){ 
+      if(Test-Path $item.Path){ 
+        $dest = Join-Path $bk $item.Name
+        if(Test-Path $dest){ Remove-Item $dest -Recurse -Force }
+        Copy-Item -Recurse -Force -Path $item.Path -Destination $dest
+        OK "已备份: $($item.Path)"
+      } else {
+        Info "跳过（不存在）: $($item.Path)"
+      }
+    }
 
     git fetch --all --prune
     git checkout $cfg.Branch
-    # drop local changes (but we've backed up important files)
     git reset --hard HEAD
-    # 排除备份目录，避免删除备份！
-    git clean -fd -e .deploy_backup -e .env -e uploads -e prisma/prisma/dev.db -e prisma/dev.db
+    # 仅清理代码文件，完全不碰数据文件
+    git clean -fd -e .deploy_backup -e .env -e uploads/ -e prisma/
     git pull --rebase
 
-    # restore backups
-    foreach($p in $toBackup){ $src = Join-Path $bk ([IO.Path]::GetFileName($p)); if(Test-Path $src){ Move-Item -Force -Path $src -Destination $p } }
-    Remove-Item $bk -Force -Recurse -ErrorAction SilentlyContinue
+    # 强制还原备份（覆盖任何拉下来的文件）
+    Info "开始还原生产数据..."
+    foreach($item in $toBackup){ 
+      $src = Join-Path $bk $item.Name
+      if(Test-Path $src){ 
+        # 确保目标目录存在
+        $targetDir = Split-Path -Parent $item.Path
+        if($targetDir -and !(Test-Path $targetDir)){ 
+          New-Item -ItemType Directory -Force -Path $targetDir | Out-Null 
+        }
+        # 删除可能存在的目标，然后复制
+        if(Test-Path $item.Path){ Remove-Item $item.Path -Recurse -Force }
+        Copy-Item -Recurse -Force -Path $src -Destination $item.Path
+        OK "已还原: $($item.Path)"
+      } else {
+        Info "备份不存在，跳过: $($item.Path)"
+      }
+    }
+    
+    Info "保留备份目录，不删除（供紧急恢复）"
+    # Remove-Item $bk -Force -Recurse -ErrorAction SilentlyContinue
     Pop-Location
   }
   OK 'repo synced'
