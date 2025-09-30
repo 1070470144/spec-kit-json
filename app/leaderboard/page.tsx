@@ -27,8 +27,8 @@ async function fetchLeaderboard(type?: 'likes' | 'favorites' | 'downloads') {
   return { likes, favorites: [], downloads: [] }
 }
 
-export default async function LeaderboardPage({ searchParams }: { searchParams?: { type?: 'likes' | 'favorites' | 'downloads' } }) {
-  const sp = searchParams
+export default async function LeaderboardPage({ searchParams }: { searchParams?: Promise<{ type?: 'likes' | 'favorites' | 'downloads' }> }) {
+  const sp = searchParams ? await searchParams : undefined
   const type = sp?.type === 'favorites' ? 'favorites' : (sp?.type === 'downloads' ? 'downloads' : 'likes')
   const { likes, favorites, downloads } = await fetchLeaderboard(type)
   const list = type==='likes' ? likes : (type==='favorites' ? favorites : downloads)

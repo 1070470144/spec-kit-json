@@ -15,8 +15,8 @@ async function fetchByState(state: string, page = 1, pageSize = 50) {
   return { items, total }
 }
 
-export default async function ReviewPage({ searchParams }: { searchParams?: { page?: string } }) {
-  const sp = searchParams
+export default async function ReviewPage({ searchParams }: { searchParams?: Promise<{ page?: string }> }) {
+  const sp = searchParams ? await searchParams : undefined
   const page = Math.max(1, Number(sp?.page || '1'))
   const pageSize = 50
   const { items: pending, total } = await fetchByState('pending', page, pageSize)

@@ -17,8 +17,8 @@ async function fetchMyUploads(page = 1, pageSize = 24) {
   return { items, total, page, pageSize }
 }
 
-export default async function MyUploadsPage({ searchParams }: { searchParams?: { page?: string } }) {
-  const sp = searchParams
+export default async function MyUploadsPage({ searchParams }: { searchParams?: Promise<{ page?: string }> }) {
+  const sp = searchParams ? await searchParams : undefined
   const pageNum = Math.max(1, Number(sp?.page || '1'))
   const { items, total, page, pageSize } = await fetchMyUploads(pageNum, 24)
   const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize))
