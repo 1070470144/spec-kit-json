@@ -220,6 +220,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/storyteller/apply/route.js"
+    ],
+    "/api/scripts/[id]/like/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/scripts/[id]/like/route.js"
     ]
   }
 }
