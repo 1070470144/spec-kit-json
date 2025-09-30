@@ -80,7 +80,8 @@ function Step-CloneOrPull($cfg){
     git checkout $cfg.Branch
     # drop local changes (but we've backed up important files)
     git reset --hard HEAD
-    git clean -fd
+    # 排除备份目录，避免删除备份！
+    git clean -fd -e .deploy_backup -e .env -e uploads -e prisma/prisma/dev.db -e prisma/dev.db
     git pull --rebase
 
     # restore backups
