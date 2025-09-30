@@ -13,14 +13,15 @@ async function updateUser(base: string, cookieHeader: string, data: { id:string;
   await fetch(`${base}/api/admin/users`, { method: 'PUT', headers: { 'Content-Type': 'application/json', cookie: cookieHeader }, body: JSON.stringify(data) })
 }
 
-export default async function AdminUserEditPage({ params }: { params: { id: string } }) {
+export default async function AdminUserEditPage(props: any) {
+  const p = await props?.params
   const h = await headers()
   const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
   const proto = h.get('x-forwarded-proto') || 'http'
   const base = `${proto}://${host}`
   const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ')
 
-  const u = await fetchUser(base, cookieHeader, params.id)
+  const u = await fetchUser(base, cookieHeader, p.id)
   const roleKeys = (u?.roles||[]).map((r:any)=>r.key)
   const isSuper = roleKeys.includes('superuser')
   const currentRole: 'admin' | 'user' = roleKeys.includes('admin') ? 'admin' : 'user'

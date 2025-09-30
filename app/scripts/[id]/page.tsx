@@ -14,8 +14,9 @@ async function fetchDetail(id: string) {
   return { data, base }
 }
 
-export default async function ScriptDetailPage({ params }: { params: { id: string } }) {
-  const { data, base } = await fetchDetail(params.id)
+export default async function ScriptDetailPage(props: any) {
+  const p = await props?.params
+  const { data, base } = await fetchDetail(p.id)
   const images = data.images ?? []
   const cover = images.find(i=>i.isCover) || images[0]
   const displayImages = images
@@ -52,7 +53,7 @@ export default async function ScriptDetailPage({ params }: { params: { id: strin
 
       {/* 评论区域 */}
       {/* @ts-expect-error Server Component boundary */}
-      <ClientCommentsWrapper id={params.id} />
+      <ClientCommentsWrapper id={p.id} />
     </div>
   )
 }
