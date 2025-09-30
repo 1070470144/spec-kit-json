@@ -1,2 +1,36 @@
 node_modules/
-node_modules/
+
+# 数据库文件（绝对不能提交到 git！）
+*.db
+*.db-journal
+prisma/dev.db
+prisma/prisma/dev.db
+
+# 环境变量（包含敏感信息）
+.env
+.env.local
+.env.production
+.env.*.local
+
+# 上传文件
+uploads/
+
+# PM2 相关
+pm2-juben.config.json
+ecosystem.config.json
+
+# 备份文件
+backups/
+.deploy_backup/
+
+# Next.js
+.next/
+out/
+
+# 日志
+*.log
+npm-debug.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db
