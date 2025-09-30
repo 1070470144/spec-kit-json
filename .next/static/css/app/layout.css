@@ -1328,6 +1328,9 @@ video {
 .block {
   display: block;
 }
+.inline-block {
+  display: inline-block;
+}
 .inline {
   display: inline;
 }
@@ -1921,6 +1924,10 @@ video {
 .border-t-transparent {
   border-top-color: transparent;
 }
+.border-t-sky-600 {
+  --tw-border-opacity: 1;
+  border-top-color: rgb(2 132 199 / var(--tw-border-opacity, 1));
+}
 .bg-\[var\(--m3-bg\)\] {
   background-color: var(--m3-bg);
 }
@@ -2197,6 +2204,11 @@ video {
   --tw-gradient-to: rgb(250 204 21 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
+.from-sky-50 {
+  --tw-gradient-from: #f0f9ff var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(240 249 255 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
 .via-black\/50 {
   --tw-gradient-to: rgb(0 0 0 / 0)  var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), rgb(0 0 0 / 0.5) var(--tw-gradient-via-position), var(--tw-gradient-to);
@@ -2290,6 +2302,9 @@ video {
 }
 .to-transparent {
   --tw-gradient-to: transparent var(--tw-gradient-to-position);
+}
+.to-cyan-50 {
+  --tw-gradient-to: #ecfeff var(--tw-gradient-to-position);
 }
 .bg-\[size\:4rem_4rem\] {
   background-size: 4rem 4rem;
@@ -2398,6 +2413,10 @@ video {
 .py-8 {
   padding-top: 2rem;
   padding-bottom: 2rem;
+}
+.px-8 {
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 .pb-20 {
   padding-bottom: 5rem;

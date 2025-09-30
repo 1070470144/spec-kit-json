@@ -13,7 +13,7 @@ function Err($s){ Write-Host "[x] $s" -ForegroundColor Red }
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $CfgPath = Join-Path $Root 'pm2-installer.config.json'
 
-function LoadCfg(){ if(Test-Path $CfgPath){ return Get-Content $CfgPath -Raw | ConvertFrom-Json } else { return [pscustomobject]@{ RepoUrl='https://github.com/1070470144/spec-kit-json'; Branch='master'; DeployDir='C:\apps\juben'; APP_BASE_URL='https://localhost'; APP_PORT='10080'; NEXTAUTH_SECRET=''; SMTP_HOST='smtp.qq.com'; SMTP_PORT='465'; SMTP_USER='1070470144@qq.com'; SMTP_PASS='ttcrvmnndyiqbdig'; MAIL_FROM='1070470144@qq.com'; } } }
+function LoadCfg(){ if(Test-Path $CfgPath){ return Get-Content $CfgPath -Raw | ConvertFrom-Json } else { return [pscustomobject]@{ RepoUrl='https://github.com/1070470144/spec-kit-json'; Branch='master'; DeployDir='C:\apps\juben'; APP_BASE_URL='https://localhost'; APP_PORT='10080'; NEXTAUTH_SECRET=''; SMTP_HOST='smtp.163.com'; SMTP_PORT='465'; SMTP_USER='meng1070470144@163.com'; SMTP_PASS='XDiCHucXDTxi99M8'; MAIL_FROM='meng1070470144@163.com'; } } }
 function SaveCfg([object]$cfg){ $cfg | ConvertTo-Json -Depth 5 | Out-File -Encoding UTF8 $CfgPath }
 
 function HasNode(){ node -v *> $null; return ($LASTEXITCODE -eq 0) }

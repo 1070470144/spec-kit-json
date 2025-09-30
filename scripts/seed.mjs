@@ -38,11 +38,11 @@ async function main() {
 
   // 默认系统配置：发送邮箱
   const mailDefaults = [
-    { key: 'smtp.host', value: 'smtp.qq.com' },
+    { key: 'smtp.host', value: 'smtp.163.com' },
     { key: 'smtp.port', value: '465' },
-    { key: 'smtp.user', value: '1070470144@qq.com' },
-    { key: 'smtp.pass', value: 'ttcrvmnndyiqbdig' },
-    { key: 'mail.from', value: '1070470144@qq.com' },
+    { key: 'smtp.user', value: 'meng1070470144@163.com' },
+    { key: 'smtp.pass', value: 'XDiCHucXDTxi99M8' },
+    { key: 'mail.from', value: 'meng1070470144@163.com' },
   ]
   for (const m of mailDefaults) {
     await prisma.systemConfig.upsert({
