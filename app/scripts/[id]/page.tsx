@@ -14,8 +14,8 @@ async function fetchDetail(id: string) {
   return { data, base }
 }
 
-export default async function ScriptDetailPage(props: any) {
-  const p = await props?.params
+export default async function ScriptDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const p = await params
   const { data, base } = await fetchDetail(p.id)
   const images = data.images ?? []
   const cover = images.find(i=>i.isCover) || images[0]

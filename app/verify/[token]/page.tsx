@@ -4,8 +4,8 @@ async function verifyToken(token: string) {
   return { ok: res.ok, data }
 }
 
-export default async function VerifyEmailPage(props: any) {
-  const p = await props?.params
+export default async function VerifyEmailPage({ params }: { params: Promise<{ token: string }> }) {
+  const p = await params
   const { ok, data } = await verifyToken(p.token)
   return (
     <div className="container-page section">

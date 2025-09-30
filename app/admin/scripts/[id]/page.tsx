@@ -11,8 +11,8 @@ async function fetchScript(id: string) {
   return { data: j?.data || j }
 }
 
-export default async function AdminScriptDetailPage(props: any) {
-  const p = await props?.params
+export default async function AdminScriptDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const p = await params
   const { data } = await fetchScript(p.id)
   return (
     <div className="container-page section">
