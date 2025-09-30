@@ -1,7 +1,10 @@
 {
+  "/api/me/route": "app/api/me/route.js",
+  "/api/site-config/route": "app/api/site-config/route.js",
+  "/api/scripts/stats-batch/route": "app/api/scripts/stats-batch/route.js",
+  "/api/scripts/route": "app/api/scripts/route.js",
+  "/api/scripts/[id]/route": "app/api/scripts/[id]/route.js",
   "/page": "app/page.js",
-  "/my/uploads/page": "app/my/uploads/page.js",
-  "/admin/scripts/batch/page": "app/admin/scripts/batch/page.js",
-  "/admin/review/page": "app/admin/review/page.js",
-  "/admin/scripts/page": "app/admin/scripts/page.js"
+  "/scripts/page": "app/scripts/page.js",
+  "/leaderboard/page": "app/leaderboard/page.js"
 }

@@ -1,4 +1,6 @@
+import HeroSection from './_components/HeroSection'
 import HotCarousel from './_components/HotCarousel'
+import FeaturesGrid from './_components/FeaturesGrid'
 import { prisma } from '@/src/db/client'
 
 async function fetchHot() {
@@ -43,14 +45,19 @@ async function fetchHot() {
 export default async function HomePage() {
   const hot = await fetchHot()
   return (
-    <div className="container-page section">
-      <div className="card">
-        <div className="card-body">
-          <h1 className="card-title">血染钟楼资源平台</h1>
-          <p className="muted">集中收集与索引剧本 JSON 与图片的门户。</p>
+    <div className="space-y-8 md:space-y-12">
+      <HeroSection />
+      
+      {!!hot.length && (
+        <div className="container-page">
+          <h2 className="text-headline-small mb-6 text-surface-on">热门剧本</h2>
+          <HotCarousel items={hot} />
         </div>
+      )}
+      
+      <div className="container-page">
+        <FeaturesGrid />
       </div>
-      {!!hot.length && <HotCarousel items={hot} />}
     </div>
   );
 }

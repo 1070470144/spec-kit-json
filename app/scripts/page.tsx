@@ -1,6 +1,11 @@
+import { headers } from 'next/headers'
+
 async function fetchList(page = 1, pageSize = 24, q?: string) {
+  const h = await headers()
+  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
+  const proto = h.get('x-forwarded-proto') || 'http'
+  const base = `${proto}://${host}`
   const qs = new URLSearchParams({ state: 'published', page: String(page), pageSize: String(pageSize), ...(q ? { q } : {}) })
-  const base = process.env.APP_BASE_URL || ''
   const res = await fetch(`${base}/api/scripts?${qs.toString()}`, { cache: 'no-store' })
   const j = await res.json()
   const items = (j?.data?.items ?? j?.items ?? []) as { id: string; title: string; authorName?: string|null }[]
@@ -13,10 +18,16 @@ export default async function ScriptsPage({ searchParams }: { searchParams?: Pro
   const pageNum = Math.max(1, Number(sp?.page || '1'))
   const q = sp?.q?.trim() || ''
   const { items, total, page, pageSize } = await fetchList(pageNum, 24, q)
+  
+  const h = await headers()
+  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
+  const proto = h.get('x-forwarded-proto') || 'http'
+  const base = `${proto}://${host}`
+  
   // 批量预取当前页的点赞/收藏统计
   let statsMap: Record<string, { likes:number; favorites:number; liked:boolean; favorited:boolean }> = {}
   try {
-    const res = await fetch('http://localhost:3000/api/scripts/stats-batch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: items.map(i=>i.id) }) })
+    const res = await fetch(`${base}/api/scripts/stats-batch`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: items.map(i=>i.id) }) })
     const j = await res.json().catch(()=>({}))
     statsMap = (j?.data?.items ?? j?.items ?? {}) as typeof statsMap
   } catch {}
@@ -40,13 +51,11 @@ export default async function ScriptsPage({ searchParams }: { searchParams?: Pro
         {items.map(i => (
           <div key={i.id} className="card">
             {/* 缩略图轮播 */}
-            {/* Server Component boundary */}
             <ClientCarouselWrapper id={i.id} />
             <div className="card-body">
               <div className="card-title">{i.title}</div>
               <div className="muted">作者：{i.authorName || '-'}</div>
               <div className="mt-3">
-                {/* Server-Client boundary */}
                 <ClientActionsWrapper id={i.id} initial={statsMap[i.id]} />
               </div>
             </div>

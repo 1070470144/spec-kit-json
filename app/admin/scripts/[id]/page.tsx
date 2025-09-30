@@ -12,14 +12,14 @@ async function fetchScript(id: string) {
 }
 
 export default async function AdminScriptDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const p = await params
-  const { data } = await fetchScript(p.id)
+  const { id } = await params
+  const { data } = await fetchScript(id)
   return (
     <div className="container-page section">
       <div className="card">
         <div className="card-body">
           <div className="card-title">编辑剧本</div>
-          <AdminScriptEditor id={p.id} />
+          <AdminScriptEditor id={id} />
         </div>
       </div>
     </div>

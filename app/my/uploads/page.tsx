@@ -34,7 +34,6 @@ export default async function MyUploadsPage({ searchParams }: { searchParams?: P
         )}
         {items && items.length > 0 && items.map(s => (
           <div key={s.id} className="card">
-            {/* Server Component boundary */}
             <ClientCarouselWrapper id={s.id} />
             <div className="card-body">
               <div className="card-title flex items-center justify-between">

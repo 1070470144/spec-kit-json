@@ -7,8 +7,7 @@ async function fetchScripts(state?: string, page = 1, pageSize = 24) {
   const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
   const proto = h.get('x-forwarded-proto') || 'http'
   const base = `${proto}://${host}`
-  const allCookies = (await cookies()).getAll() as Array<{ name: string; value: string }>
-  const cookieHeader = allCookies.map(c => `${c.name}=${c.value}`).join('; ')
+  const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ')
   const qs = new URLSearchParams({ page: String(page), pageSize: String(pageSize), ...(state ? { state } : {}) })
   const res = await fetch(`${base}/api/scripts?${qs.toString()}`, { cache: 'no-store', headers: { cookie: cookieHeader } })
   const j = await res.json().catch(()=>({}))
