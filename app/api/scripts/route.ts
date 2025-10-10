@@ -6,8 +6,10 @@ import { parseJson } from '@/src/api/validate'
 import { LocalStorage } from '@/src/storage/local'
 import { getSession } from '@/src/auth/session'
 import { getAdminSession } from '@/src/auth/adminSession'
+import { getCachedData, CACHE_CONFIG } from '@/src/cache/api-cache'
 
 export async function GET(req: NextRequest) {
+  const startTime = Date.now()
   const { searchParams } = new URL(req.url)
   const state = searchParams.get('state') || undefined
   const q = searchParams.get('q') || undefined
@@ -34,16 +36,91 @@ export async function GET(req: NextRequest) {
     console.log('[List] Mine mode - userId:', s.userId, 'Where:', JSON.stringify(where))
   }
 
-  const [itemsRaw, total] = await Promise.all([
-    prisma.script.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: pageSize,
-      select: { id: true, title: true, authorName: true, language: true, state: true, createdAt: true, images: { select: { path: true, isCover: true, sortOrder: true }, take: 1, orderBy: { sortOrder: 'asc' } } }
-    }),
-    prisma.script.count({ where })
-  ])
+  // 构建缓存键，包含主要查询参数
+  const cacheKey = `scripts-${effectiveState || 'all'}-${q || 'noquery'}-${mine ? 'mine' : 'public'}-${page}-${pageSize}${mine ? `-${JSON.stringify(where)}` : ''}`
+  
+  // 对于非个人查询使用缓存
+  const shouldCache = !mine && !q // 公共列表和无搜索条件时使用缓存
+  
+  let itemsRaw, total
+  
+  if (shouldCache) {
+    const cachedData = await getCachedData(
+      { ...CACHE_CONFIG.SCRIPTS_LIST('list'), key: cacheKey },
+      async () => {
+        console.log(`[DB QUERY] scripts-list-query - state:${effectiveState}, page:${page}`)
+        const queryStartTime = Date.now()
+        
+        const [items, count] = await Promise.all([
+          prisma.script.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: pageSize,
+            select: { 
+              id: true, 
+              title: true, 
+              authorName: true, 
+              language: true, 
+              state: true, 
+              createdAt: true, 
+              images: { 
+                select: { path: true, isCover: true, sortOrder: true }, 
+                take: 1, 
+                orderBy: { sortOrder: 'asc' } 
+              } 
+            }
+          }),
+          prisma.script.count({ where })
+        ])
+        
+        const queryDuration = Date.now() - queryStartTime
+        if (queryDuration > 200) {
+          console.warn(`[SLOW QUERY] scripts-list - ${queryDuration}ms`)
+        }
+        
+        return { items, total: count }
+      }
+    )
+    
+    itemsRaw = cachedData.items
+    total = cachedData.total
+  } else {
+    // 个人查询或搜索不使用缓存
+    console.log(`[DB QUERY] scripts-list-query (no-cache) - mine:${mine}, q:${q}`)
+    const queryStartTime = Date.now()
+    
+    const [items, count] = await Promise.all([
+      prisma.script.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+        select: { 
+          id: true, 
+          title: true, 
+          authorName: true, 
+          language: true, 
+          state: true, 
+          createdAt: true, 
+          images: { 
+            select: { path: true, isCover: true, sortOrder: true }, 
+            take: 1, 
+            orderBy: { sortOrder: 'asc' } 
+          } 
+        }
+      }),
+      prisma.script.count({ where })
+    ])
+    
+    const queryDuration = Date.now() - queryStartTime
+    if (queryDuration > 200) {
+      console.warn(`[SLOW QUERY] scripts-list (no-cache) - ${queryDuration}ms`)
+    }
+    
+    itemsRaw = items
+    total = count
+  }
 
   const items = itemsRaw.map(it => ({
     ...it,
@@ -52,6 +129,9 @@ export async function GET(req: NextRequest) {
   
   console.log('[List] Returning:', items.length, 'items, Total:', total, 'Mine:', mine)
 
+  const duration = Date.now() - startTime
+  console.log(`[API] GET /api/scripts - ${duration}ms (cached: ${shouldCache})`)
+  
   return ok({ items, total, page, pageSize })
 }
 

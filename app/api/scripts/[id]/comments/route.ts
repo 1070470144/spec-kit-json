@@ -3,21 +3,73 @@ import { prisma } from '@/src/db/client'
 import { ok, notFound, badRequest, unauthorized, forbidden } from '@/src/api/http'
 import { getSession } from '@/src/auth/session'
 import { getAdminSession } from '@/src/auth/adminSession'
+import { getCachedData, CACHE_CONFIG } from '@/src/cache/api-cache'
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const startTime = Date.now()
   const { searchParams } = new URL(req.url)
   const page = Math.max(1, Number(searchParams.get('page') || '1'))
   const pageSize = Math.min(50, Math.max(1, Number(searchParams.get('pageSize') || '10')))
   const skip = (page - 1) * pageSize
   const { id } = await context.params
-  const script = await prisma.script.findUnique({ where: { id }, select: { id: true } })
-  if (!script) return notFound()
-  const [items, total] = await Promise.all([
-    prisma.comment.findMany({ where: { scriptId: id }, orderBy: { createdAt: 'desc' }, skip, take: pageSize, select: { id: true, content: true, createdAt: true, authorId: true, author: { select: { nickname: true, email: true } } } }),
-    prisma.comment.count({ where: { scriptId: id } })
-  ])
-  const out = items.map(c => ({ id: c.id, content: c.content, createdAt: c.createdAt, author: c.author?.nickname || c.author?.email || '匿名', authorId: c.authorId }))
-  return ok({ items: out, total, page, pageSize })
+  
+  try {
+    // 先检查脚本是否存在
+    const script = await prisma.script.findUnique({ where: { id }, select: { id: true } })
+    if (!script) return notFound()
+    
+    // 构建缓存键，包含分页参数
+    const cacheKey = `comments-${id}-p${page}-ps${pageSize}`
+    
+    const commentsData = await getCachedData(
+      { ...CACHE_CONFIG.COMMENTS(id), key: cacheKey },
+      async () => {
+        console.log(`[DB QUERY] comments-${id}-query - page:${page}, pageSize:${pageSize}`)
+        const queryStartTime = Date.now()
+        
+        const [items, total] = await Promise.all([
+          prisma.comment.findMany({ 
+            where: { scriptId: id }, 
+            orderBy: { createdAt: 'desc' }, 
+            skip, 
+            take: pageSize, 
+            select: { 
+              id: true, 
+              content: true, 
+              createdAt: true, 
+              authorId: true, 
+              author: { select: { nickname: true, email: true } } 
+            } 
+          }),
+          prisma.comment.count({ where: { scriptId: id } })
+        ])
+        
+        const queryDuration = Date.now() - queryStartTime
+        if (queryDuration > 100) {
+          console.warn(`[SLOW QUERY] comments-${id} - ${queryDuration}ms`)
+        }
+        
+        const out = items.map(c => ({ 
+          id: c.id, 
+          content: c.content, 
+          createdAt: c.createdAt, 
+          author: c.author?.nickname || c.author?.email || '匿名', 
+          authorId: c.authorId 
+        }))
+        
+        return { items: out, total, page, pageSize }
+      }
+    )
+    
+    const duration = Date.now() - startTime
+    console.log(`[API] GET /api/scripts/${id}/comments - ${duration}ms (${commentsData.items.length}/${commentsData.total} comments)`)
+    
+    return ok(commentsData)
+  } catch (error) {
+    const duration = Date.now() - startTime
+    console.error(`[API ERROR] GET /api/scripts/${id}/comments - ${duration}ms:`, error)
+    return ok({ items: [], total: 0, page, pageSize })
+  }
 }
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {

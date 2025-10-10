@@ -225,8 +225,8 @@ export default function SiteHeader() {
                         )}
                         
                         {/* 登录/注册按钮（未登录状态） */}
-                        {!me && (
-                          <>
+          {!me && (
+            <>
                             <div className="border-t border-gray-100 my-1"></div>
                             <Link
                               href="/login"

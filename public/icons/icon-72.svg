@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0EA5E9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0284C7;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F0F9FF;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="0.72" stdDeviation="0.36" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  
+  
+  <!-- Main logo circle -->
+  <circle cx="36" cy="36" r="25.200000000000003" fill="url(#bgGrad)" filter="url(#shadow)" />
+  
+  <!-- Inner content -->
+  <g transform="translate(36, 36)">
+    <!-- Clock tower silhouette -->
+    <g transform="translate(0, -2.5200000000000005)">
+      <!-- Tower base -->
+      <rect x="-15.120000000000001" y="7.5600000000000005" width="30.240000000000002" height="10.080000000000002" 
+            fill="url(#textGrad)" opacity="0.9" rx="2.5200000000000005" />
+      
+      <!-- Tower middle -->
+      <rect x="-10.080000000000002" y="2.5200000000000005" width="20.160000000000004" height="7.5600000000000005" 
+            fill="url(#textGrad)" opacity="0.85" rx="1.2600000000000002" />
+      
+      <!-- Tower top -->
+      <rect x="-6.300000000000001" y="-5.040000000000001" width="12.600000000000001" height="8.82" 
+            fill="url(#textGrad)" opacity="0.9" rx="0.756" />
+      
+      <!-- Clock face -->
+      <circle cx="0" cy="1.2600000000000002" r="6.300000000000001" fill="#FFFFFF" opacity="0.95" 
+              stroke="url(#textGrad)" stroke-width="0.216" />
+      
+      <!-- Clock hands -->
+      <g transform="translate(0, 1.2600000000000002)">
+        <line x1="0" y1="0" x2="0" y2="-3.7800000000000002" stroke="#0EA5E9" stroke-width="0.28800000000000003" 
+              stroke-linecap="round" opacity="0.8" />
+        <line x1="0" y1="0" x2="2.5200000000000005" y2="-2.0160000000000005" stroke="#0284C7" stroke-width="0.216" 
+              stroke-linecap="round" opacity="0.8" />
+        <circle cx="0" cy="0" r="0.5760000000000001" fill="#DC2626" />
+      </g>
+      
+      <!-- Blood drops -->
+      <g opacity="0.7">
+        <ellipse cx="-7.5600000000000005" cy="12.600000000000001" rx="0.5760000000000001" ry="0.864" fill="#DC2626" />
+        <ellipse cx="8.82" cy="11.340000000000002" rx="0.432" ry="0.72" fill="#B91C1C" />
+        <ellipse cx="-3.7800000000000002" cy="15.120000000000001" rx="0.36" ry="0.5760000000000001" fill="#EF4444" />
+      </g>
+    </g>
+    
+    <!-- Chinese character "血" -->
+    <text x="0" y="21.42" font-family="serif" font-size="10.080000000000002" 
+          fill="url(#textGrad)" text-anchor="middle" dominant-baseline="middle" 
+          font-weight="bold" opacity="0.9">血</text>
+  </g>
+</svg>

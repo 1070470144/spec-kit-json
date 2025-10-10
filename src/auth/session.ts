@@ -28,4 +28,6 @@ export async function setSessionCookie(token: string) {
   (await cookies()).set(COOKIE_NAME, token, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 7 * 24 * 3600 })
 }
 export async function clearSessionCookie() { (await cookies()).set(COOKIE_NAME, '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 }) }
-export async function getSession(): Promise<SessionPayload | null> { return verifySessionToken((await cookies()).get(COOKIE_NAME)?.value) }
+export async function getSession(): Promise<SessionPayload | null> { 
+  return verifySessionToken((await cookies()).get(COOKIE_NAME)?.value) 
+}

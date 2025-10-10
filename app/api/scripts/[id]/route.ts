@@ -2,23 +2,76 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/src/db/client'
 import { ok, notFound, badRequest, unauthorized, forbidden } from '@/src/api/http'
 import { getAdminSession } from '@/src/auth/adminSession'
+import { getCachedData, CACHE_CONFIG } from '@/src/cache/api-cache'
 
 export async function GET(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const startTime = Date.now()
   const { id } = await context.params
-  const s = await prisma.script.findUnique({
-    where: { id },
-    include: {
-      images: { orderBy: { sortOrder: 'asc' } },
-      versions: { orderBy: { createdAt: 'desc' }, take: 1 },
-      author: { select: { nickname: true, email: true } }
+  
+  try {
+    const scriptData = await getCachedData(
+      CACHE_CONFIG.SCRIPT_DETAIL(id),
+      async () => {
+        console.log(`[DB QUERY] script-detail-${id}-query`)
+        const queryStartTime = Date.now()
+        
+        const s = await prisma.script.findUnique({
+          where: { id },
+          include: {
+            images: { orderBy: { sortOrder: 'asc' } },
+            versions: { orderBy: { createdAt: 'desc' }, take: 1 },
+            author: { select: { nickname: true, email: true } }
+          }
+        })
+        
+        const queryDuration = Date.now() - queryStartTime
+        if (queryDuration > 150) {
+          console.warn(`[SLOW QUERY] script-detail-${id} - ${queryDuration}ms`)
+        }
+        
+        if (!s) return null
+        
+        const images = s.images.map(i => ({ 
+          id: i.id, 
+          url: `/api/files?path=${encodeURIComponent(i.path)}`, 
+          isCover: i.isCover 
+        }))
+        
+        let json: unknown = null
+        try { 
+          json = s.versions[0] ? JSON.parse(s.versions[0].content) : null 
+        } catch { 
+          json = null 
+        }
+        
+        const author = s.authorName || s.author?.nickname || s.author?.email || null
+        
+        return { 
+          id: s.id, 
+          title: s.title, 
+          author, 
+          state: s.state, 
+          images, 
+          json 
+        }
+      }
+    )
+    
+    if (!scriptData) {
+      const duration = Date.now() - startTime
+      console.log(`[API] GET /api/scripts/${id} - ${duration}ms (not found)`)
+      return notFound()
     }
-  })
-  if (!s) return notFound()
-  const images = s.images.map(i => ({ id: i.id, url: `/api/files?path=${encodeURIComponent(i.path)}`, isCover: i.isCover }))
-  let json: unknown = null
-  try { json = s.versions[0] ? JSON.parse(s.versions[0].content) : null } catch { json = null }
-  const author = s.authorName || s.author?.nickname || s.author?.email || null
-  return ok({ id: s.id, title: s.title, author, state: s.state, images, json })
+    
+    const duration = Date.now() - startTime
+    console.log(`[API] GET /api/scripts/${id} - ${duration}ms`)
+    
+    return ok(scriptData)
+  } catch (error) {
+    const duration = Date.now() - startTime
+    console.error(`[API ERROR] GET /api/scripts/${id} - ${duration}ms:`, error)
+    return notFound()
+  }
 }
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {

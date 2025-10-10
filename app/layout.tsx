@@ -13,7 +13,6 @@ export const metadata: Metadata = {
   title: '血染钟楼资源平台',
   description: 'Blood on the Clocktower 剧本分享与管理平台 - 汇聚全球优质剧本',
   manifest: '/manifest.json',
-  themeColor: '#0EA5E9',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
