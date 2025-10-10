@@ -1,7 +1,9 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useKeyboardScroll } from '@/src/hooks/useKeyboardScroll'
 
 export default function UploadPage() {
+  useKeyboardScroll() // 键盘弹出时自动滚动
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
   const [title, setTitle] = useState('')
   const [authorName, setAuthorName] = useState('')
@@ -110,16 +112,16 @@ export default function UploadPage() {
             </div>
           </div>
           
-          <h1 className="text-4xl font-bold text-surface-on mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-surface-on mb-3 sm:mb-4">
             需要登录才能上传
           </h1>
-          <p className="text-lg text-surface-on-variant mb-8 max-w-md mx-auto">
+          <p className="text-base sm:text-lg text-surface-on-variant mb-6 sm:mb-8 max-w-md mx-auto px-4">
             请先登录您的账户，然后即可上传剧本和图片
           </p>
           
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
             <a 
-              className="m3-btn-filled inline-flex items-center gap-2 px-8 py-4 text-lg"
+              className="m3-btn-filled inline-flex items-center justify-center gap-2 px-8 py-4 text-base sm:text-lg min-h-touch"
               href="/login"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -128,7 +130,7 @@ export default function UploadPage() {
               登录账户
             </a>
             <a 
-              className="m3-btn-outlined inline-flex items-center gap-2 px-8 py-4 text-lg"
+              className="m3-btn-outlined inline-flex items-center justify-center gap-2 px-8 py-4 text-base sm:text-lg min-h-touch"
               href="/register"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,12 +157,12 @@ export default function UploadPage() {
   return (
     <div className="container-page section">
       <div className="max-w-3xl">
-        <h1 className="text-headline-small mb-2 text-surface-on">上传剧本</h1>
-        <p className="text-body-medium text-surface-on-variant">支持 JSON 文件与 0–3 张图片（JPG/PNG/WebP）。</p>
+        <h1 className="text-2xl sm:text-3xl md:text-headline-small mb-2 text-surface-on">上传剧本</h1>
+        <p className="text-sm sm:text-base md:text-body-medium text-surface-on-variant">支持 JSON 文件与 0–3 张图片（JPG/PNG/WebP）。</p>
       </div>
 
-      <div className="m3-card-elevated max-w-3xl mt-6">
-        <div className="p-6 space-y-6">
+      <div className="m3-card-elevated max-w-3xl mt-4 sm:mt-6">
+        <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
           {toast && (
             <div className={`rounded-sm border px-4 py-3 text-body-small ${
               toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' : toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'
@@ -170,76 +172,76 @@ export default function UploadPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <label htmlFor="title" className="sm:w-32 text-body-medium text-surface-on font-medium">名字（标题）<span className="text-error">*</span></label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <label htmlFor="title" className="text-sm sm:text-base sm:w-32 text-surface-on font-medium">名字（标题）<span className="text-error">*</span></label>
               <input 
                 id="title"
-                className="input flex-1" 
+                className="input flex-1 min-h-touch text-base" 
                 placeholder="例如：隐舟暗渡" 
                 value={title} 
                 onChange={e=>setTitle(e.target.value)}
                 required
               />
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <label htmlFor="author" className="sm:w-32 text-body-medium text-surface-on font-medium">作者（可选）</label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <label htmlFor="author" className="text-sm sm:text-base sm:w-32 text-surface-on font-medium">作者（可选）</label>
               <input 
                 id="author"
-                className="input flex-1" 
+                className="input flex-1 min-h-touch text-base" 
                 placeholder="作者名" 
                 value={authorName} 
                 onChange={e=>setAuthorName(e.target.value)} 
               />
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <label htmlFor="json-file" className="sm:w-32 text-body-medium text-surface-on font-medium">剧本 JSON<span className="text-error">*</span></label>
-              <div className="flex items-center gap-3 flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <label htmlFor="json-file" className="text-sm sm:text-base sm:w-32 text-surface-on font-medium">剧本 JSON<span className="text-error">*</span></label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-1">
                 <input 
                   ref={jsonRef} 
                   id="json-file"
                   className="hidden" 
                   type="file" 
-                  accept="application/json" 
+                  accept="application/json,.json" 
                   onChange={onPickJson} 
                 />
-                <button type="button" className="m3-btn-outlined" onClick={() => jsonRef.current?.click()}>选择文件</button>
-                <span className="text-body-small text-surface-on-variant truncate flex-1">
+                <button type="button" className="m3-btn-outlined min-h-touch w-full sm:w-auto" onClick={() => jsonRef.current?.click()}>选择文件</button>
+                <span className="text-sm text-surface-on-variant truncate">
                   {jsonFile ? jsonFile.name : '未选择'}
                 </span>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-              <label htmlFor="images-file" className="sm:w-32 text-body-medium text-surface-on font-medium sm:mt-2">图片（0–3）</label>
+            <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
+              <label htmlFor="images-file" className="text-sm sm:text-base sm:w-32 text-surface-on font-medium sm:mt-2">图片（0–3）</label>
               <div className="flex-1">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <input 
                     ref={imagesRef} 
                     id="images-file"
                     className="hidden" 
                     type="file" 
-                    accept="image/jpeg,image/png,image/webp" 
+                    accept="image/jpeg,image/jpg,image/png,image/webp" 
                     multiple 
                     onChange={onPickImages} 
                   />
-                  <button type="button" className="m3-btn-outlined" onClick={() => imagesRef.current?.click()}>选择图片</button>
-                  <span className="text-body-small text-surface-on-variant">
+                  <button type="button" className="m3-btn-outlined min-h-touch w-full sm:w-auto" onClick={() => imagesRef.current?.click()}>选择图片</button>
+                  <span className="text-sm text-surface-on-variant">
                     {images.length ? `已选 ${images.length} 张` : '未选择'}
                   </span>
                 </div>
                 {!!imgPreviews.length && (
-                  <div className="grid grid-cols-3 gap-3 mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
                     {imgPreviews.map((src, i) => (
-                      <div key={i} className="m3-card-elevated overflow-hidden">
-                        <img src={src} alt={`预览 ${i+1}`} className="object-cover w-full h-24" />
+                      <div key={i} className="m3-card-elevated overflow-hidden aspect-square">
+                        <img src={src} alt={`预览 ${i+1}`} className="object-cover w-full h-full" />
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             </div>
-            <div className="flex justify-end gap-3 pt-4">
-              <a className="m3-btn-text" href="/scripts">返回列表</a>
-              <button className="m3-btn-filled" type="submit" disabled={!title || !jsonFile || loading}>
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
+              <a className="m3-btn-text min-h-touch text-center" href="/scripts">返回列表</a>
+              <button className="m3-btn-filled min-h-touch" type="submit" disabled={!title || !jsonFile || loading}>
                 {loading ? '提交中…' : '提交'}
               </button>
             </div>

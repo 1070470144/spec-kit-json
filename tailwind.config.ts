@@ -4,6 +4,15 @@ export default {
   content: ['./app/**/*.{ts,tsx}', './pages/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
   darkMode: 'class',
   theme: {
+    // 移动端响应式断点
+    screens: {
+      'xs': '375px',   // 小屏手机 (iPhone SE)
+      'sm': '640px',   // 大屏手机
+      'md': '768px',   // 平板竖屏
+      'lg': '1024px',  // 平板横屏/小桌面
+      'xl': '1280px',  // 桌面
+      '2xl': '1536px', // 大桌面
+    },
     extend: {
       // Material Design 3 颜色系统
       colors: {
@@ -97,6 +106,13 @@ export default {
         'fast': '100ms',
         'standard': '200ms',
         'slow': '400ms',
+      },
+      // 移动端触摸目标最小尺寸 (iOS/Android 人机界面指南)
+      minHeight: {
+        'touch': '44px',
+      },
+      minWidth: {
+        'touch': '44px',
       },
     },
   },

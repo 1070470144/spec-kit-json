@@ -34,33 +34,35 @@ export default async function ScriptsPage({ searchParams }: { searchParams?: Pro
   const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize))
   const makeHref = (p: number) => `/scripts?${new URLSearchParams({ page: String(p), ...(q ? { q } : {}) }).toString()}`
   return (
-    <div className="container-page section space-y-8">
+    <div className="container-page section space-y-6 sm:space-y-8">
       <div className="text-center">
-        <h1 className="text-4xl md:text-5xl font-bold text-surface-on mb-4">剧本列表</h1>
-        <p className="text-lg text-surface-on-variant max-w-2xl mx-auto">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-surface-on mb-3 sm:mb-4">剧本列表</h1>
+        <p className="text-base sm:text-lg text-surface-on-variant max-w-2xl mx-auto px-4">
           探索丰富的剧本资源库，找到最适合你的剧本
         </p>
       </div>
       
-      <form className="flex gap-3 max-w-2xl mx-auto" action="/scripts" method="get">
+      <form className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto" action="/scripts" method="get">
         <div className="relative flex-1">
           <input 
-            className="input w-full pl-12 text-base" 
+            className="input w-full pl-10 sm:pl-12 text-base min-h-touch" 
             name="q" 
             placeholder="搜索剧本标题..." 
             defaultValue={q}
             aria-label="搜索剧本"
           />
-          <svg className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
         <input type="hidden" name="page" value="1" />
-        <button className="m3-btn-filled" type="submit">搜索</button>
-        {q && <a className="m3-btn-outlined" href="/scripts">清除</a>}
+        <div className="flex gap-3">
+          <button className="m3-btn-filled flex-1 sm:flex-none min-h-touch" type="submit">搜索</button>
+          {q && <a className="m3-btn-outlined flex-1 sm:flex-none min-h-touch" href="/scripts">清除</a>}
+        </div>
       </form>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         {/* 预取当前页所有脚本的统计，子组件从缓存读取，避免 N 次独立请求 */}
         <script
           dangerouslySetInnerHTML={{ __html: `window.dispatchEvent(new CustomEvent('scripts:prefetch-stats',{ detail:{ ids:${JSON.stringify(items.map(i=>i.id))} }}));` }}
@@ -73,9 +75,9 @@ export default async function ScriptsPage({ searchParams }: { searchParams?: Pro
             {/* 缩略图轮播 */}
             <ClientCarouselWrapper id={i.id} />
             
-            <div className="p-6">
-              <h3 className="text-xl font-bold mb-2 text-surface-on group-hover:text-sky-600 transition-colors">{i.title}</h3>
-              <div className="flex items-center gap-2 text-body-small text-surface-on-variant mb-4">
+            <div className="p-4 sm:p-6">
+              <h3 className="text-lg sm:text-xl font-bold mb-2 text-surface-on group-hover:text-sky-600 transition-colors line-clamp-2">{i.title}</h3>
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-surface-on-variant mb-4">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
@@ -90,9 +92,9 @@ export default async function ScriptsPage({ searchParams }: { searchParams?: Pro
         ))}
       </div>
       {totalPages > 1 && (
-        <div className="mt-12 flex items-center justify-center gap-4">
+        <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
           <a 
-            className={`m3-btn-outlined ${page<=1 ? 'opacity-60 pointer-events-none' : ''}`}
+            className={`m3-btn-outlined min-h-touch w-full sm:w-auto ${page<=1 ? 'opacity-60 pointer-events-none' : ''}`}
             href={makeHref(Math.max(1, page-1))} 
             aria-disabled={page<=1}
             aria-label="上一页"
@@ -102,11 +104,12 @@ export default async function ScriptsPage({ searchParams }: { searchParams?: Pro
             </svg>
             上一页
           </a>
-          <span className="text-base font-medium text-surface-on-variant px-6">
-            第 {page} / {totalPages} 页 · 共 {total} 条
+          <span className="text-sm sm:text-base font-medium text-surface-on-variant px-4 sm:px-6 py-2">
+            第 {page} / {totalPages} 页
+            <span className="hidden sm:inline"> · 共 {total} 条</span>
           </span>
           <a 
-            className={`m3-btn-outlined ${page>=totalPages ? 'opacity-60 pointer-events-none' : ''}`}
+            className={`m3-btn-outlined min-h-touch w-full sm:w-auto ${page>=totalPages ? 'opacity-60 pointer-events-none' : ''}`}
             href={makeHref(Math.min(totalPages, page+1))} 
             aria-disabled={page>=totalPages}
             aria-label="下一页"

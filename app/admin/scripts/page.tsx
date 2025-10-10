@@ -35,24 +35,24 @@ export default async function AdminScriptsManagePage({ searchParams }: { searchP
   const currentState = states.find(s => s.value === state) || states[0]
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="card">
-        <div className="card-body">
-          <div className="flex items-center justify-between mb-6">
+        <div className="card-body p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-headline-medium font-semibold text-surface-on">剧本列表</h1>
-              <p className="text-body-small text-surface-on-variant mt-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-headline-medium font-semibold text-surface-on">剧本列表</h1>
+              <p className="text-xs sm:text-sm text-surface-on-variant mt-1">
                 管理所有剧本，查看不同状态的剧本
               </p>
             </div>
             <DeleteAllScriptsButton />
           </div>
 
-          <div className="mb-6 inline-flex rounded-sm border border-outline overflow-hidden" role="group" aria-label="状态筛选">
+          <div className="mb-6 grid grid-cols-4 sm:inline-flex rounded-sm border border-outline overflow-hidden w-full sm:w-auto" role="group" aria-label="状态筛选">
             {states.map((s, idx) => (
               <a 
                 key={s.value}
-                className={`m3-segmented-btn ${state === s.value ? 'm3-segmented-btn-active' : ''}`}
+                className={`m3-segmented-btn min-h-touch text-xs sm:text-sm ${state === s.value ? 'm3-segmented-btn-active' : ''}`}
                 href={`/admin/scripts?state=${s.value}`}
                 aria-current={state === s.value ? 'page' : undefined}
               >
@@ -78,7 +78,7 @@ export default async function AdminScriptsManagePage({ searchParams }: { searchP
           )}
 
           {!!items?.length && (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {items.map(s => (
                 <AdminScriptItem key={s.id} item={s} />
               ))}
@@ -86,17 +86,18 @@ export default async function AdminScriptsManagePage({ searchParams }: { searchP
           )}
 
           {totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-center gap-3">
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
               <a 
-                className={`m3-btn-outlined ${page<=1?'opacity-60 pointer-events-none':''}`} 
+                className={`m3-btn-outlined min-h-touch w-full sm:w-auto ${page<=1?'opacity-60 pointer-events-none':''}`} 
                 href={makeHref(Math.max(1, page-1))}
                 aria-label="上一页"
                 aria-disabled={page<=1}
               >
                 上一页
               </a>
-              <span className="text-body-medium text-surface-on-variant px-4">
-                第 {page} / {totalPages} 页 · 共 {total} 条
+              <span className="text-sm sm:text-base text-surface-on-variant px-4 py-2">
+                第 {page} / {totalPages} 页
+                <span className="hidden sm:inline"> · 共 {total} 条</span>
               </span>
               <a 
                 className={`m3-btn-outlined ${page>=totalPages?'opacity-60 pointer-events-none':''}`} 

@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useSwipe } from '@/src/hooks/useTouchGesture'
 
 export type HotItem = { scriptId: string; title: string; cover?: string; downloads: number }
 
@@ -7,6 +8,12 @@ export default function HotCarousel({ items }: { items: HotItem[] }) {
   const data = (items || [])
   const [idx, setIdx] = useState(0)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // 触摸滑动支持
+  const swipeHandlers = useSwipe({
+    onSwipeLeft: () => setIdx(i => (i + 1) % data.length),
+    onSwipeRight: () => setIdx(i => (i + data.length - 1) % data.length),
+  })
 
   useEffect(() => {
     if (!data.length) return
@@ -18,8 +25,8 @@ export default function HotCarousel({ items }: { items: HotItem[] }) {
   if (!data.length) return null
 
   return (
-    <div className="relative overflow-hidden m3-card-elevated">
-      <div className="relative aspect-[16/6] w-full">
+    <div className="relative overflow-hidden m3-card-elevated" {...swipeHandlers}>
+      <div className="relative aspect-[16/9] sm:aspect-[16/8] md:aspect-[16/6] w-full">
         <span className="absolute top-4 right-4 z-10 inline-flex items-center rounded-full bg-primary/90 px-3 py-1.5 text-label-medium text-primary-on shadow-elevation-1">
           近7天热度
         </span>
@@ -44,14 +51,16 @@ export default function HotCarousel({ items }: { items: HotItem[] }) {
         ))}
       </div>
       {data.length > 1 && (
-        <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2">
+        <div className="absolute bottom-3 sm:bottom-4 left-0 right-0 flex items-center justify-center gap-2">
           {data.map((_, i) => (
             <button 
               key={i} 
               aria-label={`跳转到第 ${i+1} 张`} 
               onClick={()=>setIdx(i)} 
-              className={`h-2 w-2 rounded-full transition-all duration-fast ${i===idx?'bg-white w-6':'bg-white/60'}`}
-            />
+              className={`min-w-touch min-h-touch flex items-center justify-center transition-all duration-fast ${i===idx?'':'opacity-60'}`}
+            >
+              <span className={`h-2 rounded-full transition-all ${i===idx?'bg-white w-6':'bg-white/80 w-2'}`}></span>
+            </button>
           ))}
         </div>
       )}

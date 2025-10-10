@@ -45,26 +45,32 @@ async function fetchHot() {
 export default async function HomePage() {
   const hot = await fetchHot()
   return (
-    <div className="space-y-20 md:space-y-32">
-      <HeroSection />
-      
-      {!!hot.length && (
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-surface-on mb-4">
-              热门剧本
-            </h2>
-            <p className="text-lg text-surface-on-variant max-w-2xl mx-auto">
-              探索近期最受欢迎的剧本内容
-            </p>
-          </div>
-          <HotCarousel items={hot} />
-        </div>
-      )}
-      
-      <div className="mx-auto max-w-7xl px-6 pb-20">
-        <FeaturesGrid />
+    <>
+      {/* Hero 区域 - 独立于主容器，真正全屏 */}
+      <div className="relative -mx-4 sm:-mx-6 -my-3 sm:-my-4 mb-8 sm:mb-12 md:mb-16">
+        <HeroSection />
       </div>
-    </div>
+      
+      {/* 其他内容 - 在主容器约束内 */}
+      <div className="space-y-8 sm:space-y-12 md:space-y-16">
+        {!!hot.length && (
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="text-center mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-surface-on mb-2 sm:mb-3">
+                热门剧本
+              </h2>
+              <p className="text-sm sm:text-base text-surface-on-variant max-w-2xl mx-auto px-4">
+                探索近期最受欢迎的剧本内容
+              </p>
+            </div>
+            <HotCarousel items={hot} />
+          </div>
+        )}
+        
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-6 sm:pb-8">
+          <FeaturesGrid />
+        </div>
+      </div>
+    </>
   );
 }

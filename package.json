@@ -10,9 +10,13 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "seed": "node scripts/seed.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "optimize:images": "tsx scripts/optimize-images.ts",
+    "optimize:placeholders": "tsx scripts/generate-placeholders.ts",
+    "optimize:all": "npm run optimize:images && npm run optimize:placeholders"
   },
   "dependencies": {
+    "@ducanh2912/next-pwa": "^5.6.0",
     "@prisma/client": "^5.22.0",
     "chart.js": "^4.4.4",
     "next": "^15.5.4",
@@ -20,6 +24,7 @@
     "nodemailer": "^6.10.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "workbox-window": "^7.3.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -30,10 +35,14 @@
     "autoprefixer": "^10.4.19",
     "eslint": "^8.57.0",
     "eslint-config-next": "^15.5.4",
+    "plaiceholder": "^3.0.0",
     "postcss": "^8.4.38",
     "prisma": "^5.22.0",
+    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.7",
+    "tsx": "^4.19.2",
     "typescript": "^5.4.5",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "web-push": "^3.6.7"
   }
 }

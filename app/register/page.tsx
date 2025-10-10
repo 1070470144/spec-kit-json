@@ -1,7 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useKeyboardScroll } from '@/src/hooks/useKeyboardScroll'
 
 export default function RegisterPage() {
+  useKeyboardScroll()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [nickname, setNickname] = useState('')

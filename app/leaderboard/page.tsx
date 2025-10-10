@@ -37,32 +37,32 @@ export default async function LeaderboardPage({ searchParams }: { searchParams?:
   return (
     <div className="container-page section">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h1 className="text-headline-small text-surface-on">排行榜</h1>
-        <div className="inline-flex rounded-sm border border-outline overflow-hidden">
+        <h1 className="text-2xl sm:text-3xl lg:text-headline-small text-surface-on">排行榜</h1>
+        <div className="grid grid-cols-3 sm:inline-flex rounded-sm border border-outline overflow-hidden w-full sm:w-auto">
           <a 
-            className={`m3-segmented-btn ${type==='likes'?'m3-segmented-btn-active':''}`} 
+            className={`m3-segmented-btn min-h-touch text-sm sm:text-base ${type==='likes'?'m3-segmented-btn-active':''}`} 
             href="/leaderboard?type=likes"
           >
-            按点赞
+            👍 点赞
           </a>
           <a 
-            className={`m3-segmented-btn ${type==='favorites'?'m3-segmented-btn-active':''}`} 
+            className={`m3-segmented-btn min-h-touch text-sm sm:text-base ${type==='favorites'?'m3-segmented-btn-active':''}`} 
             href="/leaderboard?type=favorites"
           >
-            按收藏
+            ⭐ 收藏
           </a>
           <a 
-            className={`m3-segmented-btn ${type==='downloads'?'m3-segmented-btn-active':''}`} 
+            className={`m3-segmented-btn min-h-touch text-sm sm:text-base ${type==='downloads'?'m3-segmented-btn-active':''}`} 
             href="/leaderboard?type=downloads"
           >
-            按下载
+            ⬇️ 下载
           </a>
         </div>
       </div>
       <div className="m3-card-elevated">
-        <div className="p-6">
-          <div className="text-title-large mb-4 text-surface-on">{titleMap[type]}</div>
-          {!list.length && <div className="text-body-medium text-surface-on-variant">暂无数据</div>}
+        <div className="p-4 sm:p-6">
+          <div className="text-lg sm:text-xl lg:text-title-large mb-4 text-surface-on">{titleMap[type]}</div>
+          {!list.length && <div className="text-sm sm:text-base text-surface-on-variant">暂无数据</div>}
           {!!list.length && (
             <div className="divide-y divide-outline-variant">
               {list.map((s, idx) => {

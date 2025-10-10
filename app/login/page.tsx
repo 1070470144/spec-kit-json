@@ -1,7 +1,9 @@
 'use client'
 import { useState } from 'react'
+import { useKeyboardScroll } from '@/src/hooks/useKeyboardScroll'
 
 export default function LoginPage() {
+  useKeyboardScroll()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [msg, setMsg] = useState('')
@@ -35,18 +37,18 @@ export default function LoginPage() {
 
   return (
     <div className="auth-hero">
-      <div className="glass-card w-full max-w-xl">
-        <div className="p-6 space-y-6">
+      <div className="glass-card w-full max-w-xl mx-4 sm:mx-auto">
+        <div className="p-6 sm:p-8 space-y-6">
           <div>
-            <h1 className="text-display-small text-surface-on mb-2">登录</h1>
-            <p className="text-body-medium text-surface-on-variant">输入邮箱与密码登录系统。</p>
+            <h1 className="text-3xl sm:text-4xl lg:text-display-small text-surface-on mb-2">登录</h1>
+            <p className="text-sm sm:text-base text-surface-on-variant">输入邮箱与密码登录系统。</p>
           </div>
-          <form onSubmit={onSubmit} className="space-y-5 max-w-md">
+          <form onSubmit={onSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-body-medium font-medium text-surface-on mb-2">邮箱</label>
+              <label htmlFor="email" className="block text-sm sm:text-base font-medium text-surface-on mb-2">邮箱</label>
               <input 
                 id="email"
-                className="input" 
+                className="input min-h-touch text-base" 
                 type="email"
                 value={email} 
                 onChange={e=>setEmail(e.target.value)} 
@@ -55,10 +57,10 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-body-medium font-medium text-surface-on mb-2">密码</label>
+              <label htmlFor="password" className="block text-sm sm:text-base font-medium text-surface-on mb-2">密码</label>
               <input 
                 id="password"
-                className="input" 
+                className="input min-h-touch text-base" 
                 type="password" 
                 value={password} 
                 onChange={e=>setPassword(e.target.value)} 
@@ -66,12 +68,12 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
             </div>
-            <div className="flex flex-wrap gap-3 pt-2">
-              <button className="m3-btn-filled" type="submit" disabled={!email || password.length < 6 || loading}>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <button className="m3-btn-filled min-h-touch" type="submit" disabled={!email || password.length < 6 || loading}>
                 {loading ? '登录中…' : '登录'}
               </button>
-              <a className="m3-btn-outlined" href="/forgot">忘记密码</a>
-              <a className="m3-btn-text" href="/register">去注册</a>
+              <a className="m3-btn-outlined min-h-touch text-center" href="/forgot">忘记密码</a>
+              <a className="m3-btn-text min-h-touch text-center" href="/register">去注册</a>
             </div>
           </form>
           {msg && (

@@ -1,9 +1,11 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useKeyboardScroll } from '@/src/hooks/useKeyboardScroll'
 
 type Profile = { id: string; email: string; nickname?: string|null; avatarUrl?: string|null }
 
 export default function ProfilePage() {
+  useKeyboardScroll()
   const [me, setMe] = useState<Profile|null>(null)
   const [form, setForm] = useState({ nickname: '', avatarUrl: '' })
   const [msg, setMsg] = useState('')
@@ -85,43 +87,43 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container-page section space-y-6">
+    <div className="container-page section space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-headline-medium font-semibold text-surface-on">我的资料</h1>
-        <p className="text-body-small text-surface-on-variant mt-1">
+        <h1 className="text-2xl sm:text-3xl lg:text-headline-medium font-semibold text-surface-on">我的资料</h1>
+        <p className="text-sm sm:text-base text-surface-on-variant mt-1">
           管理您的个人信息和账户设置
         </p>
       </div>
 
       <div className="card max-w-3xl">
-        <div className="card-body">
+        <div className="card-body p-4 sm:p-6">
           <div className="mb-6">
             <h2 className="text-title-large font-semibold text-surface-on mb-1">基本信息</h2>
             <p className="text-body-small text-surface-on-variant">
               更新个人昵称与头像，保存后立即生效
             </p>
           </div>
-          <form className="space-y-6" onSubmit={onSave}>
+          <form className="space-y-5 sm:space-y-6" onSubmit={onSave}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="nickname" className="block text-body-medium font-medium text-surface-on mb-2">
+                <label htmlFor="nickname" className="block text-sm sm:text-base font-medium text-surface-on mb-2">
                   昵称
                 </label>
                 <input 
                   id="nickname"
-                  className="input" 
+                  className="input min-h-touch text-base" 
                   value={form.nickname} 
                   onChange={e=>set('nickname', e.target.value)} 
                   placeholder="请输入昵称" 
                 />
               </div>
               <div>
-                <label htmlFor="avatarUrl" className="block text-body-medium font-medium text-surface-on mb-2">
+                <label htmlFor="avatarUrl" className="block text-sm sm:text-base font-medium text-surface-on mb-2">
                   头像 URL（可选）
                 </label>
                 <input 
                   id="avatarUrl"
-                  className="input" 
+                  className="input min-h-touch text-base" 
                   value={form.avatarUrl} 
                   onChange={e=>set('avatarUrl', e.target.value)} 
                   placeholder="https://..." 
@@ -129,11 +131,11 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className="block text-body-medium font-medium text-surface-on mb-2">
+              <label className="block text-sm sm:text-base font-medium text-surface-on mb-2">
                 头像
               </label>
-              <div className="flex items-start gap-4">
-                <div className="w-24 h-24 rounded-full border-2 border-outline overflow-hidden bg-gray-50 flex items-center justify-center">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-outline overflow-hidden bg-gray-50 flex items-center justify-center">
                   {avatarPreview ? (
                     <img src={avatarPreview} alt="avatar preview" className="w-full h-full object-cover" />
                   ) : form.avatarUrl ? (
@@ -144,10 +146,10 @@ export default function ProfilePage() {
                     </svg>
                   )}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 w-full sm:w-auto">
                   <button
                     type="button"
-                    className="m3-btn-outlined mb-2"
+                    className="m3-btn-outlined mb-2 min-h-touch w-full sm:w-auto"
                     onClick={()=>fileInputRef.current?.click()}
                     disabled={saving}
                   >
@@ -195,13 +197,13 @@ export default function ProfilePage() {
                 </p>
               )}
             </div>
-            <div className="border-t border-outline pt-4 flex gap-3 items-center">
-              <button className="m3-btn-filled" type="submit" disabled={saving}>
+            <div className="border-t border-outline pt-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+              <button className="m3-btn-filled min-h-touch" type="submit" disabled={saving}>
                 {saving ? '保存中…' : '保存'}
               </button>
               <button
                 type="button"
-                className="m3-btn-outlined"
+                className="m3-btn-outlined min-h-touch"
                 onClick={()=>{
                   const init = initialFormRef.current || { nickname: '', avatarUrl: '' }
                   setForm(init)
@@ -238,39 +240,41 @@ export default function ProfilePage() {
           </div>
           <form className="space-y-4" onSubmit={onChangePassword}>
             <div>
-              <label htmlFor="oldPassword" className="block text-body-medium font-medium text-surface-on mb-2">
+              <label htmlFor="oldPassword" className="block text-sm sm:text-base font-medium text-surface-on mb-2">
                 当前密码
               </label>
               <input 
                 id="oldPassword"
-                className="input" 
+                className="input min-h-touch text-base" 
                 type="password" 
                 value={pwd.oldPassword} 
                 onChange={e=>setPwd(p=>({ ...p, oldPassword: e.target.value }))}
                 placeholder="请输入当前密码"
+                autoComplete="current-password"
                 required
               />
             </div>
             <div>
-              <label htmlFor="newPassword" className="block text-body-medium font-medium text-surface-on mb-2">
+              <label htmlFor="newPassword" className="block text-sm sm:text-base font-medium text-surface-on mb-2">
                 新密码
               </label>
               <input 
                 id="newPassword"
-                className="input" 
+                className="input min-h-touch text-base" 
                 type="password" 
                 value={pwd.newPassword} 
                 onChange={e=>setPwd(p=>({ ...p, newPassword: e.target.value }))}
                 placeholder="请输入新密码（至少6位）"
+                autoComplete="new-password"
                 required
                 minLength={6}
               />
-              <p className="text-body-small text-surface-on-variant mt-1">
+              <p className="text-xs sm:text-sm text-surface-on-variant mt-1">
                 密码长度至少6位，建议包含字母、数字和符号
               </p>
             </div>
             <div>
-              <button className="m3-btn-filled" type="submit">
+              <button className="m3-btn-filled min-h-touch w-full sm:w-auto" type="submit">
                 修改密码
               </button>
             </div>

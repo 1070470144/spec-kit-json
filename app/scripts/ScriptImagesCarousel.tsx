@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef } from 'react'
+import { useSwipe } from '@/src/hooks/useTouchGesture'
 
 type ScriptImage = { id: string; url: string; isCover?: boolean }
 
@@ -8,6 +9,12 @@ export default function ScriptImagesCarousel({ id }: { id: string }) {
   const [images, setImages] = useState<ScriptImage[]>([])
   const [index, setIndex] = useState(0)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // 触摸滑动支持
+  const swipeHandlers = useSwipe({
+    onSwipeLeft: () => images.length && setIndex(i => (i + 1) % images.length),
+    onSwipeRight: () => images.length && setIndex(i => (i + images.length - 1) % images.length),
+  })
 
   useEffect(() => {
     let aborted = false
@@ -43,8 +50,8 @@ export default function ScriptImagesCarousel({ id }: { id: string }) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-t-xl">
-      <div className="aspect-video w-full bg-white">
+    <div className="relative overflow-hidden rounded-t-xl" {...swipeHandlers}>
+      <div className="aspect-video w-full bg-white select-none">
         {images.map((img, i) => (
           <img
             key={img.id}
@@ -56,14 +63,16 @@ export default function ScriptImagesCarousel({ id }: { id: string }) {
         ))}
       </div>
       {images.length > 1 && (
-        <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+        <div className="absolute bottom-2 sm:bottom-3 left-0 right-0 flex justify-center gap-1">
           {images.map((_, i) => (
             <button
               key={i}
-              className={`h-1.5 w-1.5 rounded-full ${i === index ? 'bg-white' : 'bg-white/50'}`}
+              className="min-w-touch min-h-touch flex items-center justify-center"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIndex(i) }}
-              aria-label={`go to slide ${i + 1}`}
-            />
+              aria-label={`跳转到第 ${i + 1} 张图片`}
+            >
+              <span className={`h-2 rounded-full transition-all ${i === index ? 'bg-white w-6' : 'bg-white/60 w-2'}`}></span>
+            </button>
           ))}
         </div>
       )}

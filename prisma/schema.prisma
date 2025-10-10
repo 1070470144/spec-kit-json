@@ -23,6 +23,7 @@ model User {
   storytellerApplications StorytellerApplication[]
   likes           Like[]
   favorites      Favorite[]
+  pushSubscriptions PushSubscription[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   lastLoginAt     DateTime?
@@ -219,4 +220,33 @@ model SystemConfig {
   value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model PushSubscription {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint    String   @unique
+  keys        String   // JSON: {p256dh, auth}
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model NotificationQueue {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // 'review-result', 'comment-reply', 'system'
+  title       String
+  body        String
+  data        String?  // JSON
+  status      String   @default("pending") // pending/sent/failed
+  createdAt   DateTime @default(now())
+  sentAt      DateTime?
+  error       String?
+  
+  @@index([userId, status])
+  @@index([status, createdAt])
 }
