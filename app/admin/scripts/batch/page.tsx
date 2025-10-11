@@ -8,6 +8,9 @@ export default function AdminBatchUploadPage() {
   const [progress, setProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 })
   const [success, setSuccess] = useState(0)
   const [fails, setFails] = useState<{ name: string; reason: string }[]>([])
+  const [autoGeneratePreview, setAutoGeneratePreview] = useState(false)
+  const [previewSuccess, setPreviewSuccess] = useState(0)
+  const [fileStatus, setFileStatus] = useState<Record<string, string>>({})
   const inputRef = useRef<HTMLInputElement|null>(null)
 
   // 让文件选择器支持目录选择（递归）
@@ -35,27 +38,90 @@ export default function AdminBatchUploadPage() {
     setProgress({ done: 0, total: files.length })
     setFails([])
     setSuccess(0)
+    setPreviewSuccess(0)
+    setFileStatus({})
+    
+    let successCount = 0
+    let previewCount = 0
+    const failsList: { name: string; reason: string }[] = []
+    
     try {
       for (const f of files) {
+        // 更新状态：正在处理
+        setFileStatus(prev => ({ ...prev, [f.name]: '正在解析...' }))
+        
         const text = await f.text()
         let obj: unknown
-        try { obj = JSON.parse(text) } catch {
-          setFails(list => [...list, { name: f.name, reason: '非法 JSON 格式' }])
+        try { 
+          obj = JSON.parse(text) 
+        } catch {
+          failsList.push({ name: f.name, reason: '非法 JSON 格式' })
+          setFails(failsList)
+          setFileStatus(prev => ({ ...prev, [f.name]: '❌ 解析失败' }))
           setProgress(p => ({ done: p.done + 1, total: p.total }))
           continue
         }
+        
+        // 上传剧本
+        setFileStatus(prev => ({ ...prev, [f.name]: '正在上传...' }))
         const title = (f.name || 'untitled').replace(/\.json$/i, '')
-        const res = await fetch('/api/scripts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, json: obj }) })
+        const res = await fetch('/api/scripts', { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ title, json: obj }) 
+        })
+        
         if (!res.ok) {
-          const d = await res.json().catch(()=>({}))
-          setFails(list => [...list, { name: f.name, reason: d?.error?.message || String(res.status) }])
+          const d = await res.json().catch(() => ({}))
+          failsList.push({ name: f.name, reason: d?.error?.message || String(res.status) })
+          setFails(failsList)
+          setFileStatus(prev => ({ ...prev, [f.name]: '❌ 上传失败' }))
           setProgress(p => ({ done: p.done + 1, total: p.total }))
           continue
         }
-        setSuccess(n => n + 1)
+        
+        // 获取创建的剧本 ID
+        const result = await res.json()
+        const scriptId = result?.data?.id
+        
+        successCount++
+        setSuccess(successCount)
+        
+        // 如果启用自动生成预览图
+        if (autoGeneratePreview && scriptId) {
+          try {
+            setFileStatus(prev => ({ ...prev, [f.name]: '⏳ 正在生成预览图...' }))
+            
+            const previewRes = await fetch(`/api/scripts/${scriptId}/auto-preview`, {
+              method: 'GET'
+            })
+            
+            if (previewRes.ok) {
+              previewCount++
+              setPreviewSuccess(previewCount)
+              setFileStatus(prev => ({ ...prev, [f.name]: '✅ 上传成功，预览图已生成' }))
+              console.log(`[Preview] Generated for ${f.name} (${scriptId})`)
+            } else {
+              setFileStatus(prev => ({ ...prev, [f.name]: '⚠️ 上传成功，预览图生成失败' }))
+              console.warn(`[Preview] Failed for ${f.name} (${scriptId})`)
+            }
+          } catch (error) {
+            setFileStatus(prev => ({ ...prev, [f.name]: '⚠️ 上传成功，预览图生成失败' }))
+            console.error(`[Preview] Error for ${f.name}:`, error)
+          }
+        } else {
+          setFileStatus(prev => ({ ...prev, [f.name]: '✅ 上传成功' }))
+        }
+        
         setProgress(p => ({ done: p.done + 1, total: p.total }))
       }
-      setMsg(`上传完成：成功 ${success + 0} 个，失败 ${fails.length + 0} 个`)
+      
+      // 设置完成消息
+      if (autoGeneratePreview) {
+        setMsg(`上传完成：成功 ${successCount} 个，失败 ${failsList.length} 个，预览图生成 ${previewCount} 个`)
+      } else {
+        setMsg(`上传完成：成功 ${successCount} 个，失败 ${failsList.length} 个`)
+      }
     } finally {
       setLoading(false)
     }
@@ -116,6 +182,44 @@ export default function AdminBatchUploadPage() {
               )}
             </div>
 
+            {/* 自动生成预览图选项 */}
+            <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <input
+                type="checkbox"
+                id="auto-preview"
+                checked={autoGeneratePreview}
+                onChange={(e) => setAutoGeneratePreview(e.target.checked)}
+                className="mt-1 w-5 h-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500 cursor-pointer"
+                disabled={loading}
+              />
+              <label htmlFor="auto-preview" className="flex-1 cursor-pointer">
+                <div className="font-semibold text-sky-900 mb-1">
+                  自动生成预览图
+                </div>
+                <div className="text-sm text-sky-700">
+                  为每个上传的剧本自动生成预览图，方便管理和浏览（会增加约 1-2 秒/个的处理时间）
+                </div>
+              </label>
+            </div>
+
+            {/* 提示信息 */}
+            {autoGeneratePreview && files.length > 10 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div className="text-sm text-yellow-800">
+                    <div className="font-semibold mb-1">提示</div>
+                    <div>
+                      您选择了 {files.length} 个文件并启用了自动生成预览图，
+                      预计需要约 {Math.ceil(files.length * 2 / 60)} 分钟完成。
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-3">
               <button 
                 className="m3-btn-filled" 
@@ -166,14 +270,49 @@ export default function AdminBatchUploadPage() {
 
           {/* 统计信息 */}
           {(success > 0 || fails.length > 0) && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className={`grid ${autoGeneratePreview ? 'grid-cols-3' : 'grid-cols-2'} gap-4`}>
               <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-center">
                 <div className="text-3xl font-bold text-green-700 mb-1">{success}</div>
                 <div className="text-sm text-green-600">成功上传</div>
               </div>
+              {autoGeneratePreview && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-center">
+                  <div className="text-3xl font-bold text-blue-700 mb-1">{previewSuccess}</div>
+                  <div className="text-sm text-blue-600">预览图已生成</div>
+                </div>
+              )}
               <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-center">
                 <div className="text-3xl font-bold text-red-700 mb-1">{fails.length}</div>
                 <div className="text-sm text-red-600">上传失败</div>
+              </div>
+            </div>
+          )}
+
+          {/* 详细状态列表 */}
+          {Object.keys(fileStatus).length > 0 && (
+            <div className="border border-gray-200 rounded-2xl overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <h3 className="text-base font-semibold text-gray-800">处理详情</h3>
+              </div>
+              <div className="max-h-96 overflow-y-auto">
+                <div className="divide-y divide-gray-100">
+                  {Object.entries(fileStatus).map(([filename, status]) => (
+                    <div key={filename} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                      <span className="font-mono text-xs text-gray-600 flex-shrink-0 max-w-xs truncate" title={filename}>
+                        {filename}
+                      </span>
+                      <span className={`flex-1 text-sm ${
+                        status.includes('✅') ? 'text-green-600 font-medium' :
+                        status.includes('❌') ? 'text-red-600 font-medium' :
+                        status.includes('⚠️') ? 'text-yellow-600 font-medium' :
+                        status.includes('⏳') ? 'text-blue-600' :
+                        'text-gray-600'
+                      }`}>
+                        {status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

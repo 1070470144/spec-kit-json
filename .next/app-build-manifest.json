@@ -110,6 +110,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/scripts/stats-batch/route.js"
+    ],
+    "/api/scripts/[id]/auto-preview/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/scripts/[id]/auto-preview/route.js"
     ]
   }
 }

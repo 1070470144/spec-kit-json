@@ -1845,6 +1845,10 @@ video {
   --tw-divide-opacity: 1;
   border-color: rgb(202 196 208 / var(--tw-divide-opacity, 1));
 }
+.divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  --tw-divide-opacity: 1;
+  border-color: rgb(243 244 246 / var(--tw-divide-opacity, 1));
+}
 .self-center {
   align-self: center;
 }
@@ -2940,6 +2944,10 @@ video {
   --tw-text-opacity: 1;
   color: rgb(133 77 14 / var(--tw-text-opacity, 1));
 }
+.text-sky-900 {
+  --tw-text-opacity: 1;
+  color: rgb(12 74 110 / var(--tw-text-opacity, 1));
+}
 .line-through {
   text-decoration-line: line-through;
 }
@@ -3416,6 +3424,11 @@ main:has([data-admin]) {
 
 .focus\:ring-primary\/20:focus {
   --tw-ring-color: rgb(103 80 164 / 0.2);
+}
+
+.focus\:ring-sky-500:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(14 165 233 / var(--tw-ring-opacity, 1));
 }
 
 .active\:scale-95:active {
