@@ -39,31 +39,34 @@ model Role {
 }
 
 model Script {
-  id           String        @id @default(cuid())
-  title        String
-  authorName   String?
-  summary      String?
-  tagsCsv      String?
-  language     String?
-  license      String?
-  sourceLink   String?
-  state        String        @default("pending")
-  coverImageId String?
-  createdBy    User?         @relation("CreatedScripts", fields: [createdById], references: [id])
-  createdById  String?
-  author       User?         @relation("AuthorScripts", fields: [authorId], references: [id])
-  authorId     String?
-  versions     ScriptJSON[]
-  images       ImageAsset[]
-  reviews      Review[]
-  downloads    DownloadEvent[]
-  likeEvents   LikeEvent[]
-  likes        Like[]
-  favorites    Favorite[]
-  comments     Comment[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  publishedAt  DateTime?
+  id              String        @id @default(cuid())
+  title           String
+  authorName      String?
+  summary         String?
+  tagsCsv         String?
+  language        String?
+  license         String?
+  sourceLink      String?
+  state           String        @default("pending")
+  coverImageId    String?
+  createdBy       User?         @relation("CreatedScripts", fields: [createdById], references: [id])
+  createdById     String?
+  author          User?         @relation("AuthorScripts", fields: [authorId], references: [id])
+  authorId        String?
+  versions        ScriptJSON[]
+  images          ImageAsset[]
+  reviews         Review[]
+  downloads       DownloadEvent[]
+  likeEvents      LikeEvent[]
+  likes           Like[]
+  favorites       Favorite[]
+  comments        Comment[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  publishedAt     DateTime?
+  systemOwned     Boolean       @default(false)  // 标记为系统接管
+  originalOwnerId String?                        // 原始所有者ID
+  transferredAt   DateTime?                       // 转移时间
 }
 
 model ScriptJSON {

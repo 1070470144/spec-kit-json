@@ -23,7 +23,11 @@ async function fetchMyUploads(page = 1, pageSize = 24) {
   const skip = (page - 1) * pageSize
   const [scripts, total] = await Promise.all([
     prisma.script.findMany({
-      where: { createdById: session.userId },
+      where: { 
+        createdById: session.userId,
+        state: { not: 'abandoned' },  // 排除已废弃的剧本
+        systemOwned: false  // 排除系统接管的剧本
+      },
       orderBy: { createdAt: 'desc' },
       skip,
       take: pageSize,
@@ -45,7 +49,13 @@ async function fetchMyUploads(page = 1, pageSize = 24) {
         }
       }
     }),
-    prisma.script.count({ where: { createdById: session.userId } })
+    prisma.script.count({ 
+      where: { 
+        createdById: session.userId,
+        state: { not: 'abandoned' },  // 排除已废弃的剧本
+        systemOwned: false  // 排除系统接管的剧本
+      } 
+    })
   ])
   
   const items: Item[] = scripts.map(s => {

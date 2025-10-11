@@ -1368,6 +1368,9 @@ video {
 .mt-auto {
   margin-top: auto;
 }
+.mb-0 {
+  margin-bottom: 0px;
+}
 .line-clamp-2 {
   overflow: hidden;
   display: -webkit-box;
@@ -1578,6 +1581,15 @@ video {
 .w-screen {
   width: 100vw;
 }
+.w-1\/2 {
+  width: 50%;
+}
+.w-1\/4 {
+  width: 25%;
+}
+.w-3\/4 {
+  width: 75%;
+}
 .min-w-0 {
   min-width: 0px;
 }
@@ -1630,6 +1642,9 @@ video {
   flex: 1 1 0%;
 }
 .flex-shrink-0 {
+  flex-shrink: 0;
+}
+.shrink-0 {
   flex-shrink: 0;
 }
 .origin-top-right {
@@ -1719,6 +1734,9 @@ video {
 }
 .grid-cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.grid-cols-\[50px_1fr_150px_120px_280px\] {
+  grid-template-columns: 50px 1fr 150px 120px 280px;
 }
 .flex-col {
   flex-direction: column;
@@ -1876,6 +1894,9 @@ video {
 }
 .rounded-xl {
   border-radius: 28px;
+}
+.rounded-md {
+  border-radius: 12px;
 }
 .rounded-r {
   border-top-right-radius: 0.25rem;
@@ -2199,6 +2220,22 @@ video {
 .bg-yellow-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(254 252 232 / var(--tw-bg-opacity, 1));
+}
+.bg-green-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(220 252 231 / var(--tw-bg-opacity, 1));
+}
+.bg-red-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 226 226 / var(--tw-bg-opacity, 1));
+}
+.bg-yellow-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 249 195 / var(--tw-bg-opacity, 1));
+}
+.bg-error {
+  --tw-bg-opacity: 1;
+  background-color: rgb(179 38 30 / var(--tw-bg-opacity, 1));
 }
 .bg-opacity-0 {
   --tw-bg-opacity: 0;
@@ -3225,6 +3262,19 @@ main:has([data-admin]) {
   background-color: rgb(255 255 255 / 0.2);
 }
 
+.hover\:bg-green-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(21 128 61 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-error\/90:hover {
+  background-color: rgb(179 38 30 / 0.9);
+}
+
+.hover\:bg-primary\/90:hover {
+  background-color: rgb(103 80 164 / 0.9);
+}
+
 .hover\:bg-opacity-20:hover {
   --tw-bg-opacity: 0.2;
 }
@@ -3777,6 +3827,10 @@ main:has([data-admin]) {
 
   .md\:flex {
     display: flex;
+  }
+
+  .md\:grid {
+    display: grid;
   }
 
   .md\:hidden {
