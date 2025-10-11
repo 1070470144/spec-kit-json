@@ -320,20 +320,53 @@ export function generateScriptPreviewSVG(scriptData: ScriptData): string {
   const teamOrder: BotcTeam[] = ['townsfolk', 'outsider', 'minion', 'demon', 'traveler', 'fabled']
   const teamsWithRoles = teamOrder.filter(team => info.rolesByTeam[team].length > 0)
   
-  // 辅助函数：将长文本分成两行（固定宽度，超出才换行）
-  const splitTextToLines = (text: string, maxLength: number): string[] => {
+  // 辅助函数：将长文本智能分成多行（支持多行扩展，优先在标点符号处换行）
+  const splitTextToLines = (
+    text: string, 
+    maxLength: number, 
+    maxLines: number = 5
+  ): string[] => {
     if (text.length <= maxLength) return [text]
     
-    // 固定宽度截断，第一行显示maxLength个字符
-    const firstLine = text.substring(0, maxLength)
-    const remainingText = text.substring(maxLength)
+    const lines: string[] = []
+    let remaining = text
     
-    // 第二行如果还超出，添加省略号
-    const secondLine = remainingText.length > maxLength 
-      ? remainingText.substring(0, maxLength - 2) + '..'
-      : remainingText
+    // 标点符号列表（优先在这些位置换行）
+    const punctuation = ['。', '，', '；', '：', '！', '？', '.', ',', ';', ':', '!', '?', ' ']
     
-    return [firstLine, secondLine]
+    while (remaining.length > 0 && lines.length < maxLines) {
+      if (remaining.length <= maxLength) {
+        // 剩余文本可以放在一行
+        lines.push(remaining)
+        break
+      }
+      
+      // 尝试在标点符号或空格处切分
+      let cutPoint = maxLength
+      
+      // 在 maxLength 附近查找最近的标点符号（向前查找 5 个字符）
+      for (let i = maxLength; i > maxLength - 5 && i > 0; i--) {
+        if (punctuation.includes(remaining[i])) {
+          cutPoint = i + 1 // 包含标点符号
+          break
+        }
+      }
+      
+      // 切分当前行
+      const currentLine = remaining.substring(0, cutPoint).trim()
+      lines.push(currentLine)
+      remaining = remaining.substring(cutPoint).trim()
+    }
+    
+    // 如果还有剩余文本（超过最大行数），在最后一行添加省略号
+    if (remaining.length > 0 && lines.length === maxLines) {
+      const lastLine = lines[lines.length - 1]
+      if (lastLine.length > 2) {
+        lines[lines.length - 1] = lastLine.substring(0, lastLine.length - 2) + '..'
+      }
+    }
+    
+    return lines
   }
 
   // 生成角色列表HTML - 两列布局，包含logo和技能
@@ -378,8 +411,8 @@ export function generateScriptPreviewSVG(scriptData: ScriptData): string {
         const imageUrl = char.image || ''
         const initial = name.charAt(0) || '?'
         
-        // 技能描述支持两行，每行最多22个字符（充分利用列宽）
-        const abilityLines = ability ? splitTextToLines(ability, 22) : []
+        // 技能描述支持多行扩展（最多5行），每行最多22个字符（充分利用列宽）
+        const abilityLines = ability ? splitTextToLines(ability, 22, 5) : []
         const currentHeight = abilityLines.length > 0 ? 20 + (abilityLines.length - 1) * 8 : 14
         
         // Logo - 使用真实图片
@@ -408,7 +441,7 @@ export function generateScriptPreviewSVG(scriptData: ScriptData): string {
           <text x="${textX}" y="${y}" font-size="8" font-weight="bold" fill="#ffffff">${name}</text>
         `)
         
-        // 角色技能（最多两行）
+        // 角色技能（支持多行扩展）
         abilityLines.forEach((line, lineIndex) => {
           roleElements.push(`
             <text x="${textX}" y="${y + 8 + lineIndex * 8}" font-size="6.5" fill="#94a3b8">${line}</text>
@@ -430,7 +463,7 @@ export function generateScriptPreviewSVG(scriptData: ScriptData): string {
       if (roles.length % 2 === 1) {
         const lastChar = roles[roles.length - 1]
         const ability = lastChar.ability || lastChar.description || ''
-        const abilityLines = ability ? splitTextToLines(ability, 22) : []
+        const abilityLines = ability ? splitTextToLines(ability, 22, 5) : []
         const rowHeight = abilityLines.length > 0 ? 20 + (abilityLines.length - 1) * 8 : 14
         y += rowHeight
       }

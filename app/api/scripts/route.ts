@@ -245,6 +245,10 @@ export async function POST(req: Request) {
         const buf = Buffer.from(await f.arrayBuffer())
         if (buf.byteLength > MAX_IMAGE_SIZE) return tooLarge('FILE_TOO_LARGE')
         const meta = await storage.save(buf, f.name || 'image', f.type || 'application/octet-stream')
+        
+        // 检查是否为前端上传的自动预览图（文件名以 "preview-" 开头的 SVG）
+        const isAutoPreview = f.name?.startsWith('preview-') && f.type === 'image/svg+xml'
+        
         await prisma.imageAsset.create({
           data: {
             scriptId,
@@ -252,8 +256,8 @@ export async function POST(req: Request) {
             mime: meta.mime,
             size: meta.size,
             sha256: meta.sha256 || '',
-            sortOrder: sortOrder++,
-            isCover: false
+            sortOrder: isAutoPreview ? -1 : sortOrder++, // 自动预览图优先级低
+            isCover: isAutoPreview // 自动预览图标记为封面
           }
         })
       }

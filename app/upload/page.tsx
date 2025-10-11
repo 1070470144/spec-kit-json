@@ -91,8 +91,8 @@ export default function UploadPage() {
     // 添加用户上传的图片
     for (const f of images) form.append('images', f)
     
-    // 如果有自动生成的预览图且没有用户上传图片，则上传预览图
-    if (autoPreviewUrl && images.length === 0) {
+    // 如果有自动生成的预览图，也上传它（作为额外的图片）
+    if (autoPreviewUrl) {
       try {
         const response = await fetch(autoPreviewUrl)
         const blob = await response.blob()
@@ -358,7 +358,7 @@ export default function UploadPage() {
                     {imgPreviews.map((src, i) => (
                       <div 
                         key={i} 
-                        className="m3-card-elevated overflow-hidden aspect-square cursor-pointer hover:shadow-lg transition-shadow"
+                        className="relative m3-card-elevated overflow-hidden aspect-square cursor-pointer hover:shadow-lg transition-shadow"
                         onClick={() => openPreviewModal(src)}
                       >
                         <img src={src} alt={`预览 ${i+1}`} className="object-cover w-full h-full" />
