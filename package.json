@@ -16,7 +16,6 @@
     "optimize:all": "npm run optimize:images && npm run optimize:placeholders"
   },
   "dependencies": {
-    "@ducanh2912/next-pwa": "^5.6.0",
     "@prisma/client": "^5.22.0",
     "chart.js": "^4.4.4",
     "next": "^15.5.4",
@@ -24,7 +23,6 @@
     "nodemailer": "^6.10.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "workbox-window": "^7.3.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
