@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import CenteredImagesWithLightbox from '../_components/CenteredImagesWithLightbox'
 import JsonPreview from './JsonPreview'
+import CopyJsonButtons from './CopyJsonButtons'
 
 type Detail = { id: string; title: string; author?: string | null; state: string; images: { id: string; url: string; isCover?: boolean }[]; json?: unknown }
 
@@ -64,9 +65,9 @@ export default async function ScriptDetailPage({ params }: { params: Promise<{ i
           </div>
 
           {/* 操作按钮组 */}
-          <div className="flex flex-wrap items-center gap-4 pb-8 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 pb-8 border-b border-gray-200">
             <a 
-              className="m3-btn-filled inline-flex items-center gap-2 text-lg px-10 py-4" 
+              className="m3-btn-filled w-full sm:w-auto inline-flex items-center justify-center gap-2 text-lg px-6 sm:px-10 py-3 sm:py-4 min-h-touch" 
               href={`${base}/api/scripts/${data.id}/download`} 
               download
             >
@@ -75,8 +76,9 @@ export default async function ScriptDetailPage({ params }: { params: Promise<{ i
               </svg>
               下载 JSON
             </a>
+            <CopyJsonButtons scriptId={data.id} baseUrl={base} />
             <a 
-              className="m3-btn-outlined inline-flex items-center gap-2" 
+              className="m3-btn-outlined w-full sm:w-auto inline-flex items-center justify-center gap-2 min-h-touch" 
               href="/scripts"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

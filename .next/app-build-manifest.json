@@ -115,6 +115,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/scripts/[id]/auto-preview/route.js"
+    ],
+    "/api/scripts/[id]/download/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/scripts/[id]/download/route.js"
     ]
   }
 }

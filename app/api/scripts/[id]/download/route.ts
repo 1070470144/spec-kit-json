@@ -3,7 +3,9 @@ import { prisma } from '@/src/db/client'
 import { notFound } from '@/src/api/http'
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const { id } = await context.params
+  let { id } = await context.params
+  // 移除 .json 后缀（如果存在），支持 RESTful 风格的 URL
+  id = id.replace(/\.json$/, '')
   const [script, v] = await Promise.all([
     prisma.script.findUnique({ where: { id }, select: { title: true } }),
     prisma.scriptJSON.findFirst({ where: { scriptId: id }, orderBy: { createdAt: 'desc' } })
