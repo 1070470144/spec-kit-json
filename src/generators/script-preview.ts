@@ -527,22 +527,35 @@ export function generateScriptPreviewSVG(scriptData: ScriptData): string {
 /**
  * 下载图片并转为base64
  */
-async function downloadImageAsBase64(url: string): Promise<string | null> {
-  try {
-    const response = await fetch(url, { 
-      signal: AbortSignal.timeout(5000) // 5秒超时
-    })
-    if (!response.ok) return null
-    
-    const buffer = await response.arrayBuffer()
-    const base64 = Buffer.from(buffer).toString('base64')
-    const contentType = response.headers.get('content-type') || 'image/png'
-    
-    return `data:${contentType};base64,${base64}`
-  } catch (error) {
-    console.warn(`[PREVIEW] Failed to download image: ${url}`, error)
-    return null
+async function downloadImageAsBase64(url: string, retries = 2): Promise<string | null> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, { 
+        signal: AbortSignal.timeout(15000) // 15秒超时（从5秒增加到15秒）
+      })
+      if (!response.ok) {
+        console.warn(`[PREVIEW] Image download failed (HTTP ${response.status}): ${url}`)
+        return null
+      }
+      
+      const buffer = await response.arrayBuffer()
+      const base64 = Buffer.from(buffer).toString('base64')
+      const contentType = response.headers.get('content-type') || 'image/png'
+      
+      return `data:${contentType};base64,${base64}`
+    } catch (error) {
+      const isLastAttempt = attempt === retries
+      if (isLastAttempt) {
+        console.warn(`[PREVIEW] Failed to download image after ${retries + 1} attempts: ${url}`, error)
+        return null
+      } else {
+        console.warn(`[PREVIEW] Image download attempt ${attempt + 1} failed, retrying: ${url}`)
+        // 重试前等待1秒
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
+    }
   }
+  return null
 }
 
 /**
