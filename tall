@@ -1,0 +1,10 @@
+* [33mc1a1262[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m 添加 json复制和json内容复制
+* [33m6f9321e[m 更新
+* [33mee2f1f0[m 后台批量生产增加  自动生成图片
+* [33mddefba2[m 优化:剧本管理
+* [33mfcbf720[m 提交
+* [33mb93c570[m 自动生成图片
+* [33md28d74d[m 接口 速度优化
+* [33medd4103[m 响应式 优化
+* [33m7b159e9[m[33m ([m[1;31morigin/version1[m[33m, [m[1;32mversion1[m[33m)[m fix: 彻底修复部署数据丢失 - 使用Copy保护原文件
+* [33me77f0f8[m fix: 修复部署脚本数据丢失问题 - git clean 排除备份目录
