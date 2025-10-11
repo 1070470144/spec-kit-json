@@ -52,7 +52,7 @@ function Step-GenerateEnv($cfg){
   $content = @(
     ('APP_BASE_URL={0}' -f $cfg.APP_BASE_URL),
     ('PORT={0}' -f $cfg.APP_PORT),
-    'DATABASE_URL="file:./prisma/prisma/dev.db"',
+    'DATABASE_URL="file:./prisma/dev.db"',
     ('NEXTAUTH_SECRET={0}' -f $cfg.NEXTAUTH_SECRET),
     ('SMTP_HOST={0}' -f $cfg.SMTP_HOST),
     ('SMTP_PORT={0}' -f $cfg.SMTP_PORT),
