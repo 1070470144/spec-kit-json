@@ -1,8 +1,9 @@
 {
-  "/api/scripts/[id]/generate-preview/route": "app/api/scripts/[id]/generate-preview/route.js",
-  "/api/scripts/route": "app/api/scripts/route.js",
   "/api/admin/auth/me/route": "app/api/admin/auth/me/route.js",
+  "/api/scripts/route": "app/api/scripts/route.js",
+  "/api/scripts/[id]/generate-preview/route": "app/api/scripts/[id]/generate-preview/route.js",
   "/api/admin/review/approve-all/route": "app/api/admin/review/approve-all/route.js",
+  "/api/admin/scripts/route": "app/api/admin/scripts/route.js",
   "/admin/scripts/page": "app/admin/scripts/page.js",
   "/admin/review/page": "app/admin/review/page.js",
   "/admin/scripts/batch/page": "app/admin/scripts/batch/page.js"
