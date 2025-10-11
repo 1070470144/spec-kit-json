@@ -6,20 +6,10 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/my/uploads/page": [
+    "/scripts/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/my/uploads/page.js"
-    ],
-    "/api/me/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/me/route.js"
-    ],
-    "/api/site-config/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/site-config/route.js"
+      "static/chunks/app/scripts/[id]/page.js"
     ],
     "/scripts/page": [
       "static/chunks/webpack.js",
@@ -31,45 +21,65 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/scripts/route.js"
     ],
+    "/api/scripts/[id]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/scripts/[id]/route.js"
+    ],
     "/api/scripts/stats-batch/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/scripts/stats-batch/route.js"
     ],
-    "/profile/page": [
+    "/api/me/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/profile/page.js"
+      "static/chunks/app/api/me/route.js"
     ],
-    "/api/profile/route": [
+    "/api/site-config/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/profile/route.js"
+      "static/chunks/app/api/site-config/route.js"
     ],
-    "/page": [
+    "/my/uploads/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/my/uploads/page.js"
+    ],
+    "/api/scripts/[id]/comments/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/scripts/[id]/comments/route.js"
+    ],
+    "/api/files/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/files/route.js"
+    ],
+    "/upload/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/upload/page.js"
     ],
     "/leaderboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/leaderboard/page.js"
     ],
-    "/profile/storyteller/page": [
+    "/api/scripts/[id]/delete/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/profile/storyteller/page.js"
+      "static/chunks/app/api/scripts/[id]/delete/route.js"
     ],
-    "/api/storyteller/apply/route": [
+    "/api/scripts/temp-preview/generate/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/storyteller/apply/route.js"
+      "static/chunks/app/api/scripts/temp-preview/generate/route.js"
     ],
-    "/upload/page": [
+    "/api/scripts/[id]/download/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/upload/page.js"
+      "static/chunks/app/api/scripts/[id]/download/route.js"
     ]
   }
 }

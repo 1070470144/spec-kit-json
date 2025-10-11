@@ -13,6 +13,11 @@ export default function UploadPage() {
   const [imgPreviews, setImgPreviews] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState<null | { type: 'success' | 'error' | 'info'; text: string }>(null)
+  // 自动预览图相关状态
+  const [autoPreviewUrl, setAutoPreviewUrl] = useState<string | null>(null)
+  const [autoPreviewLoading, setAutoPreviewLoading] = useState(false)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [modalImageSrc, setModalImageSrc] = useState<string | null>(null)
   const jsonRef = useRef<HTMLInputElement | null>(null)
   const imagesRef = useRef<HTMLInputElement | null>(null)
 
@@ -30,6 +35,15 @@ export default function UploadPage() {
     checkLogin()
   }, [])
 
+  // 清理blob URL
+  useEffect(() => {
+    return () => {
+      if (autoPreviewUrl && autoPreviewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(autoPreviewUrl)
+      }
+    }
+  }, [autoPreviewUrl])
+
   function showToast(text: string, type: 'success' | 'error' | 'info' = 'info') {
     setToast({ type, text })
     setTimeout(() => setToast(null), 3000)
@@ -38,6 +52,10 @@ export default function UploadPage() {
   function onPickJson(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] || null
     setJsonFile(f || null)
+    // 清除之前的自动预览图
+    if (autoPreviewUrl) {
+      setAutoPreviewUrl(null)
+    }
   }
   function onPickImages(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || [])
@@ -64,11 +82,26 @@ export default function UploadPage() {
     setMessage('')
     if (!title || !jsonFile) { showToast('请填写标题并选择 JSON 文件', 'error'); return }
     if (images.length > 3) { showToast('最多选择 3 张图片', 'error'); return }
+    
     const form = new FormData()
     form.set('title', title)
     if (authorName) form.set('authorName', authorName)
     form.set('jsonFile', jsonFile)
+    
+    // 添加用户上传的图片
     for (const f of images) form.append('images', f)
+    
+    // 如果有自动生成的预览图且没有用户上传图片，则上传预览图
+    if (autoPreviewUrl && images.length === 0) {
+      try {
+        const response = await fetch(autoPreviewUrl)
+        const blob = await response.blob()
+        const previewFile = new File([blob], `preview-${Date.now()}.svg`, { type: 'image/svg+xml' })
+        form.append('images', previewFile)
+      } catch (error) {
+        console.error('Failed to convert preview to file:', error)
+      }
+    }
 
     setLoading(true)
     const res = await fetch('/api/scripts', { method: 'POST', body: form })
@@ -85,6 +118,98 @@ export default function UploadPage() {
       location.href = `/my/uploads`
     }, 1000)
   }
+
+  // 生成自动预览图
+  async function generateAutoPreview() {
+    if (!jsonFile || !title) {
+      showToast('请先填写标题并选择JSON文件', 'error')
+      return
+    }
+
+    setAutoPreviewLoading(true)
+    try {
+      // 读取JSON文件内容
+      const jsonText = await jsonFile.text()
+      let json: any = {}
+      
+      try {
+        json = JSON.parse(jsonText)
+      } catch (error) {
+        showToast('JSON文件格式错误', 'error')
+        setAutoPreviewLoading(false)
+        return
+      }
+
+      // 创建临时脚本数据
+      const tempScriptData = {
+        id: 'temp-preview',
+        title,
+        author: authorName || '未知作者',
+        json
+      }
+
+      // 调用预览生成API
+      const response = await fetch('/api/scripts/temp-preview/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(tempScriptData)
+      })
+
+      if (response.ok) {
+        // 使用Blob URL代替data URL，这样SVG可以加载外部图片
+        const svgBlob = await response.blob()
+        const blobUrl = URL.createObjectURL(svgBlob)
+        
+        // 清理旧的blob URL
+        if (autoPreviewUrl && autoPreviewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(autoPreviewUrl)
+        }
+        
+        setAutoPreviewUrl(blobUrl)
+        showToast('预览图生成成功！', 'success')
+      } else {
+        showToast('预览图生成失败', 'error')
+      }
+    } catch (error) {
+      console.error('Auto preview generation failed:', error)
+      showToast('预览图生成失败', 'error')
+    }
+    setAutoPreviewLoading(false)
+  }
+
+  // 打开预览模态框
+  function openPreviewModal(imageSrc: string) {
+    setModalImageSrc(imageSrc)
+    setShowPreviewModal(true)
+  }
+
+  // 关闭预览模态框
+  function closePreviewModal() {
+    setShowPreviewModal(false)
+    setModalImageSrc(null)
+  }
+
+  // 监听ESC键关闭模态框
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showPreviewModal) {
+        closePreviewModal()
+      }
+    }
+    
+    if (showPreviewModal) {
+      window.addEventListener('keydown', handleKeyDown)
+      // 禁止背景滚动
+      document.body.style.overflow = 'hidden'
+    }
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [showPreviewModal])
 
   // 加载中状态
   if (isLoggedIn === null) {
@@ -231,10 +356,62 @@ export default function UploadPage() {
                 {!!imgPreviews.length && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
                     {imgPreviews.map((src, i) => (
-                      <div key={i} className="m3-card-elevated overflow-hidden aspect-square">
+                      <div 
+                        key={i} 
+                        className="m3-card-elevated overflow-hidden aspect-square cursor-pointer hover:shadow-lg transition-shadow"
+                        onClick={() => openPreviewModal(src)}
+                      >
                         <img src={src} alt={`预览 ${i+1}`} className="object-cover w-full h-full" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-20 transition-all">
+                          <svg className="w-8 h-8 text-white opacity-0 hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                          </svg>
+                        </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* 自动预览图功能 */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
+              <label htmlFor="preview-btn" className="text-sm sm:text-base sm:w-32 text-surface-on font-medium sm:mt-2">自动预览图</label>
+              <div className="flex-1 space-y-4">
+                <button
+                  id="preview-btn"
+                  type="button"
+                  onClick={generateAutoPreview}
+                  disabled={!jsonFile || !title || autoPreviewLoading}
+                  className="m3-btn-filled min-h-touch flex items-center gap-2 disabled:opacity-50"
+                >
+                  {autoPreviewLoading ? (
+                    <>
+                      <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      生成预览图
+                    </>
+                  )}
+                </button>
+                
+                {/* 预览图显示区域 */}
+                {autoPreviewUrl && (
+                  <div 
+                    className="inline-block m3-card-elevated overflow-hidden cursor-pointer hover:shadow-xl transition-shadow"
+                    style={{ width: '280px', maxHeight: '700px' }}
+                    onClick={() => openPreviewModal(autoPreviewUrl)}
+                  >
+                    <img 
+                      src={autoPreviewUrl} 
+                      alt="预览图" 
+                      className="w-full h-auto object-contain bg-white"
+                    />
                   </div>
                 )}
               </div>
@@ -248,6 +425,43 @@ export default function UploadPage() {
           </form>
         </div>
       </div>
+      
+      {/* 预览图放大模态框 */}
+      {showPreviewModal && modalImageSrc && (
+        <div className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 p-0 backdrop-blur-md">
+          {/* 关闭按钮 - 右上角固定 */}
+          <button
+            onClick={closePreviewModal}
+            className="fixed top-6 right-6 w-12 h-12 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all shadow-2xl z-20 hover:scale-110 border border-white/30"
+            aria-label="关闭"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          {/* 提示文字 - 左上角 */}
+          <div className="fixed top-6 left-6 text-white/80 text-sm font-medium z-20 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-lg">
+            🖼️ 预览图 • 按ESC或点击背景关闭
+          </div>
+          
+          {/* 图片容器 - 充满整个视口 */}
+          <div className="relative w-full h-full flex items-center justify-center p-8 animate-in fade-in zoom-in duration-300">
+            <img 
+              src={modalImageSrc} 
+              alt="预览图放大" 
+              className="max-w-full max-h-full object-contain drop-shadow-2xl"
+              style={{ maxHeight: '95vh', maxWidth: '95vw' }}
+            />
+          </div>
+          
+          {/* 点击背景关闭 */}
+          <div 
+            className="absolute inset-0 -z-10" 
+            onClick={closePreviewModal}
+          />
+        </div>
+      )}
     </div>
   )
 }

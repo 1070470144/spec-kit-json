@@ -7,6 +7,8 @@ import { LocalStorage } from '@/src/storage/local'
 import { getSession } from '@/src/auth/session'
 import { getAdminSession } from '@/src/auth/adminSession'
 import { getCachedData, CACHE_CONFIG } from '@/src/cache/api-cache'
+import { join } from 'path'
+import { existsSync } from 'fs'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
@@ -122,9 +124,46 @@ export async function GET(req: NextRequest) {
     total = count
   }
 
-  const items = itemsRaw.map(it => ({
-    ...it,
-    previewUrl: (it.images && it.images[0]?.path) ? `/api/files?path=${encodeURIComponent(it.images[0].path)}` : null,
+  // 为没有预览图的剧本生成自动预览图URL
+  const items = await Promise.all(itemsRaw.map(async (it) => {
+    let previewUrl = null
+    
+    // 优先使用用户上传的图片
+    if (it.images && it.images[0]?.path) {
+      previewUrl = `/api/files?path=${encodeURIComponent(it.images[0].path)}`
+    } else {
+      // 没有用户上传图片时，提供自动生成预览图的URL
+      previewUrl = `/api/scripts/${it.id}/auto-preview`
+      
+      // 异步触发预览图生成（不阻塞响应）
+      setImmediate(async () => {
+        try {
+          // 检查是否已有生成的预览图
+          const storage = new (await import('@/src/storage/local')).LocalStorage()
+          const { getPreviewImagePath } = await import('@/src/generators/script-preview')
+          const previewPath = getPreviewImagePath(it.id)
+          const fullPath = join(storage.basePath, previewPath)
+          
+          if (!existsSync(fullPath)) {
+            console.log(`[AUTO PREVIEW] Generating preview for script: ${it.title}`)
+            // 触发预览图生成（发送内部请求）
+            fetch(`http://localhost:3000/api/scripts/${it.id}/generate-preview`, {
+              method: 'POST'
+            }).catch(error => {
+              console.warn(`[AUTO PREVIEW] Generation failed for ${it.id}:`, error)
+            })
+          }
+        } catch (error) {
+          console.warn(`[AUTO PREVIEW] Check failed for ${it.id}:`, error)
+        }
+      })
+    }
+    
+    return {
+      ...it,
+      previewUrl,
+      hasAutoPreview: !it.images || !it.images[0]?.path
+    }
   }))
   
   console.log('[List] Returning:', items.length, 'items, Total:', total, 'Mine:', mine)
@@ -136,7 +175,7 @@ export async function GET(req: NextRequest) {
 }
 
 const createSchema = z.object({ title: z.string().min(1), json: z.any() })
-const ALLOWED = new Set(['image/jpeg','image/png','image/webp'])
+const ALLOWED = new Set(['image/jpeg','image/png','image/webp','image/svg+xml'])
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024
 const MAX_IMAGES = 3
 const MAX_JSON_SIZE = 5 * 1024 * 1024
@@ -219,7 +258,52 @@ export async function POST(req: Request) {
         })
       }
 
-      return ok({ id: scriptId }, 201)
+      // 异步生成预览图（如果没有用户上传图片）
+      if (images.filter(f => f).length === 0) {
+        setImmediate(async () => {
+          try {
+            console.log(`[UPLOAD] Auto-generating preview for new script: ${title}`)
+            
+            const { generateScriptPreview, getPreviewImagePath } = await import('@/src/generators/script-preview')
+            
+            const scriptData = {
+              id: scriptId,
+              title,
+              author: authorName || '未知作者',
+              json: json || {}
+            }
+            
+            const imagePath = getPreviewImagePath(scriptId)
+            const fullPath = storage.getAbsolutePath(imagePath)
+            
+            await generateScriptPreview(scriptData, fullPath)
+            
+            // 保存到数据库
+            await prisma.imageAsset.create({
+              data: {
+                scriptId: scriptId,
+                path: imagePath,
+                mime: 'image/svg+xml',
+                size: 0,
+                sha256: '',
+                isCover: true,
+                sortOrder: -1, // 自动生成优先级低
+              }
+            })
+            
+            console.log(`[UPLOAD] Auto preview generated for ${scriptId}`)
+            
+          } catch (error) {
+            console.error(`[UPLOAD] Failed to generate preview for ${scriptId}:`, error)
+          }
+        })
+      }
+      
+      return ok({ 
+        id: scriptId,
+        hasAutoPreview: images.filter(f => f).length === 0,
+        autoPreviewUrl: `/api/scripts/${scriptId}/auto-preview`
+      }, 201)
     } catch (e: any) {
       if (e?.code === 'P2002' && String(e?.meta?.target || '').includes('contentHash')) {
         return badRequest('DUPLICATE_JSON')

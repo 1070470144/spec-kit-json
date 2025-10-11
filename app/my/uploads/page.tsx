@@ -10,6 +10,8 @@ type Item = {
   state: string; 
   createdAt?: string;
   rejectReason?: string | null;
+  previewUrl: string;
+  hasAutoPreview: boolean;
 }
 
 async function fetchMyUploads(page = 1, pageSize = 24) {
@@ -30,6 +32,11 @@ async function fetchMyUploads(page = 1, pageSize = 24) {
         title: true,
         state: true,
         createdAt: true,
+        images: {
+          select: { path: true, isCover: true, sortOrder: true },
+          take: 3,
+          orderBy: { sortOrder: 'asc' }
+        },
         reviews: {
           where: { decision: 'rejected' },
           orderBy: { createdAt: 'desc' },
@@ -41,13 +48,30 @@ async function fetchMyUploads(page = 1, pageSize = 24) {
     prisma.script.count({ where: { createdById: session.userId } })
   ])
   
-  const items: Item[] = scripts.map(s => ({
-    id: s.id,
-    title: s.title,
-    state: s.state,
-    createdAt: s.createdAt.toISOString(),
-    rejectReason: s.reviews[0]?.reason || null
-  }))
+  const items: Item[] = scripts.map(s => {
+    // 计算预览图 URL
+    let previewUrl: string
+    let hasAutoPreview = false
+    
+    if (s.images && s.images[0]?.path) {
+      previewUrl = `/api/files?path=${encodeURIComponent(s.images[0].path)}`
+      hasAutoPreview = false
+    } else {
+      // 没有图片时使用自动预览图
+      previewUrl = `/api/scripts/${s.id}/auto-preview`
+      hasAutoPreview = true
+    }
+    
+    return {
+      id: s.id,
+      title: s.title,
+      state: s.state,
+      createdAt: s.createdAt.toISOString(),
+      rejectReason: s.reviews[0]?.reason || null,
+      previewUrl,
+      hasAutoPreview
+    }
+  })
   
   return { items, total, page, pageSize }
 }
@@ -94,7 +118,7 @@ export default async function MyUploadsPage({ searchParams }: { searchParams?: P
             {/* 顶部装饰条 */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500"></div>
             
-            <ClientCarouselWrapper id={s.id} />
+            <ClientCarouselWrapper id={s.id} previewUrl={s.previewUrl} hasAutoPreview={s.hasAutoPreview} />
             <div className="p-6">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h3 className={`text-xl font-bold flex-1 ${s.state==='abandoned' ? 'line-through text-gray-400' : 'text-surface-on group-hover:text-sky-600'} transition-colors`}>
@@ -194,9 +218,9 @@ export default async function MyUploadsPage({ searchParams }: { searchParams?: P
 }
 
 // 复用剧本图片轮播
-function ClientCarouselWrapper({ id }: { id: string }) {
-  const Carousel = require('../../scripts/ScriptImagesCarousel').default as (p: { id: string }) => JSX.Element
-  return <Carousel id={id} />
+function ClientCarouselWrapper({ id, previewUrl, hasAutoPreview }: { id: string; previewUrl: string; hasAutoPreview: boolean }) {
+  const Carousel = require('../../scripts/ScriptImagesCarousel').default as (p: { id: string; previewUrl?: string; hasAutoPreview?: boolean }) => JSX.Element
+  return <Carousel id={id} previewUrl={previewUrl} hasAutoPreview={hasAutoPreview} />
 }
 
 

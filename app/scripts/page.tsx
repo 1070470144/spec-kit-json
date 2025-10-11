@@ -8,7 +8,7 @@ async function fetchList(page = 1, pageSize = 24, q?: string) {
   const qs = new URLSearchParams({ state: 'published', page: String(page), pageSize: String(pageSize), ...(q ? { q } : {}) })
   const res = await fetch(`${base}/api/scripts?${qs.toString()}`, { cache: 'no-store' })
   const j = await res.json()
-  const items = (j?.data?.items ?? j?.items ?? []) as { id: string; title: string; authorName?: string|null }[]
+  const items = (j?.data?.items ?? j?.items ?? []) as { id: string; title: string; authorName?: string|null; previewUrl?: string; hasAutoPreview?: boolean }[]
   const total = Number(j?.data?.total ?? j?.total ?? 0)
   return { items, total, page, pageSize }
 }
@@ -73,7 +73,7 @@ export default async function ScriptsPage({ searchParams }: { searchParams?: Pro
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500"></div>
             
             {/* 缩略图轮播 */}
-            <ClientCarouselWrapper id={i.id} />
+            <ClientCarouselWrapper id={i.id} previewUrl={i.previewUrl} hasAutoPreview={i.hasAutoPreview} />
             
             <div className="p-4 sm:p-6">
               <h3 className="text-lg sm:text-xl font-bold mb-2 text-surface-on group-hover:text-sky-600 transition-colors line-clamp-2">{i.title}</h3>
@@ -126,9 +126,9 @@ export default async function ScriptsPage({ searchParams }: { searchParams?: Pro
 }
 
 // 轻量包装以在服务端组件中插入客户端组件
-function ClientCarouselWrapper({ id }: { id: string }) {
-  const Carousel = require('./ScriptImagesCarousel').default as (p: { id: string }) => JSX.Element
-  return <Carousel id={id} />
+function ClientCarouselWrapper({ id, previewUrl, hasAutoPreview }: { id: string; previewUrl?: string; hasAutoPreview?: boolean }) {
+  const Carousel = require('./ScriptImagesCarousel').default as (p: { id: string; previewUrl?: string; hasAutoPreview?: boolean }) => JSX.Element
+  return <Carousel id={id} previewUrl={previewUrl} hasAutoPreview={hasAutoPreview} />
 }
 
 function ClientActionsWrapper({ id, initial }: { id: string; initial?: { likes:number; favorites:number; liked:boolean; favorited:boolean } }) {
