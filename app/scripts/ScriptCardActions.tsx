@@ -120,7 +120,7 @@ export default function ScriptCardActions({ id, initial }: { id: string; initial
         </div>
       )}
       <div className="flex items-center justify-between gap-2">
-        <a className="m3-btn-outlined flex-1 text-center min-h-touch" href={`/scripts/${id}`}>查看详情</a>
+        <a className="m3-btn-outlined flex-1 text-center min-h-touch whitespace-nowrap text-xs sm:text-sm" href={`/scripts/${id}`}>查看详情</a>
         <div className="flex items-center gap-2">
           <button 
             className={`inline-flex items-center justify-center gap-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-sm transition-all duration-standard min-w-touch min-h-touch active:scale-95 ${
