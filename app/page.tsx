@@ -3,6 +3,10 @@ import HotCarousel from './_components/HotCarousel'
 import FeaturesGrid from './_components/FeaturesGrid'
 import { prisma } from '@/src/db/client'
 
+// 强制动态渲染，不在构建时预渲染
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function fetchHot() {
   // 直接 SSR 聚合近7天下载 Top5，减少 /api 跳转
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000)
