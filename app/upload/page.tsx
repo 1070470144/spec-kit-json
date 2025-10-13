@@ -80,11 +80,11 @@ export default function UploadPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setMessage('')
-    if (!title || !jsonFile) { showToast('请填写标题并选择 JSON 文件', 'error'); return }
+    if (!jsonFile) { showToast('请选择 JSON 文件', 'error'); return }
     if (images.length > 3) { showToast('最多选择 3 张图片', 'error'); return }
     
     const form = new FormData()
-    form.set('title', title)
+    if (title) form.set('title', title)
     if (authorName) form.set('authorName', authorName)
     form.set('jsonFile', jsonFile)
     
@@ -121,8 +121,8 @@ export default function UploadPage() {
 
   // 生成自动预览图
   async function generateAutoPreview() {
-    if (!jsonFile || !title) {
-      showToast('请先填写标题并选择JSON文件', 'error')
+    if (!jsonFile) {
+      showToast('请先选择JSON文件', 'error')
       return
     }
 
@@ -140,11 +140,19 @@ export default function UploadPage() {
         return
       }
 
+      // 从JSON中提取标题和作者（如果用户没填）
+      const jsonTitle = Array.isArray(json) 
+        ? (json[0]?.name || json[0]?.id || '未命名剧本')
+        : (json?.name || json?.id || '未命名剧本')
+      const jsonAuthor = Array.isArray(json)
+        ? (json[0]?.author || '未知作者')
+        : (json?.author || '未知作者')
+
       // 创建临时脚本数据
       const tempScriptData = {
         id: 'temp-preview',
-        title,
-        author: authorName || '未知作者',
+        title: title || jsonTitle,
+        author: authorName || jsonAuthor,
         json
       }
 
@@ -298,14 +306,13 @@ export default function UploadPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <label htmlFor="title" className="text-sm sm:text-base sm:w-32 text-surface-on font-medium">名字（标题）<span className="text-error">*</span></label>
+              <label htmlFor="title" className="text-sm sm:text-base sm:w-32 text-surface-on font-medium">名字（可选）</label>
               <input 
                 id="title"
                 className="input flex-1 min-h-touch text-base" 
-                placeholder="例如：隐舟暗渡" 
+                placeholder="不填则使用JSON中的标题" 
                 value={title} 
                 onChange={e=>setTitle(e.target.value)}
-                required
               />
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
@@ -313,7 +320,7 @@ export default function UploadPage() {
               <input 
                 id="author"
                 className="input flex-1 min-h-touch text-base" 
-                placeholder="作者名" 
+                placeholder="不填则使用JSON中的作者" 
                 value={authorName} 
                 onChange={e=>setAuthorName(e.target.value)} 
               />
@@ -382,7 +389,7 @@ export default function UploadPage() {
                   id="preview-btn"
                   type="button"
                   onClick={generateAutoPreview}
-                  disabled={!jsonFile || !title || autoPreviewLoading}
+                  disabled={!jsonFile || autoPreviewLoading}
                   className="m3-btn-filled min-h-touch flex items-center gap-2 disabled:opacity-50"
                 >
                   {autoPreviewLoading ? (
@@ -418,7 +425,7 @@ export default function UploadPage() {
             </div>
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
               <a className="m3-btn-text min-h-touch text-center" href="/scripts">返回列表</a>
-              <button className="m3-btn-filled min-h-touch" type="submit" disabled={!title || !jsonFile || loading}>
+              <button className="m3-btn-filled min-h-touch" type="submit" disabled={!jsonFile || loading}>
                 {loading ? '提交中…' : '提交'}
               </button>
             </div>

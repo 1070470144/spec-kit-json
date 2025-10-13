@@ -44,13 +44,25 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null)
     
-    if (!body || !body.title) {
-      return badRequest('Missing required fields: title')
+    if (!body || !body.json) {
+      return badRequest('Missing required fields: json')
     }
     
     const { id, title, author, json } = body
     
-    console.log(`[TEMP PREVIEW] Generating preview for "${title}"`)
+    // 从JSON中提取标题和作者（如果没有传入）
+    const jsonData = json as any
+    const jsonTitle = Array.isArray(jsonData)
+      ? (jsonData[0]?.name || jsonData[0]?.id || '')
+      : (jsonData?.name || jsonData?.id || '')
+    const jsonAuthor = Array.isArray(jsonData)
+      ? (jsonData[0]?.author || '')
+      : (jsonData?.author || '')
+    
+    const finalTitle = title || jsonTitle || '未命名剧本'
+    const finalAuthor = author || jsonAuthor || '未知作者'
+    
+    console.log(`[TEMP PREVIEW] Generating preview for "${finalTitle}" by ${finalAuthor}`)
     const genStartTime = Date.now()
     
     // 处理图片URL为base64
@@ -59,8 +71,8 @@ export async function POST(req: NextRequest) {
     // 使用预览图生成器创建SVG
     const scriptData = {
       id: id || 'temp',
-      title,
-      author: author || '未知作者', 
+      title: finalTitle,
+      author: finalAuthor, 
       json: processedJson
     }
     

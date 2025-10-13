@@ -159,8 +159,9 @@ export function extractScriptInfo(scriptData: ScriptData) {
     // 提取元数据
     const metaData = json.find(item => item.id === '_meta')
     if (metaData) {
-      scriptName = metaData.name || title
-      scriptAuthor = metaData.author || author
+      // 优先使用传入的title和author（用户填写的），没有才使用JSON中的
+      scriptName = title || metaData.name
+      scriptAuthor = author || metaData.author
       console.log('[PREVIEW] Found meta data:', { name: scriptName, author: scriptAuthor })
     }
     
@@ -177,8 +178,9 @@ export function extractScriptInfo(scriptData: ScriptData) {
     // 对象格式：角色在characters字段中
     console.log('[PREVIEW] Processing object format JSON')
     characters = json.characters || []
-    scriptName = json.name || title
-    scriptAuthor = json.author || author
+    // 优先使用传入的title和author（用户填写的），没有才使用JSON中的
+    scriptName = title || json.name
+    scriptAuthor = author || json.author
   }
   
   // 调试：输出JSON结构

@@ -216,11 +216,30 @@ export async function POST(req: Request) {
       
       console.log('[Upload] Session userId:', session?.userId, 'OwnerId:', ownerId)
 
+      // 从JSON中提取标题和作者（如果用户没填）
+      let finalTitle = title
+      let finalAuthorName = authorName
+      
+      if (!finalTitle || !finalAuthorName) {
+        const jsonData = json as any
+        const jsonTitle = Array.isArray(jsonData)
+          ? (jsonData[0]?.name || jsonData[0]?.id || '')
+          : (jsonData?.name || jsonData?.id || '')
+        const jsonAuthor = Array.isArray(jsonData)
+          ? (jsonData[0]?.author || '')
+          : (jsonData?.author || '')
+        
+        if (!finalTitle) finalTitle = jsonTitle || '未命名剧本'
+        if (!finalAuthorName) finalAuthorName = jsonAuthor || ''
+        
+        console.log('[Upload] Extracted from JSON - title:', finalTitle, 'author:', finalAuthorName)
+      }
+
       // 不再按标题合并系列：始终创建新剧本
       const created = await prisma.script.create({
         data: {
-          title,
-          authorName: authorName || undefined,
+          title: finalTitle,
+          authorName: finalAuthorName || undefined,
           state: 'pending',
           createdById: ownerId,
           versions: {
@@ -267,14 +286,14 @@ export async function POST(req: Request) {
       if (images.filter(f => f).length === 0) {
         setImmediate(async () => {
           try {
-            console.log(`[UPLOAD] Auto-generating preview for new script: ${title}`)
+            console.log(`[UPLOAD] Auto-generating preview for new script: ${finalTitle}`)
             
             const { generateScriptPreview, getPreviewImagePath } = await import('@/src/generators/script-preview')
             
             const scriptData = {
               id: scriptId,
-              title,
-              author: authorName || '未知作者',
+              title: finalTitle,
+              author: finalAuthorName || '未知作者',
               json: json || {}
             }
             
