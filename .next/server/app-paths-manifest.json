@@ -1,6 +1,9 @@
 {
+  "/api/me/route": "app/api/me/route.js",
+  "/api/site-config/route": "app/api/site-config/route.js",
+  "/api/scripts/temp-preview/generate/route": "app/api/scripts/temp-preview/generate/route.js",
   "/scripts/[id]/page": "app/scripts/[id]/page.js",
-  "/admin/scripts/page": "app/admin/scripts/page.js",
+  "/upload/page": "app/upload/page.js",
   "/admin/review/page": "app/admin/review/page.js",
   "/admin/scripts/batch/page": "app/admin/scripts/batch/page.js",
   "/admin/login/page": "app/admin/login/page.js"
