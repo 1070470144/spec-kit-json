@@ -209,6 +209,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../app/generate/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/generate">> = Specific
+  const handler = {} as typeof import("../../app/generate/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../app/leaderboard/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/leaderboard">> = Specific
@@ -807,6 +816,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/storyteller/apply">> = Specific
   const handler = {} as typeof import("../../app/api/storyteller/apply/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/tools/convert-svg-to-png/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/tools/convert-svg-to-png">> = Specific
+  const handler = {} as typeof import("../../app/api/tools/convert-svg-to-png/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
