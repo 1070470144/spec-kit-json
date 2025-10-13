@@ -3,6 +3,8 @@ import { prisma } from '@/src/db/client'
 import { parseJson } from '@/src/api/validate'
 import { ok, notFound, badRequest, unauthorized } from '@/src/api/http'
 import { getAdminSession } from '@/src/auth/adminSession'
+import { invalidateCache } from '@/src/cache/api-cache'
+import { revalidatePath } from 'next/cache'
 
 const schema = z.object({ decision: z.enum(['approved','rejected']), reason: z.string().min(1).optional() })
 
@@ -33,5 +35,21 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       select: { id: true, state: true }
     })
   })
+  
+  // 清除所有相关缓存
+  invalidateCache('scripts-pending')   // 清除待审核列表缓存
+  invalidateCache('scripts-published') // 清除已发布列表缓存
+  invalidateCache('scripts-rejected')  // 清除已拒绝列表缓存
+  invalidateCache('scripts-all')       // 清除全部列表缓存
+  invalidateCache(`script-${id}`)      // 清除剧本详情缓存
+  
+  // 重新验证页面缓存
+  revalidatePath('/admin/review')
+  revalidatePath('/admin/scripts')
+  revalidatePath('/scripts')
+  revalidatePath(`/scripts/${id}`)
+  
+  console.log(`[REVIEW] Script ${id} ${decision}, cache invalidated`)
+  
   return ok(updated)
 }

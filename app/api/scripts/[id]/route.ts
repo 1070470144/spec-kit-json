@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/src/db/client'
 import { ok, notFound, badRequest, unauthorized, forbidden } from '@/src/api/http'
 import { getAdminSession } from '@/src/auth/adminSession'
-import { getCachedData, CACHE_CONFIG } from '@/src/cache/api-cache'
+import { getCachedData, CACHE_CONFIG, invalidateCache } from '@/src/cache/api-cache'
+import { revalidatePath } from 'next/cache'
 
 // OPTIONS 请求处理（CORS预检）
 export async function OPTIONS() {
@@ -131,6 +132,16 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     const hash = (await import('node:crypto')).createHash('sha256').update(contentStr).digest('hex')
     await prisma.scriptJSON.create({ data: { scriptId: id, content: contentStr, contentHash: hash, schemaValid: true, version: 1 } })
   }
+  
+  // 清除缓存
+  invalidateCache(`script-${id}`)
+  invalidateCache('scripts-')
+  revalidatePath(`/scripts/${id}`)
+  revalidatePath('/scripts')
+  revalidatePath('/admin/scripts')
+  
+  console.log(`[UPDATE] Script ${id} updated, cache invalidated`)
+  
   return ok({ id })
 }
 
@@ -151,5 +162,14 @@ export async function DELETE(_req: NextRequest, context: { params: Promise<{ id:
     await tx.downloadEvent.deleteMany({ where: { scriptId: id } })
     await tx.script.delete({ where: { id } })
   })
+  
+  // 清除缓存
+  invalidateCache(`script-${id}`)
+  invalidateCache('scripts-')
+  revalidatePath('/scripts')
+  revalidatePath('/admin/scripts')
+  
+  console.log(`[DELETE] Script ${id} deleted, cache invalidated`)
+  
   return ok({ id })
 }
