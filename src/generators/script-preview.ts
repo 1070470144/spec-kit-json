@@ -149,21 +149,13 @@ export function extractScriptInfo(scriptData: ScriptData) {
   
   // 处理两种JSON格式：数组格式和对象格式
   let characters: BotcCharacter[] = []
-  let scriptName = title
-  let scriptAuthor = author
+  // 直接使用传入的title和author（调用方已经处理了优先级）
+  const scriptName: string = title
+  const scriptAuthor: string = author || '未知作者'
   
   if (Array.isArray(json)) {
     // 数组格式：第一个元素是元数据，其余是角色
     console.log('[PREVIEW] Processing array format JSON')
-    
-    // 提取元数据
-    const metaData = json.find(item => item.id === '_meta')
-    if (metaData) {
-      // 优先使用传入的title和author（用户填写的），没有才使用JSON中的
-      scriptName = title || metaData.name
-      scriptAuthor = author || metaData.author
-      console.log('[PREVIEW] Found meta data:', { name: scriptName, author: scriptAuthor })
-    }
     
     // 提取角色（排除元数据和特殊互动说明）
     characters = json.filter((item: any) => {
@@ -178,9 +170,6 @@ export function extractScriptInfo(scriptData: ScriptData) {
     // 对象格式：角色在characters字段中
     console.log('[PREVIEW] Processing object format JSON')
     characters = json.characters || []
-    // 优先使用传入的title和author（用户填写的），没有才使用JSON中的
-    scriptName = title || json.name
-    scriptAuthor = author || json.author
   }
   
   // 调试：输出JSON结构
