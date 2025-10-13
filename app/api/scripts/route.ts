@@ -6,7 +6,8 @@ import { parseJson } from '@/src/api/validate'
 import { LocalStorage } from '@/src/storage/local'
 import { getSession } from '@/src/auth/session'
 import { getAdminSession } from '@/src/auth/adminSession'
-import { getCachedData, CACHE_CONFIG } from '@/src/cache/api-cache'
+import { getCachedData, CACHE_CONFIG, invalidateCache } from '@/src/cache/api-cache'
+import { revalidatePath } from 'next/cache'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
@@ -303,6 +304,16 @@ export async function POST(req: Request) {
         })
       }
       
+      // 清除待审核列表缓存
+      invalidateCache('scripts-pending')
+      invalidateCache('scripts-all')
+      
+      // 刷新服务端渲染页面缓存
+      revalidatePath('/admin/review')
+      revalidatePath('/admin/scripts')
+      
+      console.log(`[UPLOAD] Script ${scriptId} created (form), cache invalidated`)
+      
       return ok({ 
         id: scriptId,
         hasAutoPreview: images.filter(f => f).length === 0,
@@ -351,6 +362,17 @@ export async function POST(req: Request) {
       },
       select: { id: true }
     })
+    
+    // 清除待审核列表缓存
+    invalidateCache('scripts-pending')
+    invalidateCache('scripts-all')
+    
+    // 刷新服务端渲染页面缓存
+    revalidatePath('/admin/review')
+    revalidatePath('/admin/scripts')
+    
+    console.log(`[UPLOAD] Script ${created.id} created (JSON), cache invalidated`)
+    
     return ok({ id: created.id }, 201)
   } catch (e: any) {
     if (e?.code === 'P2002' && String(e?.meta?.target || '').includes('contentHash')) {

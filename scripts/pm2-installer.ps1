@@ -78,7 +78,7 @@ function Step-CloneOrPull($cfg){
     $toBackup = @(
       @{Path='.env'; Name='env'},
       @{Path='uploads'; Name='uploads'},
-      @{Path='prisma\prisma\dev.db'; Name='dev.db'}
+      @{Path='prisma\dev.db'; Name='dev.db'}  # 修复：正确的数据库路径
     )
     
     Info "开始备份生产数据..."
@@ -185,7 +185,7 @@ function Step-Backup($cfg){
   $backupDir = Join-Path $cfg.DeployDir 'backups'
   if(!(Test-Path $backupDir)){ New-Item -ItemType Directory -Force -Path $backupDir | Out-Null }
   $uploads = Join-Path $cfg.DeployDir 'uploads'
-  $sqlite = Join-Path $cfg.DeployDir 'prisma\prisma\dev.db'
+  $sqlite = Join-Path $cfg.DeployDir 'prisma\dev.db'  # 修复：正确的数据库路径
   $target = Join-Path $backupDir "backup-$ts.zip"
   $paths = @(); if(Test-Path $uploads){ $paths += $uploads }; if(Test-Path $sqlite){ $paths += $sqlite }
   if($paths.Count -gt 0){ Compress-Archive -Path $paths -DestinationPath $target -Force; OK "backup saved: $target" } else { Info 'nothing to backup' }

@@ -4,6 +4,7 @@ import { ok, notFound, unauthorized } from '@/src/api/http'
 import { getSession } from '@/src/auth/session'
 import { getAdminSession } from '@/src/auth/adminSession'
 import { invalidateCache } from '@/src/cache/api-cache'
+import { revalidatePath } from 'next/cache'
 
 // 普通用户：软删除（标记 state = 'abandoned'），管理员：硬删除
 export async function POST(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -23,22 +24,47 @@ export async function POST(_req: NextRequest, context: { params: Promise<{ id: s
       await tx.script.delete({ where: { id } })
     })
     
-    // 清除所有剧本列表缓存
-    invalidateCache('scripts-')
-    console.log('[Delete] Cache invalidated for hard delete')
+    // 清除所有相关缓存（硬删除清除所有状态）
+    invalidateCache('scripts-pending')
+    invalidateCache('scripts-published')
+    invalidateCache('scripts-rejected')
+    invalidateCache('scripts-abandoned')
+    invalidateCache('scripts-all')
+    invalidateCache(`script-${id}`)
+    
+    // 刷新服务端渲染页面缓存
+    revalidatePath('/admin/review')
+    revalidatePath('/admin/scripts')
+    revalidatePath('/scripts')
+    
+    console.log(`[Delete] Hard delete script: ${id}, cache invalidated`)
     
     return ok({ hardDeleted: true })
   }
 
   const session = await getSession()
   if (!session) return unauthorized()
-  const mine = await prisma.script.findFirst({ where: { id, createdById: session.userId }, select: { id: true } })
+  const mine = await prisma.script.findFirst({ where: { id, createdById: session.userId }, select: { id: true, state: true } })
   if (!mine) return unauthorized()
+  
+  const oldState = mine.state
   await prisma.script.update({ where: { id }, data: { state: 'abandoned' } })
   
-  // 清除所有剧本列表缓存
-  invalidateCache('scripts-')
-  console.log('[Delete] Cache invalidated for soft delete, script:', id)
+  // 清除所有相关缓存（清除所有状态以确保一致性）
+  invalidateCache('scripts-pending')
+  invalidateCache('scripts-published')
+  invalidateCache('scripts-rejected')
+  invalidateCache('scripts-abandoned')
+  invalidateCache('scripts-all')
+  invalidateCache(`script-${id}`)
+  
+  // 刷新服务端渲染页面缓存
+  revalidatePath('/admin/review')
+  revalidatePath('/admin/scripts')
+  revalidatePath('/scripts')
+  revalidatePath('/my/uploads')
+  
+  console.log(`[Delete] Soft delete - ${oldState} -> abandoned, script: ${id}, cache invalidated`)
   
   return ok({ softDeleted: true })
 }

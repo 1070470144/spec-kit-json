@@ -3,6 +3,7 @@ import { prisma } from '@/src/db/client'
 import { ok, notFound, unauthorized, badRequest } from '@/src/api/http'
 import { getAdminSession } from '@/src/auth/adminSession'
 import { invalidateCache } from '@/src/cache/api-cache'
+import { revalidatePath } from 'next/cache'
 
 /**
  * 管理员恢复已废弃的剧本
@@ -55,17 +56,28 @@ export async function POST(
     data: updateData
   })
 
-  // 清除所有剧本列表缓存
-  invalidateCache('scripts-')
+  // 清除所有相关缓存（恢复操作影响多个状态）
+  invalidateCache('scripts-pending')
+  invalidateCache('scripts-published')
+  invalidateCache('scripts-rejected')
+  invalidateCache('scripts-abandoned')
+  invalidateCache('scripts-all')
+  invalidateCache(`script-${id}`)
+  
+  // 刷新服务端渲染页面缓存
+  revalidatePath('/admin/review')
+  revalidatePath('/admin/scripts')
+  revalidatePath('/scripts')
 
   console.log(
     '[Restore] Script restored:',
     id,
     script.title,
-    'New state:',
+    'abandoned ->',
     newState,
     'Transferred:',
-    transferOwnership
+    transferOwnership,
+    'cache invalidated'
   )
 
   return ok({

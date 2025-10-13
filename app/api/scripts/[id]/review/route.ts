@@ -36,10 +36,11 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     })
   })
   
-  // 清除所有相关缓存
+  // 清除所有相关缓存（清除所有状态以确保一致性）
   invalidateCache('scripts-pending')   // 清除待审核列表缓存
   invalidateCache('scripts-published') // 清除已发布列表缓存
   invalidateCache('scripts-rejected')  // 清除已拒绝列表缓存
+  invalidateCache('scripts-abandoned') // 清除已废弃列表缓存
   invalidateCache('scripts-all')       // 清除全部列表缓存
   invalidateCache(`script-${id}`)      // 清除剧本详情缓存
   

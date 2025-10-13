@@ -133,9 +133,14 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     await prisma.scriptJSON.create({ data: { scriptId: id, content: contentStr, contentHash: hash, schemaValid: true, version: 1 } })
   }
   
-  // 清除缓存
+  // 清除所有相关缓存（编辑可能影响所有列表）
   invalidateCache(`script-${id}`)
-  invalidateCache('scripts-')
+  invalidateCache('scripts-pending')
+  invalidateCache('scripts-published')
+  invalidateCache('scripts-rejected')
+  invalidateCache('scripts-abandoned')
+  invalidateCache('scripts-all')
+  
   revalidatePath(`/scripts/${id}`)
   revalidatePath('/scripts')
   revalidatePath('/admin/scripts')
@@ -163,9 +168,14 @@ export async function DELETE(_req: NextRequest, context: { params: Promise<{ id:
     await tx.script.delete({ where: { id } })
   })
   
-  // 清除缓存
+  // 清除所有相关缓存（删除影响所有列表）
   invalidateCache(`script-${id}`)
-  invalidateCache('scripts-')
+  invalidateCache('scripts-pending')
+  invalidateCache('scripts-published')
+  invalidateCache('scripts-rejected')
+  invalidateCache('scripts-abandoned')
+  invalidateCache('scripts-all')
+  
   revalidatePath('/scripts')
   revalidatePath('/admin/scripts')
   
