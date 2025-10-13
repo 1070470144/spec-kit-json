@@ -3,6 +3,7 @@ import { prisma } from '@/src/db/client'
 import { LocalStorage } from '@/src/storage/local'
 import { ok, unsupportedMediaType, notFound, tooLarge, badRequest, unauthorized } from '@/src/api/http'
 import { getAdminSession } from '@/src/auth/adminSession'
+import { invalidateCache } from '@/src/cache/api-cache'
 
 const ALLOWED = new Set(['image/jpeg','image/png','image/webp'])
 const MAX_SIZE = 10 * 1024 * 1024
@@ -50,6 +51,10 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     })
     created.push({ id: row.id, url: `/api/files?path=${encodeURIComponent(meta.path)}` })
   }
+  
+  // 清除剧本详情缓存（图片变化影响详情页）
+  invalidateCache(`script-${id}`)
+  console.log(`[IMAGES] Added ${created.length} images to script ${id}, cache invalidated`)
 
   return ok({ items: created }, 201)
 }
@@ -64,5 +69,10 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
   const img = await prisma.imageAsset.findFirst({ where: { id: imageId, scriptId: id }, select: { id: true } })
   if (!img) return notFound()
   await prisma.imageAsset.delete({ where: { id: img.id } })
+  
+  // 清除剧本详情缓存（图片变化影响详情页）
+  invalidateCache(`script-${id}`)
+  console.log(`[IMAGES] Deleted image ${imageId} from script ${id}, cache invalidated`)
+  
   return ok({ id: img.id })
 }

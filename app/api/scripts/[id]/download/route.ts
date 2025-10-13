@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/src/db/client'
 import { notFound } from '@/src/api/http'
+import { invalidateCache } from '@/src/cache/api-cache'
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   let { id } = await context.params
@@ -13,10 +14,16 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
   if (!v) return notFound()
   let obj: unknown = null
   try { obj = JSON.parse(v.content) } catch { obj = null }
-  // 记录下载事件（忽略错误）
+  
+  // 记录下载事件并清除下载榜缓存
   const ua = req.headers.get('user-agent') || undefined
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || undefined
-  prisma.downloadEvent.create({ data: { scriptId: id, ip, userAgent: ua } }).catch(()=>{})
+  prisma.downloadEvent.create({ data: { scriptId: id, ip, userAgent: ua } })
+    .then(() => {
+      // 清除下载榜缓存（下载影响排行榜）
+      invalidateCache('leaderboard-downloads')
+    })
+    .catch(()=>{})
 
   const res = NextResponse.json(obj)
   const filename = encodeURIComponent(((script?.title ?? 'script')) + '.json')
