@@ -29,3 +29,5 @@ out/
 
 # 日志
 *.log
+.next
+.next
