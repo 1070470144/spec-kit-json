@@ -1,6 +1,5 @@
 import { headers } from 'next/headers'
-import PreviewImage from './PreviewImage'
-import DeleteButton from './DeleteButton'
+import { ScriptListItem } from './ClientWrapper'
 
 type ScriptItem = {
   id: string
@@ -36,16 +35,6 @@ async function fetchMyUploads(page = 1, pageSize = 24) {
   return { items, total, page: p, pageSize: ps }
 }
 
-function StateBadge({ state }: { state: ScriptItem['state'] }) {
-  const map: Record<ScriptItem['state'], { text: string; cls: string }> = {
-    pending: { text: '待审核', cls: 'bg-amber-100 text-amber-700 border-amber-200' },
-    published: { text: '已通过', cls: 'bg-green-100 text-green-700 border-green-200' },
-    rejected: { text: '已驳回', cls: 'bg-red-100 text-red-700 border-red-200' },
-    abandoned: { text: '已废弃', cls: 'bg-gray-100 text-gray-600 border-gray-200' },
-  }
-  const it = map[state]
-  return <span className={`inline-block rounded-full px-2 py-0.5 text-xs border ${it.cls}`}>{it.text}</span>
-}
 
 export default async function MyUploadsPage({ searchParams }: { searchParams?: Promise<{ page?: string }> }) {
   const sp = searchParams ? await searchParams : undefined
@@ -93,97 +82,7 @@ export default async function MyUploadsPage({ searchParams }: { searchParams?: P
           {/* 列表内容 */}
           <div className="divide-y divide-gray-100">
             {items.map(i => (
-              <div key={i.id} className="hover:bg-gray-50 transition-colors">
-                {/* 桌面端布局 */}
-                <div className="hidden md:grid md:grid-cols-12 md:gap-4 md:items-center px-6 py-4">
-                  {/* 剧本信息 */}
-                  <div className="col-span-4">
-                    <h3 className="font-semibold text-surface-on text-base mb-1 line-clamp-1">{i.title}</h3>
-                    <p className="text-sm text-surface-on-variant">作者：{i.authorName || '未知'}</p>
-                  </div>
-                  
-                  {/* 状态 */}
-                  <div className="col-span-2">
-                    <StateBadge state={i.state} />
-                  </div>
-                  
-                  {/* 上传时间 */}
-                  <div className="col-span-2">
-                    <div className="text-sm text-surface-on-variant">
-                      {new Date(i.createdAt).toLocaleDateString('zh-CN', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </div>
-                  </div>
-                  
-                  {/* 预览图 */}
-                  <div className="col-span-2">
-                    <PreviewImage previewUrl={i.previewUrl} title={i.title} />
-                  </div>
-                  
-                  {/* 操作 */}
-                  <div className="col-span-2">
-                    <div className="flex gap-2">
-                      <a 
-                        href={`/scripts/${i.id}`}
-                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-colors"
-                      >
-                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        详情
-                      </a>
-                      <DeleteButton scriptId={i.id} scriptTitle={i.title} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 移动端布局 */}
-                <div className="md:hidden p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-surface-on text-base mb-1 line-clamp-2">{i.title}</h3>
-                      <p className="text-sm text-surface-on-variant">作者：{i.authorName || '未知'}</p>
-                    </div>
-                    <div className="flex-shrink-0">
-                      <PreviewImage previewUrl={i.previewUrl} title={i.title} />
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <StateBadge state={i.state} />
-                      <div className="text-xs text-surface-on-variant">
-                        {new Date(i.createdAt).toLocaleDateString('zh-CN', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2 pt-2">
-                    <a 
-                      href={`/scripts/${i.id}`}
-                      className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-colors"
-                    >
-                      <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      详情
-                    </a>
-                    <DeleteButton scriptId={i.id} scriptTitle={i.title} />
-                  </div>
-                </div>
-              </div>
+              <ScriptListItem key={i.id} item={i} />
             ))}
           </div>
         </div>

@@ -1,0 +1,53 @@
+========================================
+云服务器部署文件清单
+========================================
+
+需要上传/更新的文件（按优先级排序）：
+
+=== 核心修复文件（必须更新）===
+1. middleware.ts
+2. app/api/admin/auth/login/route.ts
+3. app/api/admin/auth/logout/route.ts
+4. app/api/admin/auth/me/route.ts
+5. app/my/uploads/page.tsx
+
+=== 功能增强文件（可选更新）===
+6. app/api/tools/convert-svg-to-png/route.ts  (超高清图片)
+7. app/generate/page.tsx                       (超高清图片UI)
+8. scripts/pm2-installer.ps1                   (PM2安装器增强)
+
+=== 组件文件（已存在但可能需要更新）===
+9. app/my/uploads/PreviewImage.tsx
+10. app/my/uploads/DeleteButton.tsx
+
+========================================
+部署后执行的命令
+========================================
+
+cd C:\apps\juben
+npx pm2 stop juben
+npm run build
+npx pm2 start juben
+npx pm2 logs juben --lines 10
+
+========================================
+验证步骤
+========================================
+
+1. 清理浏览器缓存和Cookie
+2. 重新登录管理后台
+3. 测试用户列表显示
+4. 测试超高清图片下载
+5. 检查所有功能正常
+
+========================================
+预期结果
+========================================
+
+✓ 管理后台登录后不被重定向
+✓ 用户列表正常显示
+✓ 超高清图片30-60MB
+✓ 所有功能正常工作
+
+========================================
+
