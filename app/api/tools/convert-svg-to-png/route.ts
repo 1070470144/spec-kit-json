@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       console.log(`[SVG to PNG] Quality: ${quality}, Conversion completed in ${duration}ms, PNG size: ${pngBuffer.length} bytes (${fileSizeMB}MB)`)
       
       // 返回PNG图片
-      return new Response(pngBuffer, {
+      return new Response(pngBuffer as unknown as BodyInit, {
         headers: {
           'Content-Type': 'image/png',
           'Content-Disposition': 'attachment; filename="preview.png"',

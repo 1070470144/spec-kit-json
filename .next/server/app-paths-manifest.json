@@ -1,7 +1,0 @@
-{
-  "/api/me/route": "app/api/me/route.js",
-  "/api/site-config/route": "app/api/site-config/route.js",
-  "/api/tools/convert-svg-to-png/route": "app/api/tools/convert-svg-to-png/route.js",
-  "/api/scripts/temp-preview/generate/route": "app/api/scripts/temp-preview/generate/route.js",
-  "/generate/page": "app/generate/page.js"
-}
