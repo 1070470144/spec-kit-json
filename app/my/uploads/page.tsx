@@ -1,44 +1,6 @@
 import { headers } from 'next/headers'
-
-// 内联 PreviewImage 组件
-function PreviewImage({ previewUrl, title }: { previewUrl?: string | null; title: string }) {
-  return (
-    <div className="w-16 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center relative">
-      {previewUrl ? (
-        <img 
-          src={previewUrl} 
-          alt={title}
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <div className="text-xs text-gray-400 text-center px-1">
-          无图片
-        </div>
-      )}
-    </div>
-  )
-}
-
-// 内联 DeleteButton 组件
-function DeleteButton({ scriptId, scriptTitle }: { scriptId: string; scriptTitle: string }) {
-  return (
-    <button
-      onClick={() => {
-        if (confirm(`确定要删除剧本 "${scriptTitle}" 吗？此操作无法撤销。`)) {
-          fetch(`/api/scripts/${scriptId}/delete`, { method: 'POST' })
-            .then(() => window.location.reload())
-            .catch(() => alert('删除失败，请重试'))
-        }
-      }}
-      className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-colors md:px-3 md:py-1.5 flex-1 md:flex-initial justify-center"
-    >
-      <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-      </svg>
-      删除
-    </button>
-  )
-}
+import PreviewImage from './PreviewImage'
+import DeleteButton from './DeleteButton'
 
 type ScriptItem = {
   id: string
