@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { downloadImage } from '@/src/utils/image-converter'
+import SvgImage from '../SvgImage'
 
 type Img = { id: string; url: string; alt?: string }
 
@@ -26,7 +27,7 @@ export default function CenteredImagesWithLightbox({ images, title }: { images: 
     <div className="relative">
       <div className="flex flex-wrap justify-center gap-3 py-1">
         {images.map((img, idx) => (
-          <img
+          <SvgImage
             key={img.id}
             src={img.url}
             alt={img.alt || title || ''}
@@ -40,7 +41,7 @@ export default function CenteredImagesWithLightbox({ images, title }: { images: 
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
           <button type="button" className="absolute top-4 right-4 text-white/80 hover:text-white text-2xl" onClick={() => setOpen(false)}>×</button>
           <button type="button" className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-3xl" onClick={(e)=>{ e.stopPropagation(); setCurrent(i => (i + images.length - 1) % images.length) }}>‹</button>
-          <img src={images[current]?.url} alt={title||''} className="max-h-[90vh] max-w-[90vw] object-contain rounded" onClick={(e)=>e.stopPropagation()} />
+          <SvgImage src={images[current]?.url} alt={title||''} className="max-h-[90vh] max-w-[90vw] object-contain rounded" onClick={(e)=>e.stopPropagation()} />
           <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-3xl" onClick={(e)=>{ e.stopPropagation(); setCurrent(i => (i + 1) % images.length) }}>›</button>
           <button
             type="button"

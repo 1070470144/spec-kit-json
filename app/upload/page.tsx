@@ -15,9 +15,12 @@ export default function UploadPage() {
   const [toast, setToast] = useState<null | { type: 'success' | 'error' | 'info'; text: string }>(null)
   // 自动预览图相关状态
   const [autoPreviewUrl, setAutoPreviewUrl] = useState<string | null>(null)
+  const [autoPreviewSvg, setAutoPreviewSvg] = useState<string | null>(null)
+  const [imgPreviewFailed, setImgPreviewFailed] = useState(false)
   const [autoPreviewLoading, setAutoPreviewLoading] = useState(false)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [modalImageSrc, setModalImageSrc] = useState<string | null>(null)
+  const [modalSvg, setModalSvg] = useState<string | null>(null)
   const jsonRef = useRef<HTMLInputElement | null>(null)
   const imagesRef = useRef<HTMLInputElement | null>(null)
 
@@ -56,6 +59,10 @@ export default function UploadPage() {
     if (autoPreviewUrl) {
       setAutoPreviewUrl(null)
     }
+    if (autoPreviewSvg) {
+      setAutoPreviewSvg(null)
+    }
+    setImgPreviewFailed(false)
   }
   function onPickImages(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || [])
@@ -128,25 +135,46 @@ export default function UploadPage() {
 
     setAutoPreviewLoading(true)
     try {
+      console.log('[PREVIEW] Starting auto preview generation')
+      
       // 读取JSON文件内容
       const jsonText = await jsonFile.text()
+      console.log('[PREVIEW] File read, size:', jsonText.length)
+      
       let json: any = {}
       
       try {
         json = JSON.parse(jsonText)
+        console.log('[PREVIEW] JSON parsed successfully:', Array.isArray(json) ? `array with ${json.length} items` : typeof json)
       } catch (error) {
+        console.error('[PREVIEW] JSON parse error:', error)
         showToast('JSON文件格式错误', 'error')
         setAutoPreviewLoading(false)
         return
       }
 
       // 从JSON中提取标题和作者（如果用户没填）
-      const jsonTitle = Array.isArray(json) 
-        ? (json[0]?.name || json[0]?.id || '未命名剧本')
-        : (json?.name || json?.id || '未命名剧本')
-      const jsonAuthor = Array.isArray(json)
-        ? (json[0]?.author || '未知作者')
-        : (json?.author || '未知作者')
+      let jsonTitle = '未命名剧本'
+      let jsonAuthor = '未知作者'
+      
+      if (Array.isArray(json) && json.length > 0) {
+        // 查找_meta对象
+        const meta = json.find(item => item?.id === '_meta')
+        if (meta) {
+          jsonTitle = meta.name || meta.id || '未命名剧本'
+          jsonAuthor = meta.author || '未知作者'
+        } else {
+          // 如果没有_meta，使用第一个有效对象
+          const firstItem = json.find(item => item && item.id !== '_meta')
+          if (firstItem) {
+            jsonTitle = firstItem.name || firstItem.id || '未命名剧本'
+            jsonAuthor = firstItem.author || '未知作者'
+          }
+        }
+      } else if (json && typeof json === 'object') {
+        jsonTitle = json.name || json.id || '未命名剧本'
+        jsonAuthor = json.author || '未知作者'
+      }
 
       // 创建临时脚本数据
       const tempScriptData = {
@@ -156,19 +184,81 @@ export default function UploadPage() {
         json
       }
 
-      // 调用预览生成API
-      const response = await fetch('/api/scripts/temp-preview/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(tempScriptData)
-      })
+      // 调用预览生成API (带重试机制)
+      console.log('[PREVIEW] Calling API with data:', tempScriptData)
+      
+      let response: Response | undefined
+      let retryCount = 0
+      const maxRetries = 2
+      
+      while (retryCount <= maxRetries) {
+        try {
+          response = await fetch('/api/scripts/temp-preview/generate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(tempScriptData)
+          })
+          
+          console.log(`[PREVIEW] API response status (attempt ${retryCount + 1}):`, response.status)
+          
+          if (response.ok) {
+            break // 成功，跳出重试循环
+          } else if (retryCount < maxRetries) {
+            console.log(`[PREVIEW] Retrying in 1 second... (attempt ${retryCount + 1}/${maxRetries + 1})`)
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            retryCount++
+          } else {
+            break // 达到最大重试次数
+          }
+        } catch (fetchError) {
+          console.error(`[PREVIEW] Fetch error (attempt ${retryCount + 1}):`, fetchError)
+          if (retryCount < maxRetries) {
+            console.log(`[PREVIEW] Retrying after fetch error... (attempt ${retryCount + 1}/${maxRetries + 1})`)
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            retryCount++
+          } else {
+            throw fetchError
+          }
+        }
+      }
 
-      if (response.ok) {
+      if (response && response.ok) {
         // 使用Blob URL代替data URL，这样SVG可以加载外部图片
         const svgBlob = await response.blob()
-        const blobUrl = URL.createObjectURL(svgBlob)
+        console.log('[PREVIEW] Got blob, size:', svgBlob.size, 'type:', svgBlob.type)
+        
+        // 调试：检查SVG内容
+        const svgText = await svgBlob.text()
+        console.log('[PREVIEW] SVG content sample:', svgText.substring(0, 500))
+        console.log('[PREVIEW] SVG contains base64 images:', svgText.includes('data:image'))
+        console.log('[PREVIEW] SVG contains invalid chars:', /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/.test(svgText))
+        
+        // 缓存SVG文本用于内联回退渲染（并强制自适应容器宽度，避免显示一半）
+        const svgTextScaled = svgText.replace(/<svg(\s[^>]*?)?>/, (m) => {
+          // 如果已有style则附加，否则新增
+          if (/style=/.test(m)) {
+            return m.replace(/style=\"([^"]*)\"/, (s, v) => `style=\"${v};max-width:100%;width:100%;height:auto;display:block\"`)
+          }
+          return m.replace('<svg', '<svg style=\"max-width:100%;width:100%;height:auto;display:block\"')
+        })
+        setAutoPreviewSvg(svgTextScaled)
+        setImgPreviewFailed(false)
+        
+        // 检查base64数据是否完整
+        const base64Images = svgText.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/]+=*/g) || []
+        console.log(`[PREVIEW] Found ${base64Images.length} base64 images`)
+        base64Images.forEach((img, idx) => {
+          const sizeKB = (img.length / 1024).toFixed(1)
+          const isValid = /^data:image\/[^;]+;base64,[A-Za-z0-9+/]+=*$/.test(img)
+          console.log(`[PREVIEW] Image ${idx + 1}: ${sizeKB}KB, valid format: ${isValid}`)
+        })
+        
+        // 重新创建Blob以确保内容正确
+        const cleanedBlob = new Blob([svgText], { type: 'image/svg+xml' })
+        const blobUrl = URL.createObjectURL(cleanedBlob)
+        console.log('[PREVIEW] Created blob URL:', blobUrl)
         
         // 清理旧的blob URL
         if (autoPreviewUrl && autoPreviewUrl.startsWith('blob:')) {
@@ -177,8 +267,33 @@ export default function UploadPage() {
         
         setAutoPreviewUrl(blobUrl)
         showToast('预览图生成成功！', 'success')
+        
+        // （已移除：使用 <img> 进行二次探测会导致控制台噪音，且不影响内联渲染）
+        
+        // 已隐藏：下载SVG调试按钮
       } else {
-        showToast('预览图生成失败', 'error')
+        let errorMessage = '预览图生成失败'
+        
+        if (response) {
+          const errorText = await response.text()
+          console.error('[PREVIEW] API error:', response.status, errorText)
+          
+          try {
+            const errorData = JSON.parse(errorText)
+            if (errorData.error?.message) {
+              errorMessage = errorData.error.message
+            }
+          } catch {
+            if (errorText.length > 0 && errorText.length < 200) {
+              errorMessage = errorText
+            }
+          }
+        } else {
+          console.error('[PREVIEW] No response received after retries')
+          errorMessage = '网络连接失败，请重试'
+        }
+        
+        showToast(errorMessage, 'error')
       }
     } catch (error) {
       console.error('Auto preview generation failed:', error)
@@ -189,7 +304,16 @@ export default function UploadPage() {
 
   // 打开预览模态框
   function openPreviewModal(imageSrc: string) {
-    setModalImageSrc(imageSrc)
+    if (imageSrc && imageSrc.length > 0) {
+      setModalSvg(null)
+      setModalImageSrc(imageSrc)
+    } else if (autoPreviewSvg) {
+      setModalSvg(autoPreviewSvg)
+      setModalImageSrc('')
+    } else {
+      setModalSvg(null)
+      setModalImageSrc('')
+    }
     setShowPreviewModal(true)
   }
 
@@ -408,17 +532,19 @@ export default function UploadPage() {
                 </button>
                 
                 {/* 预览图显示区域 */}
-                {autoPreviewUrl && (
+                {autoPreviewSvg && (
                   <div 
                     className="inline-block m3-card-elevated overflow-hidden cursor-pointer hover:shadow-xl transition-shadow"
                     style={{ width: '280px', maxHeight: '700px' }}
-                    onClick={() => openPreviewModal(autoPreviewUrl)}
+                    onClick={() => openPreviewModal('')}
                   >
-                    <img 
-                      src={autoPreviewUrl} 
-                      alt="预览图" 
-                      className="w-full h-auto object-contain bg-white"
-                    />
+                    <div 
+                      className="w-full h-auto bg-white"
+                      style={{ lineHeight: 0, overflow: 'hidden' }}
+                    >
+                      {/* eslint-disable-next-line react/no-danger */}
+                      <div dangerouslySetInnerHTML={{ __html: autoPreviewSvg }} />
+                    </div>
                   </div>
                 )}
               </div>
@@ -434,7 +560,7 @@ export default function UploadPage() {
       </div>
       
       {/* 预览图放大模态框 */}
-      {showPreviewModal && modalImageSrc && (
+      {showPreviewModal && (modalImageSrc || modalSvg) && (
         <div className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 p-0 backdrop-blur-md">
           {/* 关闭按钮 - 右上角固定 */}
           <button
@@ -454,12 +580,26 @@ export default function UploadPage() {
           
           {/* 图片容器 - 充满整个视口 */}
           <div className="relative w-full h-full flex items-center justify-center p-8 animate-in fade-in zoom-in duration-300">
-            <img 
-              src={modalImageSrc} 
-              alt="预览图放大" 
-              className="max-w-full max-h-full object-contain drop-shadow-2xl"
-              style={{ maxHeight: '95vh', maxWidth: '95vw' }}
-            />
+            {modalImageSrc && modalImageSrc.length > 0 ? (
+              <img 
+                src={modalImageSrc} 
+                alt="预览图放大" 
+                className="max-w-full max-h-full object-contain drop-shadow-2xl"
+                style={{ maxHeight: '95vh', maxWidth: '95vw' }}
+                onError={() => {
+                  // 回退为SVG内联
+                  if (autoPreviewSvg) {
+                    setModalSvg(autoPreviewSvg)
+                    setModalImageSrc('')
+                  }
+                }}
+              />
+            ) : modalSvg ? (
+              <div className="max-w-full max-h-full overflow-auto bg-white p-0" style={{ lineHeight: 0 }}>
+                {/* eslint-disable-next-line react/no-danger */}
+                <div dangerouslySetInnerHTML={{ __html: modalSvg }} />
+              </div>
+            ) : null}
           </div>
           
           {/* 点击背景关闭 */}

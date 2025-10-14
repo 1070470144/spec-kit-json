@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import DeleteAllScriptsButton from '../_components/DeleteAllScriptsButton'
+import RefreshAllPreviewsButton from '../_components/RefreshAllPreviewsButton'
 import StateBadge from '../_components/StateBadge'
 import AdminScriptViewModal from '../_components/AdminScriptViewModal'
 
@@ -234,7 +235,10 @@ function AdminScriptsListContent() {
                 管理所有剧本，查看不同状态的剧本
               </p>
             </div>
-            <DeleteAllScriptsButton />
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <RefreshAllPreviewsButton />
+              <DeleteAllScriptsButton />
+            </div>
           </div>
 
           <div className="mb-6 grid grid-cols-4 sm:inline-flex rounded-sm border border-outline overflow-hidden w-full sm:w-auto" role="group" aria-label="状态筛选">

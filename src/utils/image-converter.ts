@@ -13,26 +13,72 @@ export async function svgToPng(
   svgUrl: string,
   scale: number = 2
 ): Promise<Blob> {
-  // 1. 加载 SVG 图片
+  console.log('[svgToPng] 开始转换:', svgUrl)
+  
+  // 1. 获取 SVG 内容
+  const response = await fetch(svgUrl)
+  if (!response.ok) {
+    throw new Error(`SVG 加载失败: ${response.status} ${response.statusText}`)
+  }
+  const svgText = await response.text()
+  console.log('[svgToPng] SVG 文本大小:', svgText.length, 'bytes')
+  
+  // 2. 从 SVG 文本中提取宽高
+  const svgWidthMatch = svgText.match(/width=["'](\d+)["']/)
+  const svgHeightMatch = svgText.match(/height=["'](\d+)["']/)
+  const viewBoxMatch = svgText.match(/viewBox=["'][0-9\s]+\s+(\d+)\s+(\d+)["']/)
+  
+  let width = svgWidthMatch ? parseInt(svgWidthMatch[1]) : 800
+  let height = svgHeightMatch ? parseInt(svgHeightMatch[1]) : 600
+  
+  // 如果没有 width/height 但有 viewBox，使用 viewBox 的尺寸
+  if ((!svgWidthMatch || !svgHeightMatch) && viewBoxMatch) {
+    width = parseInt(viewBoxMatch[1])
+    height = parseInt(viewBoxMatch[2])
+  }
+  
+  console.log('[svgToPng] SVG 尺寸:', width, 'x', height)
+
+  // 3. 加载 SVG 到 Image 对象
   const img = new Image()
-  img.crossOrigin = 'anonymous'
+  let imageSrc: string | null = null
+  
+  try {
+    // 优先尝试 Data URL（适合小文件）
+    if (svgText.length < 2000000) { // 小于2MB时使用Data URL
+      imageSrc = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`
+      console.log('[svgToPng] 使用 Data URL 方式')
+    } else {
+      // 大文件使用 Blob URL
+      const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' })
+      imageSrc = URL.createObjectURL(svgBlob)
+      console.log('[svgToPng] 使用 Blob URL 方式')
+    }
+    
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => {
+        console.log('[svgToPng] SVG 加载成功')
+        resolve()
+      }
+      img.onerror = (e) => {
+        console.error('[svgToPng] SVG 加载失败:', e)
+        reject(new Error('SVG 图片加载失败'))
+      }
+      img.src = imageSrc!
+    })
+  } finally {
+    // 清理 Blob URL（如果使用了）
+    if (imageSrc && imageSrc.startsWith('blob:')) {
+      URL.revokeObjectURL(imageSrc)
+    }
+  }
 
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve()
-    img.onerror = () => reject(new Error('SVG 图片加载失败'))
-    img.src = svgUrl
-  })
-
-  // 2. 创建 Canvas
+  // 5. 创建 Canvas
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('无法创建 Canvas 上下文')
 
-  // 3. 设置高清分辨率
-  const width = img.naturalWidth || img.width
-  const height = img.naturalHeight || img.height
-
-  // 限制最大尺寸防止内存溢出
+  // 6. 设置高清分辨率
   const maxDimension = 4000
   let finalScale = scale
   if (width * scale > maxDimension || height * scale > maxDimension) {
@@ -41,22 +87,26 @@ export async function svgToPng(
 
   canvas.width = width * finalScale
   canvas.height = height * finalScale
+  
+  console.log('[svgToPng] Canvas 尺寸:', canvas.width, 'x', canvas.height)
 
-  // 4. 绘制白色背景（SVG 可能是透明的）
+  // 7. 绘制白色背景（SVG 可能是透明的）
   ctx.fillStyle = 'white'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  // 5. 绘制 SVG 到 Canvas
+  // 8. 绘制 SVG 到 Canvas
   ctx.scale(finalScale, finalScale)
   ctx.drawImage(img, 0, 0)
 
-  // 6. 转换为 PNG Blob
+  // 9. 转换为 PNG Blob
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
         if (blob) {
+          console.log('[svgToPng] PNG 转换成功, 大小:', blob.size, 'bytes')
           resolve(blob)
         } else {
+          console.error('[svgToPng] PNG 转换失败: blob 为空')
           reject(new Error('PNG 转换失败'))
         }
       },

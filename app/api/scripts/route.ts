@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/src/db/client'
 import { z } from 'zod'
-import { ok, unsupportedMediaType, badRequest, tooLarge, internalError, forbidden } from '@/src/api/http'
+import { ok, unsupportedMediaType, badRequest, tooLarge, internalError, forbidden, unauthorized } from '@/src/api/http'
 import { parseJson } from '@/src/api/validate'
 import { LocalStorage } from '@/src/storage/local'
 import { getSession } from '@/src/auth/session'
@@ -125,45 +125,20 @@ export async function GET(req: NextRequest) {
     total = count
   }
 
-  // 为没有预览图的剧本生成自动预览图URL
+  // 处理剧本预览图URL（只使用用户上传的图片）
   const items = await Promise.all(itemsRaw.map(async (it) => {
     let previewUrl = null
     
-    // 优先使用用户上传的图片
+    // 只使用用户上传的图片，不自动生成
     if (it.images && it.images[0]?.path) {
       previewUrl = `/api/files?path=${encodeURIComponent(it.images[0].path)}`
-    } else {
-      // 没有用户上传图片时，提供自动生成预览图的URL
-      previewUrl = `/api/scripts/${it.id}/auto-preview`
-      
-      // 异步触发预览图生成（不阻塞响应）
-      setImmediate(async () => {
-        try {
-          // 检查是否已有生成的预览图
-          const storage = new (await import('@/src/storage/local')).LocalStorage()
-          const { getPreviewImagePath } = await import('@/src/generators/script-preview')
-          const previewPath = getPreviewImagePath(it.id)
-          const fullPath = join(storage.basePath, previewPath)
-          
-          if (!existsSync(fullPath)) {
-            console.log(`[AUTO PREVIEW] Generating preview for script: ${it.title}`)
-            // 触发预览图生成（发送内部请求）
-            fetch(`http://localhost:3000/api/scripts/${it.id}/generate-preview`, {
-              method: 'POST'
-            }).catch(error => {
-              console.warn(`[AUTO PREVIEW] Generation failed for ${it.id}:`, error)
-            })
-          }
-        } catch (error) {
-          console.warn(`[AUTO PREVIEW] Check failed for ${it.id}:`, error)
-        }
-      })
     }
+    // 没有用户上传图片时，previewUrl 保持为 null
     
     return {
       ...it,
       previewUrl,
-      hasAutoPreview: !it.images || !it.images[0]?.path
+      hasAutoPreview: false // 不再自动生成预览图
     }
   }))
   
@@ -175,7 +150,8 @@ export async function GET(req: NextRequest) {
   return ok({ items, total, page, pageSize })
 }
 
-const createSchema = z.object({ title: z.string().min(1), json: z.any() })
+// 标题改为可选，由后续从JSON中提取
+const createSchema = z.object({ title: z.string().optional().default(''), json: z.any() })
 const ALLOWED = new Set(['image/jpeg','image/png','image/webp','image/svg+xml'])
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024
 const MAX_IMAGES = 3
@@ -192,7 +168,8 @@ export async function POST(req: Request) {
       const jsonFile = form.get('jsonFile') as File | null
       const images = form.getAll('images') as (File | null)[]
 
-      if (!title || !jsonFile) return badRequest('title and jsonFile are required')
+      // 仅要求JSON文件，标题可选
+      if (!jsonFile) return badRequest('jsonFile is required')
       if (jsonFile.size > MAX_JSON_SIZE) return tooLarge('JSON file too large')
 
       const jsonText = await jsonFile.text()
@@ -209,12 +186,14 @@ export async function POST(req: Request) {
       const contentStr = JSON.stringify(json)
       const hash = (await import('node:crypto')).createHash('sha256').update(contentStr).digest('hex')
       
-      // 前台上传只使用普通用户 session，不使用 admin session
-      // 这样确保用户在"我的上传"中能看到自己的剧本
-      const session = await getSession()
-      const ownerId = session?.userId || null
+      // 只使用当前登录用户的会话（管理员也是用户）
+      const userSession = await getSession()
+      if (!userSession) {
+        return unauthorized('NOT_LOGGED_IN')
+      }
+      const ownerId = userSession.userId
       
-      console.log('[Upload] Session userId:', session?.userId, 'OwnerId:', ownerId)
+      console.log('[Upload] User userId:', userSession.userId, 'ownerId:', ownerId)
 
       // 从JSON中提取标题和作者（如果用户没填）
       let finalTitle = title
@@ -330,13 +309,13 @@ export async function POST(req: Request) {
       // 刷新服务端渲染页面缓存
       revalidatePath('/admin/review')
       revalidatePath('/admin/scripts')
+      revalidatePath('/my/uploads')
       
       console.log(`[UPLOAD] Script ${scriptId} created (form), cache invalidated`)
       
       return ok({ 
         id: scriptId,
-        hasAutoPreview: images.filter(f => f).length === 0,
-        autoPreviewUrl: `/api/scripts/${scriptId}/auto-preview`
+        hasAutoPreview: false // 不再自动生成预览图
       }, 201)
     } catch (e: any) {
       if (e?.code === 'P2002' && String(e?.meta?.target || '').includes('contentHash')) {
@@ -360,13 +339,34 @@ export async function POST(req: Request) {
   const contentStr = JSON.stringify(json)
   const hash = (await import('node:crypto')).createHash('sha256').update(contentStr).digest('hex')
   
-  // 前台上传只使用普通用户 session
-  const session = await getSession()
-  const ownerId = session?.userId || null
+  // 只使用当前登录用户的会话（管理员也是用户）
+  const userSession = await getSession()
+  if (!userSession) {
+    return unauthorized('NOT_LOGGED_IN')
+  }
+  const ownerId = userSession.userId
   try {
+    // 如果未提供标题，则从JSON中提取
+    let finalTitle = title
+    if (!finalTitle) {
+      const jsonData = json as any
+      let jsonTitle = ''
+      if (Array.isArray(jsonData) && jsonData.length > 0) {
+        const meta = jsonData.find((it: any) => it?.id === '_meta')
+        if (meta) {
+          jsonTitle = meta.name || meta.id || ''
+        } else {
+          const firstItem = jsonData.find((it: any) => it && it.id !== '_meta')
+          jsonTitle = firstItem?.name || firstItem?.id || ''
+        }
+      } else if (jsonData && typeof jsonData === 'object') {
+        jsonTitle = jsonData.name || jsonData.id || ''
+      }
+      finalTitle = jsonTitle || '未命名剧本'
+    }
     const created = await prisma.script.create({
       data: {
-        title,
+        title: finalTitle,
         state: 'pending',
         createdById: ownerId,
         versions: {
@@ -389,6 +389,7 @@ export async function POST(req: Request) {
     // 刷新服务端渲染页面缓存
     revalidatePath('/admin/review')
     revalidatePath('/admin/scripts')
+    revalidatePath('/my/uploads')
     
     console.log(`[UPLOAD] Script ${created.id} created (JSON), cache invalidated`)
     

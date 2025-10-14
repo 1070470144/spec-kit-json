@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { clearAdminSessionCookie } from '@/src/auth/adminSession'
+import { clearSessionCookie } from '@/src/auth/session'
 
 export async function POST() {
-  await clearAdminSessionCookie()
-  const res = NextResponse.json({ ok: true })
-  res.cookies.set('admin_session', '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 })
-  return res
+  // 统一使用session，只需清除一个cookie
+  await clearSessionCookie()
+  
+  return NextResponse.json({ ok: true })
 }

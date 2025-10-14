@@ -65,11 +65,11 @@ export async function POST(_req: NextRequest, context: { params: Promise<{ id: s
     
     // 创建数据库记录（如果不存在）
     try {
-      // 检查是否已存在记录
+      // 检查是否已存在记录（使用相对路径）
       const existing = await prisma.imageAsset.findFirst({
         where: {
           scriptId: id,
-          path: fullPath
+          path: imagePath  // 使用相对路径
         }
       })
       
@@ -77,7 +77,7 @@ export async function POST(_req: NextRequest, context: { params: Promise<{ id: s
         await prisma.imageAsset.create({
           data: {
             scriptId: id,
-            path: fullPath,
+            path: imagePath,  // 使用相对路径而不是完整路径
             mime: 'image/svg+xml',
             size: imageBuffer.length,
             sha256: '',

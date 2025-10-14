@@ -6,6 +6,7 @@
 
 import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
+import sharp from 'sharp'
 
 // 预览图配置
 export const PREVIEW_CONFIG = {
@@ -740,32 +741,88 @@ export function generateScriptPreviewSVG(scriptData: ScriptData): string {
 /**
  * 下载图片并转为base64
  */
-async function downloadImageAsBase64(url: string, retries = 2): Promise<string | null> {
+async function compressBufferToBase64(
+  buffer: ArrayBuffer,
+  contentType: string,
+  maxSize: number,
+  prefer: 'png' | 'jpeg' = 'png'
+): Promise<string> {
+  // 如果原图已足够小，直接返回
+  if (buffer.byteLength <= maxSize) {
+    return `data:${contentType};base64,${Buffer.from(buffer).toString('base64')}`
+  }
+
+  // 先尝试PNG压缩
+  if (prefer === 'png') {
+    let quality = 70
+    let maxWidth = 48
+    let smallest: Buffer | null = null
+
+    for (let i = 0; i < 4; i++) {
+      try {
+        const out = await sharp(Buffer.from(buffer))
+          .resize(maxWidth, maxWidth, { fit: 'inside', withoutEnlargement: true })
+          .png({ quality, compressionLevel: 9 })
+          .toBuffer()
+        smallest = !smallest || out.length < smallest.length ? out : smallest
+        if (out.length <= maxSize) {
+          return `data:image/png;base64,${out.toString('base64')}`
+        }
+        maxWidth = Math.max(20, Math.floor(maxWidth * 0.8))
+        quality = Math.max(30, quality - 15)
+      } catch {}
+    }
+    if (smallest) {
+      return `data:image/png;base64,${smallest.toString('base64')}`
+    }
+  }
+
+  // 再尝试JPEG压缩
+  {
+    let quality = 60
+    let maxWidth = 36
+    let smallest: Buffer | null = null
+    for (let i = 0; i < 4; i++) {
+      try {
+        const out = await sharp(Buffer.from(buffer))
+          .resize(maxWidth, maxWidth, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality, progressive: true, optimiseScans: true })
+          .toBuffer()
+        smallest = !smallest || out.length < smallest.length ? out : smallest
+        if (out.length <= maxSize) {
+          return `data:image/jpeg;base64,${out.toString('base64')}`
+        }
+        maxWidth = Math.max(16, Math.floor(maxWidth * 0.8))
+        quality = Math.max(20, quality - 15)
+      } catch {}
+    }
+    if (smallest) {
+      return `data:image/jpeg;base64,${smallest.toString('base64')}`
+    }
+  }
+
+  // 最后保底：返回原图（可能较大），以满足“不得使用占位符”的要求
+  return `data:${contentType};base64,${Buffer.from(buffer).toString('base64')}`
+}
+
+async function downloadAndCompressAsBase64(url: string, maxSize: number, retries = 2): Promise<string | null> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const response = await fetch(url, { 
-        signal: AbortSignal.timeout(15000) // 15秒超时（从5秒增加到15秒）
-      })
+      const response = await fetch(url, { signal: AbortSignal.timeout(15000) })
       if (!response.ok) {
         console.warn(`[PREVIEW] Image download failed (HTTP ${response.status}): ${url}`)
         return null
       }
-      
       const buffer = await response.arrayBuffer()
-      const base64 = Buffer.from(buffer).toString('base64')
       const contentType = response.headers.get('content-type') || 'image/png'
-      
-      return `data:${contentType};base64,${base64}`
+      return await compressBufferToBase64(buffer, contentType, maxSize, 'png')
     } catch (error) {
       const isLastAttempt = attempt === retries
       if (isLastAttempt) {
         console.warn(`[PREVIEW] Failed to download image after ${retries + 1} attempts: ${url}`, error)
         return null
-      } else {
-        console.warn(`[PREVIEW] Image download attempt ${attempt + 1} failed, retrying: ${url}`)
-        // 重试前等待1秒
-        await new Promise(resolve => setTimeout(resolve, 1000))
       }
+      await new Promise(resolve => setTimeout(resolve, 800))
     }
   }
   return null
@@ -775,17 +832,41 @@ async function downloadImageAsBase64(url: string, retries = 2): Promise<string |
  * 处理JSON中的图片URL，转为base64
  */
 async function processImagesInJson(json: any): Promise<any> {
+  // 计算角色数量用于确定压缩阈值
+  const countRoles = (data: any): number => {
+    if (Array.isArray(data)) {
+      return data.filter((x: any) => x && x.id && x.id !== '_meta').length
+    }
+    if (data && Array.isArray(data.characters)) return data.characters.length
+    return 0
+  }
+  const roleCount = countRoles(json)
+  const isLarge = roleCount > 15
+  const isVeryLarge = roleCount > 20
+  const perImageMax = isVeryLarge ? 4 * 1024 : isLarge ? 8 * 1024 : 20 * 1024
+
+  const processArray = async (arr: any[]) => Promise.all(arr.map(async (item) => {
+    // 处理角色图片
+    if (item.image && typeof item.image === 'string' && item.image.startsWith('http')) {
+      const base64 = await downloadAndCompressAsBase64(item.image, perImageMax)
+      // 若下载失败，移除image以便SVG回退到首字母，不使用占位符
+      return base64 ? { ...item, image: base64 } : { ...item, image: undefined }
+    }
+    // 处理_meta.logo
+    if (item.id === '_meta' && item.logo && typeof item.logo === 'string' && item.logo.startsWith('http')) {
+      const base64 = await downloadAndCompressAsBase64(item.logo, Math.min(12 * 1024, perImageMax))
+      return base64 ? { ...item, logo: base64 } : { ...item, logo: undefined }
+    }
+    return item
+  }))
+
   if (Array.isArray(json)) {
-    const processed = await Promise.all(
-      json.map(async (item) => {
-        if (item.image && typeof item.image === 'string' && item.image.startsWith('http')) {
-          const base64 = await downloadImageAsBase64(item.image)
-          return { ...item, image: base64 || item.image }
-        }
-        return item
-      })
-    )
-    return processed
+    return await processArray(json)
+  }
+  if (json && typeof json === 'object' && Array.isArray(json.characters)) {
+    const processedChars = await processArray(json.characters)
+    const processedMeta = Array.isArray(json._meta) ? await processArray(json._meta) : json._meta
+    return { ...json, characters: processedChars, _meta: processedMeta }
   }
   return json
 }

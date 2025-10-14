@@ -6,6 +6,7 @@ export default function GenerateImagePage() {
   const [authorName, setAuthorName] = useState('')
   const [jsonFile, setJsonFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewSvg, setPreviewSvg] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState<null | { type: 'success' | 'error' | 'info'; text: string }>(null)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
@@ -27,6 +28,9 @@ export default function GenerateImagePage() {
         URL.revokeObjectURL(previewUrl)
       }
       setPreviewUrl(null)
+    }
+    if (previewSvg) {
+      setPreviewSvg(null)
     }
   }
 
@@ -76,7 +80,7 @@ export default function GenerateImagePage() {
         json
       }
 
-      // 调用预览生成API
+      // 调用预览生成API（统一压缩逻辑）
       const response = await fetch('/api/scripts/temp-preview/generate', {
         method: 'POST',
         headers: {
@@ -86,16 +90,24 @@ export default function GenerateImagePage() {
       })
 
       if (response.ok) {
-        // 使用Blob URL代替data URL
-        const svgBlob = await response.blob()
-        const blobUrl = URL.createObjectURL(svgBlob)
-        
-        // 清理旧的blob URL
-        if (previewUrl && previewUrl.startsWith('blob:')) {
-          URL.revokeObjectURL(previewUrl)
-        }
-        
-        setPreviewUrl(blobUrl)
+        // 直接读取SVG文本并内联渲染，避免<img>解码失败
+        const svgText = await response.text()
+        const svgTextScaled = svgText.replace(/<svg(\s[^>]*?)?>/, (m) => {
+          if (/style=/.test(m)) {
+            return m.replace(/style=\"([^\"]*)\"/, (s, v) => `style=\"${v};max-width:100%;width:100%;height:auto;display:block\"`)
+          }
+          return m.replace('<svg', '<svg style=\"max-width:100%;width:100%;height:auto;display:block\"')
+        })
+        setPreviewSvg(svgTextScaled)
+        // 同步创建blob备用
+        try {
+          const svgBlob = new Blob([svgText], { type: 'image/svg+xml' })
+          const blobUrl = URL.createObjectURL(svgBlob)
+          if (previewUrl && previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(previewUrl)
+          }
+          setPreviewUrl(blobUrl)
+        } catch {}
         showToast('预览图生成成功！', 'success')
       } else {
         showToast('预览图生成失败', 'error')
@@ -109,19 +121,18 @@ export default function GenerateImagePage() {
 
   // 点击查看预览图（在当前页面模态框中打开）
   function viewPreview() {
-    if (!previewUrl) return
+    if (!previewSvg && !previewUrl) return
     setShowPreviewModal(true)
   }
 
   // 下载PNG
   async function downloadPNG() {
-    if (!previewUrl) return
+    if (!previewSvg && !previewUrl) return
 
     setLoading(true)
     try {
-      // 获取SVG内容
-      const response = await fetch(previewUrl)
-      const svgText = await response.text()
+      // 优先使用缓存的SVG文本
+      const svgText = previewSvg || (await (await fetch(previewUrl as string)).text())
 
       // 调用转换API
       const convertResponse = await fetch('/api/tools/convert-svg-to-png', {
@@ -252,7 +263,7 @@ export default function GenerateImagePage() {
             </div>
 
             {/* 预览图显示 */}
-            {previewUrl && (
+            {(previewSvg || previewUrl) && (
               <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 pt-4 border-t">
                 <label className="text-sm sm:text-base sm:w-32 text-surface-on font-medium sm:mt-2">预览图</label>
                 <div className="flex-1 space-y-4">
@@ -261,11 +272,14 @@ export default function GenerateImagePage() {
                     style={{ width: '280px', maxHeight: '700px' }}
                     onClick={viewPreview}
                   >
-                    <img 
-                      src={previewUrl} 
-                      alt="预览图" 
-                      className="w-full h-auto object-contain bg-white"
-                    />
+                    {previewSvg ? (
+                      <div className="w-full h-auto bg-white" style={{ lineHeight: 0, overflow: 'hidden' }}>
+                        {/* eslint-disable-next-line react/no-danger */}
+                        <div dangerouslySetInnerHTML={{ __html: previewSvg }} />
+                      </div>
+                    ) : (
+                      <img src={previewUrl as string} alt="预览图" className="w-full h-auto object-contain bg-white" />
+                    )}
                     {/* 悬浮提示 */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 rounded-full p-3 shadow-lg">
@@ -313,7 +327,7 @@ export default function GenerateImagePage() {
       </div>
 
       {/* 预览图放大模态框 */}
-      {showPreviewModal && previewUrl && (
+      {showPreviewModal && (previewSvg || previewUrl) && (
         <div 
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
           onClick={() => setShowPreviewModal(false)}
@@ -334,12 +348,19 @@ export default function GenerateImagePage() {
             
             {/* 预览图 */}
             <div className="p-4">
-              <img 
-                src={previewUrl} 
-                alt="预览图" 
-                className="w-full h-auto object-contain"
-                style={{ maxHeight: 'calc(90vh - 4rem)' }}
-              />
+              {previewSvg ? (
+                <div className="w-full h-auto" style={{ lineHeight: 0 }}>
+                  {/* eslint-disable-next-line react/no-danger */}
+                  <div dangerouslySetInnerHTML={{ __html: previewSvg }} />
+                </div>
+              ) : (
+                <img 
+                  src={previewUrl as string} 
+                  alt="预览图" 
+                  className="w-full h-auto object-contain"
+                  style={{ maxHeight: 'calc(90vh - 4rem)' }}
+                />
+              )}
             </div>
             
             {/* 底部信息栏 */}

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import SvgImage from './SvgImage'
 
 type ScriptImage = { id: string; url: string }
 
@@ -38,7 +39,7 @@ export default function ScriptImagesThumbnails({ id, max = 6 }: { id: string; ma
     <div className="p-3">
       <div className="grid grid-cols-3 gap-2">
         {show.map(img => (
-          <img key={img.id} src={img.url} alt="thumb" className="h-20 w-full object-cover rounded border bg-white" />
+          <SvgImage key={img.id} src={img.url} alt="thumb" className="h-20 w-full object-cover rounded border bg-white" />
         ))}
       </div>
       {hasMore && (
