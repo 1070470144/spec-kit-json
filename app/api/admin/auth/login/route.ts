@@ -3,7 +3,7 @@ import { prisma } from '@/src/db/client'
 import { verifyPassword } from '@/src/auth/password'
 import { parseJson } from '@/src/api/validate'
 import { unauthorized, ok, forbidden } from '@/src/api/http'
-import { signSession, setSessionCookie } from '@/src/auth/session'
+import { signAdminSession, setAdminSessionCookie } from '@/src/auth/adminSession'
 
 const schema = z.object({ email: z.string().email(), password: z.string().min(6) })
 
@@ -17,9 +17,9 @@ export async function POST(req: Request) {
   const isAdmin = roleKeys.includes('admin') || roleKeys.includes('superuser')
   if (!isAdmin) return forbidden('NOT_ADMIN')
   
-  // 统一使用session，通过role字段区分管理员和普通用户
-  const token = signSession({ userId: user.id, email: user.email, role: 'admin' })
-  await setSessionCookie(token)
+  // 使用管理员专用会话系统
+  const token = signAdminSession({ userId: user.id, email: user.email, role: 'admin' })
+  await setAdminSessionCookie(token)
   
   try {
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || ''
