@@ -207,8 +207,3 @@ export default async function MyUploadsPage({ searchParams }: { searchParams?: P
     </div>
   )
 }
-
-function ClientCarouselWrapper({ id, previewUrl, hasAutoPreview }: { id: string; previewUrl?: string; hasAutoPreview?: boolean }) {
-  const Carousel = require('../../scripts/ScriptImagesCarousel').default as (p: { id: string; previewUrl?: string; hasAutoPreview?: boolean }) => JSX.Element
-  return <Carousel id={id} previewUrl={previewUrl} hasAutoPreview={hasAutoPreview} />
-}
