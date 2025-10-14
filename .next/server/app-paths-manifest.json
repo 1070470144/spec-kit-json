@@ -1,19 +1,7 @@
 {
-  "/api/scripts/route": "app/api/scripts/route.js",
   "/api/me/route": "app/api/me/route.js",
   "/api/site-config/route": "app/api/site-config/route.js",
-  "/api/files/route": "app/api/files/route.js",
-  "/api/scripts/stats-batch/route": "app/api/scripts/stats-batch/route.js",
-  "/api/admin/auth/me/route": "app/api/admin/auth/me/route.js",
-  "/api/scripts/[id]/route": "app/api/scripts/[id]/route.js",
-  "/api/scripts/[id]/comments/route": "app/api/scripts/[id]/comments/route.js",
-  "/api/scripts/temp-preview/generate/route": "app/api/scripts/temp-preview/generate/route.js",
   "/api/tools/convert-svg-to-png/route": "app/api/tools/convert-svg-to-png/route.js",
-  "/upload/page": "app/upload/page.js",
-  "/scripts/page": "app/scripts/page.js",
-  "/scripts/[id]/page": "app/scripts/[id]/page.js",
-  "/my/uploads/page": "app/my/uploads/page.js",
-  "/leaderboard/page": "app/leaderboard/page.js",
-  "/generate/page": "app/generate/page.js",
-  "/admin/scripts/page": "app/admin/scripts/page.js"
+  "/api/scripts/temp-preview/generate/route": "app/api/scripts/temp-preview/generate/route.js",
+  "/generate/page": "app/generate/page.js"
 }

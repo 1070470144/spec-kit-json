@@ -8,6 +8,7 @@ export default function GenerateImagePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewSvg, setPreviewSvg] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [downloadingUHD, setDownloadingUHD] = useState(false)
   const [toast, setToast] = useState<null | { type: 'success' | 'error' | 'info'; text: string }>(null)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [finalTitle, setFinalTitle] = useState('')
@@ -125,7 +126,7 @@ export default function GenerateImagePage() {
     setShowPreviewModal(true)
   }
 
-  // 下载PNG
+  // 下载PNG（标准版）
   async function downloadPNG() {
     if (!previewSvg && !previewUrl) return
 
@@ -140,11 +141,12 @@ export default function GenerateImagePage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ svg: svgText })
+        body: JSON.stringify({ svg: svgText, quality: 'normal' })
       })
 
       if (convertResponse.ok) {
         const blob = await convertResponse.blob()
+        const fileSizeMB = (blob.size / 1024 / 1024).toFixed(2)
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -155,7 +157,7 @@ export default function GenerateImagePage() {
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
-        showToast('PNG图片下载成功', 'success')
+        showToast(`标准PNG下载成功 (${fileSizeMB}MB)`, 'success')
       } else {
         showToast('PNG转换失败', 'error')
       }
@@ -164,6 +166,56 @@ export default function GenerateImagePage() {
       showToast('下载失败', 'error')
     }
     setLoading(false)
+  }
+
+  // 下载超高清PNG
+  async function downloadUltraHDPNG() {
+    if (!previewSvg && !previewUrl) return
+
+    // 提示用户
+    showToast('开始生成超高清图，预计需要15-30秒，文件约30-60MB', 'info')
+    
+    setDownloadingUHD(true)
+    const startTime = Date.now()
+    
+    try {
+      // 优先使用缓存的SVG文本
+      const svgText = previewSvg || (await (await fetch(previewUrl as string)).text())
+
+      // 调用转换API，使用ultra质量
+      const convertResponse = await fetch('/api/tools/convert-svg-to-png', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ svg: svgText, quality: 'ultra' })
+      })
+
+      if (convertResponse.ok) {
+        const blob = await convertResponse.blob()
+        const fileSizeMB = (blob.size / 1024 / 1024).toFixed(2)
+        const duration = ((Date.now() - startTime) / 1000).toFixed(1)
+        
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        // 文件名添加_UHD后缀
+        const fileName = `${finalTitle}_${finalAuthor}_UHD.png`
+        a.download = fileName
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        
+        showToast(`超高清图片下载成功！文件大小: ${fileSizeMB}MB，耗时: ${duration}秒`, 'success')
+      } else {
+        showToast('超高清图生成失败', 'error')
+      }
+    } catch (error) {
+      console.error('Download Ultra HD PNG failed:', error)
+      showToast('下载失败', 'error')
+    }
+    setDownloadingUHD(false)
   }
 
   return (
@@ -294,15 +346,16 @@ export default function GenerateImagePage() {
 
                   {/* 下载按钮 */}
                   <div className="flex flex-wrap gap-3">
+                    {/* 标准PNG */}
                     <button
                       type="button"
                       onClick={downloadPNG}
-                      disabled={loading}
-                      className="m3-btn-filled flex items-center gap-2 min-h-touch disabled:opacity-50"
+                      disabled={loading || downloadingUHD}
+                      className="m3-btn-outlined flex items-center gap-2 min-h-touch disabled:opacity-50"
                     >
                       {loading ? (
                         <>
-                          <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                          <div className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full"></div>
                           转换中...
                         </>
                       ) : (
@@ -310,11 +363,38 @@ export default function GenerateImagePage() {
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                           </svg>
-                          下载 PNG 图片
+                          下载 PNG (标准)
+                        </>
+                      )}
+                    </button>
+
+                    {/* 超高清PNG */}
+                    <button
+                      type="button"
+                      onClick={downloadUltraHDPNG}
+                      disabled={loading || downloadingUHD}
+                      className="m3-btn-filled flex items-center gap-2 min-h-touch disabled:opacity-50"
+                    >
+                      {downloadingUHD ? (
+                        <>
+                          <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                          生成中...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          下载超高清图 ★
                         </>
                       )}
                     </button>
                   </div>
+                  
+                  {/* 提示文本 */}
+                  <p className="text-xs text-surface-on-variant">
+                    标准版 (~1-2MB) 适合网络分享 | 超高清 (~30-60MB) 极致质量 适合专业打印
+                  </p>
                 </div>
               </div>
             )}
@@ -365,30 +445,54 @@ export default function GenerateImagePage() {
             
             {/* 底部信息栏 */}
             <div className="sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent p-4 border-t">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{finalTitle}</p>
                   <p className="text-xs text-gray-500 truncate">作者: {finalAuthor}</p>
                 </div>
-                <button
-                  onClick={downloadPNG}
-                  disabled={loading}
-                  className="m3-btn-filled flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                      转换中...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      下载
-                    </>
-                  )}
-                </button>
+                <div className="flex gap-2">
+                  {/* 标准版 */}
+                  <button
+                    onClick={downloadPNG}
+                    disabled={loading || downloadingUHD}
+                    className="m3-btn-outlined flex items-center gap-2 whitespace-nowrap disabled:opacity-50 text-sm"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                        转换中...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        标准
+                      </>
+                    )}
+                  </button>
+                  
+                  {/* 超高清版 */}
+                  <button
+                    onClick={downloadUltraHDPNG}
+                    disabled={loading || downloadingUHD}
+                    className="m3-btn-filled flex items-center gap-2 whitespace-nowrap disabled:opacity-50 text-sm"
+                  >
+                    {downloadingUHD ? (
+                      <>
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        生成中...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        超高清 ★
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
