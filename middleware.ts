@@ -22,7 +22,7 @@ export function middleware(req: NextRequest) {
   if (pathname.startsWith('/admin')) {
     // 允许未登录访问登录页，避免自我重定向
     if (pathname === '/admin/login') {
-      const token = req.cookies.get('session')?.value
+      const token = req.cookies.get('admin_session')?.value
       const session = parseSessionToken(token)
       // 如果已登录且是管理员，重定向到后台首页
       if (session && session.role === 'admin') {
@@ -33,8 +33,8 @@ export function middleware(req: NextRequest) {
       return NextResponse.next()
     }
     
-    // 检查session cookie，验证是否为管理员
-    const token = req.cookies.get('session')?.value
+    // 检查 admin_session cookie，验证是否为管理员
+    const token = req.cookies.get('admin_session')?.value
     const session = parseSessionToken(token)
     
     if (!session || session.role !== 'admin') {
