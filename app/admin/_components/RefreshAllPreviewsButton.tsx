@@ -30,7 +30,7 @@ type ProcessingState = {
   totalFailed: number
   allDetails: Array<{ id: string; title: string; status: 'success' | 'skipped' | 'failed'; reason?: string }>
   progress: Progress | null
-  retryInfo?: { batch: number; attempt: number; maxAttempts: number }
+  retryInfo?: { batch: number; attempt: number; maxAttempts: number; message?: string }
 }
 
 export default function RefreshAllPreviewsButton() {
@@ -138,6 +138,7 @@ export default function RefreshAllPreviewsButton() {
     })
 
     let currentPage = 0
+    let consecutiveSuccesses = 0
 
     while (true) {
       const batchResult = await processBatch(currentPage)
@@ -178,8 +179,29 @@ export default function RefreshAllPreviewsButton() {
       }
 
       currentPage++
-      // 单个处理，延迟可以更短
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      consecutiveSuccesses++
+      
+      // 每处理20个剧本后，休息5秒让连接恢复
+      if (consecutiveSuccesses % 20 === 0) {
+        console.log(`[Batch ${currentPage}] 已连续处理 ${consecutiveSuccesses} 个，休息 5 秒...`)
+        setProcessing(prev => ({
+          ...prev,
+          retryInfo: { 
+            batch: 0, 
+            attempt: 0, 
+            maxAttempts: 0,
+            message: `已处理 ${consecutiveSuccesses} 个，休息 5 秒恢复连接...`
+          } as any
+        }))
+        await new Promise(resolve => setTimeout(resolve, 5000))
+        setProcessing(prev => ({
+          ...prev,
+          retryInfo: undefined
+        }))
+      } else {
+        // 正常延迟
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
     }
   }
 
@@ -255,8 +277,8 @@ export default function RefreshAllPreviewsButton() {
                   <p className="font-medium">✨ 新特性：</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
                     <li><strong>单个处理</strong>：每次仅处理 1 个剧本，确保稳定性</li>
+                    <li><strong>周期性休息</strong>：每处理 20 个剧本休息 5 秒，避免连接累积问题</li>
                     <li><strong>自动重试</strong>：遇到超时或服务器错误自动重试（最多2次）</li>
-                    <li><strong>实时进度</strong>：显示详细进度和每个剧本状态</li>
                     <li><strong>错误跳过</strong>：JSON 有问题的剧本会跳过并记录</li>
                   </ul>
                 </div>
@@ -343,14 +365,24 @@ export default function RefreshAllPreviewsButton() {
                   </div>
                 </div>
                 
-                {/* 重试状态提示 */}
+                {/* 重试状态或休息提示 */}
                 {processing.retryInfo && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    <div className="flex items-center gap-2 text-sm text-amber-700">
+                  <div className={`border rounded-lg p-3 ${
+                    processing.retryInfo.message 
+                      ? 'bg-blue-50 border-blue-200' 
+                      : 'bg-amber-50 border-amber-200'
+                  }`}>
+                    <div className={`flex items-center gap-2 text-sm ${
+                      processing.retryInfo.message 
+                        ? 'text-blue-700' 
+                        : 'text-amber-700'
+                    }`}>
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      批次 {processing.retryInfo.batch} 超时，正在重试 ({processing.retryInfo.attempt}/{processing.retryInfo.maxAttempts})...
+                      {processing.retryInfo.message || 
+                        `批次 ${processing.retryInfo.batch} 超时，正在重试 (${processing.retryInfo.attempt}/${processing.retryInfo.maxAttempts})...`
+                      }
                     </div>
                   </div>
                 )}
