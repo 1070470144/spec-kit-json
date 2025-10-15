@@ -11,6 +11,10 @@ const BATCH_SIZE = 5
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
   
+  // 在 try 块外部声明变量，以便在 catch 块中使用
+  let page = 0
+  let batchSize = BATCH_SIZE
+  
   try {
     // 验证管理员权限
     const admin = await getAdminSession()
@@ -20,11 +24,15 @@ export async function POST(req: NextRequest) {
 
     // 解析请求参数
     const body = await req.json().catch(() => ({}))
-    const { 
-      page = 0, 
-      batchSize = BATCH_SIZE,
-      forceRefresh = false 
-    } = body
+    const parsedParams = { 
+      page: body.page ?? 0, 
+      batchSize: body.batchSize ?? BATCH_SIZE,
+      forceRefresh: body.forceRefresh ?? false 
+    }
+    
+    page = parsedParams.page
+    batchSize = parsedParams.batchSize
+    const forceRefresh = parsedParams.forceRefresh
 
     const skip = page * batchSize
     
