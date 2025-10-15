@@ -12,8 +12,8 @@ prisma/dev.db
 .env.local
 .env.production
 
-# 上传文件
-uploads/
+# 上传文件（只忽略根目录的 uploads 文件夹，不忽略代码目录 app/my/uploads）
+/uploads/
 
 # PM2 配置
 pm2-juben.config.json
