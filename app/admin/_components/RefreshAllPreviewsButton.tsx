@@ -59,16 +59,17 @@ export default function RefreshAllPreviewsButton() {
       const controller = new AbortController()
       abortControllerRef.current = controller
 
-      // 设置60秒超时，避免 QUIC 空闲超时
-      const timeoutId = setTimeout(() => controller.abort(), 60000)
+      // 设置45秒超时，单个剧本应该足够
+      const timeoutId = setTimeout(() => controller.abort(), 45000)
 
       const res = await fetch('/api/admin/scripts/refresh-all-previews', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Connection': 'keep-alive'
+          'Connection': 'keep-alive',
+          'Cache-Control': 'no-cache'
         },
-        body: JSON.stringify({ page, batchSize: 2, forceRefresh }),
+        body: JSON.stringify({ page, batchSize: 1, forceRefresh }),
         signal: controller.signal,
         keepalive: true
       })
@@ -177,8 +178,8 @@ export default function RefreshAllPreviewsButton() {
       }
 
       currentPage++
-      // 添加适当延迟避免服务器压力（批次更小，延迟可以略短）
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // 单个处理，延迟可以更短
+      await new Promise(resolve => setTimeout(resolve, 1000))
     }
   }
 
@@ -253,9 +254,9 @@ export default function RefreshAllPreviewsButton() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 space-y-1">
                   <p className="font-medium">✨ 新特性：</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li><strong>超小批量</strong>：每批仅 2 个剧本，避免 QUIC 空闲超时</li>
+                    <li><strong>单个处理</strong>：每次仅处理 1 个剧本，确保稳定性</li>
                     <li><strong>自动重试</strong>：遇到超时或服务器错误自动重试（最多2次）</li>
-                    <li><strong>实时进度</strong>：显示详细进度信息</li>
+                    <li><strong>实时进度</strong>：显示详细进度和每个剧本状态</li>
                     <li><strong>错误跳过</strong>：JSON 有问题的剧本会跳过并记录</li>
                   </ul>
                 </div>

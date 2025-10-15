@@ -5,8 +5,8 @@ import { generateScriptPreview, getPreviewImagePath } from '@/src/generators/scr
 import { LocalStorage } from '@/src/storage/local'
 import { getAdminSession } from '@/src/auth/adminSession'
 
-// 批处理大小 - 极小批次避免 QUIC 空闲超时
-const BATCH_SIZE = 2
+// 批处理大小 - 单个处理确保稳定性
+const BATCH_SIZE = 1
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
