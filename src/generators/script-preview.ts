@@ -808,7 +808,8 @@ async function compressBufferToBase64(
 async function downloadAndCompressAsBase64(url: string, maxSize: number, retries = 2): Promise<string | null> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(15000) })
+      // 减少图片下载超时从15秒到8秒，避免单个图片占用太多时间
+      const response = await fetch(url, { signal: AbortSignal.timeout(8000) })
       if (!response.ok) {
         console.warn(`[PREVIEW] Image download failed (HTTP ${response.status}): ${url}`)
         return null
@@ -822,7 +823,8 @@ async function downloadAndCompressAsBase64(url: string, maxSize: number, retries
         console.warn(`[PREVIEW] Failed to download image after ${retries + 1} attempts: ${url}`, error)
         return null
       }
-      await new Promise(resolve => setTimeout(resolve, 800))
+      // 减少重试等待时间从800ms到500ms
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
   }
   return null
@@ -878,11 +880,21 @@ export async function generateScriptPreview(
   scriptData: ScriptData,
   outputPath?: string
 ): Promise<Buffer> {
+  const startTime = Date.now()
   try {
     console.log(`[PREVIEW GEN] Generating SVG for "${scriptData.title}"`)
     
-    // 处理图片URL为base64
-    const processedJson = await processImagesInJson(scriptData.json)
+    // 处理图片URL为base64（设置总超时30秒）
+    const processStartTime = Date.now()
+    const processedJson = await Promise.race([
+      processImagesInJson(scriptData.json),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('图片处理超时')), 30000)
+      )
+    ]) as any
+    const processTime = Date.now() - processStartTime
+    console.log(`[PREVIEW GEN] Image processing took ${processTime}ms`)
+    
     const processedData = { ...scriptData, json: processedJson }
     
     const svg = generateScriptPreviewSVG(processedData)
@@ -901,9 +913,12 @@ export async function generateScriptPreview(
       console.log(`[PREVIEW GEN] SVG saved to: ${svgPath}`)
     }
     
+    const totalTime = Date.now() - startTime
+    console.log(`[PREVIEW GEN] Total generation time: ${totalTime}ms`)
     return buffer
   } catch (error) {
-    console.error('[PREVIEW GEN] SVG generation failed:', error)
+    const totalTime = Date.now() - startTime
+    console.error(`[PREVIEW GEN] SVG generation failed after ${totalTime}ms:`, error)
     throw error
   }
 }

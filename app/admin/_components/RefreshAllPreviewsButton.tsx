@@ -59,8 +59,8 @@ export default function RefreshAllPreviewsButton() {
       const controller = new AbortController()
       abortControllerRef.current = controller
 
-      // 设置45秒超时，单个剧本应该足够
-      const timeoutId = setTimeout(() => controller.abort(), 45000)
+      // 设置60秒超时，给复杂剧本更多时间
+      const timeoutId = setTimeout(() => controller.abort(), 60000)
 
       const res = await fetch('/api/admin/scripts/refresh-all-previews', {
         method: 'POST',
@@ -144,13 +144,37 @@ export default function RefreshAllPreviewsButton() {
       const batchResult = await processBatch(currentPage)
 
       if (!batchResult.success) {
-        // 处理错误
+        // 记录失败但继续处理下一个
+        console.error(`[Batch ${currentPage + 1}] Failed:`, batchResult.error)
+        
+        // 更新失败计数
         setProcessing(prev => ({
           ...prev,
-          isRunning: false
+          totalFailed: prev.totalFailed + 1,
+          allDetails: [...prev.allDetails, {
+            id: `batch-${currentPage}`,
+            title: `批次 ${currentPage + 1}`,
+            status: 'failed',
+            reason: batchResult.error || '未知错误'
+          }]
         }))
-        alert(`批处理失败: ${batchResult.error}`)
-        break
+        
+        // 继续处理下一个（不要中断整个流程）
+        currentPage++
+        consecutiveSuccesses++
+        
+        // 失败后也要检查是否还有更多批次
+        if (currentPage >= (processing.progress?.total || 0)) {
+          setProcessing(prev => ({
+            ...prev,
+            isRunning: false
+          }))
+          break
+        }
+        
+        // 失败后等待2秒再继续
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        continue
       }
 
       const { batch, progress } = batchResult.data.data
