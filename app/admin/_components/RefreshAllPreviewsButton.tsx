@@ -136,8 +136,8 @@ export default function RefreshAllPreviewsButton() {
       }
 
       currentPage++
-      // 添加小延迟避免服务器压力
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // 添加较长延迟避免服务器压力和 QUIC 协议错误
+      await new Promise(resolve => setTimeout(resolve, 2000))
     }
   }
 
