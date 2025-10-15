@@ -30,6 +30,7 @@ type ProcessingState = {
   totalFailed: number
   allDetails: Array<{ id: string; title: string; status: 'success' | 'skipped' | 'failed'; reason?: string }>
   progress: Progress | null
+  retryInfo?: { batch: number; attempt: number; maxAttempts: number }
 }
 
 export default function RefreshAllPreviewsButton() {
@@ -51,20 +52,42 @@ export default function RefreshAllPreviewsButton() {
 
   const abortControllerRef = useRef<AbortController | null>(null)
 
-  async function processBatch(page: number): Promise<{ success: boolean; data?: any; error?: string }> {
+  async function processBatch(page: number, retryCount = 0): Promise<{ success: boolean; data?: any; error?: string }> {
+    const MAX_RETRIES = 2
+    
     try {
       const controller = new AbortController()
       abortControllerRef.current = controller
 
+      // 设置90秒超时，略小于CloudFlare的100秒超时
+      const timeoutId = setTimeout(() => controller.abort(), 90000)
+
       const res = await fetch('/api/admin/scripts/refresh-all-previews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ page, batchSize: 5, forceRefresh }),
+        body: JSON.stringify({ page, batchSize: 3, forceRefresh }),
         signal: controller.signal
       })
 
+      clearTimeout(timeoutId)
+
       if (!res.ok) {
         const errorText = await res.text()
+        
+        // 如果是524或502/503/504错误，且还有重试机会，则重试
+        if ([524, 502, 503, 504].includes(res.status) && retryCount < MAX_RETRIES) {
+          console.log(`[Retry] 批次 ${page + 1} 遇到 ${res.status} 错误，${retryCount + 1}/${MAX_RETRIES} 次重试...`)
+          
+          // 更新重试状态
+          setProcessing(prev => ({
+            ...prev,
+            retryInfo: { batch: page + 1, attempt: retryCount + 1, maxAttempts: MAX_RETRIES }
+          }))
+          
+          await new Promise(resolve => setTimeout(resolve, 3000)) // 等待3秒后重试
+          return processBatch(page, retryCount + 1)
+        }
+        
         throw new Error(`HTTP ${res.status}: ${errorText}`)
       }
 
@@ -73,7 +96,20 @@ export default function RefreshAllPreviewsButton() {
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          return { success: false, error: '用户取消操作' }
+          // 超时错误，尝试重试
+          if (retryCount < MAX_RETRIES) {
+            console.log(`[Retry] 批次 ${page + 1} 超时，${retryCount + 1}/${MAX_RETRIES} 次重试...`)
+            
+            // 更新重试状态
+            setProcessing(prev => ({
+              ...prev,
+              retryInfo: { batch: page + 1, attempt: retryCount + 1, maxAttempts: MAX_RETRIES }
+            }))
+            
+            await new Promise(resolve => setTimeout(resolve, 3000))
+            return processBatch(page, retryCount + 1)
+          }
+          return { success: false, error: '请求超时（已重试）' }
         }
         return { success: false, error: error.message }
       }
@@ -113,7 +149,7 @@ export default function RefreshAllPreviewsButton() {
 
       const { batch, progress } = batchResult.data.data
 
-      // 更新处理状态
+      // 更新处理状态，清除重试信息
       setProcessing(prev => ({
         ...prev,
         currentBatch: currentPage + 1,
@@ -122,7 +158,8 @@ export default function RefreshAllPreviewsButton() {
         totalSkipped: prev.totalSkipped + batch.skipped,
         totalFailed: prev.totalFailed + batch.failed,
         allDetails: [...prev.allDetails, ...batch.details],
-        progress
+        progress,
+        retryInfo: undefined // 清除重试信息
       }))
 
       // 检查是否还有更多批次
@@ -212,10 +249,10 @@ export default function RefreshAllPreviewsButton() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 space-y-1">
                   <p className="font-medium">✨ 新特性：</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li><strong>分批处理</strong>：每批处理 5 个剧本，避免超时</li>
+                    <li><strong>小批量处理</strong>：每批 3 个剧本，避免 CloudFlare 524 超时</li>
+                    <li><strong>自动重试</strong>：遇到超时或服务器错误自动重试</li>
                     <li><strong>实时进度</strong>：显示详细进度信息</li>
                     <li><strong>错误跳过</strong>：JSON 有问题的剧本会跳过并记录</li>
-                    <li><strong>可随时取消</strong>：支持中途停止操作</li>
                   </ul>
                 </div>
               </div>
@@ -291,13 +328,27 @@ export default function RefreshAllPreviewsButton() {
               </div>
             </div>
 
-            {/* 当前批次信息 */}
+            {/* 当前批次信息和重试状态 */}
             {processing.isRunning && (
-              <div className="bg-violet-50 border border-violet-200 rounded-lg p-3 mb-6">
-                <div className="flex items-center gap-2 text-sm text-violet-700">
-                  <div className="w-3 h-3 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
-                  正在处理批次 {processing.currentBatch}
+              <div className="space-y-3 mb-6">
+                <div className="bg-violet-50 border border-violet-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-sm text-violet-700">
+                    <div className="w-3 h-3 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+                    正在处理批次 {processing.currentBatch}
+                  </div>
                 </div>
+                
+                {/* 重试状态提示 */}
+                {processing.retryInfo && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-sm text-amber-700">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      批次 {processing.retryInfo.batch} 超时，正在重试 ({processing.retryInfo.attempt}/{processing.retryInfo.maxAttempts})...
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

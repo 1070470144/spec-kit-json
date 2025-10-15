@@ -5,8 +5,8 @@ import { generateScriptPreview, getPreviewImagePath } from '@/src/generators/scr
 import { LocalStorage } from '@/src/storage/local'
 import { getAdminSession } from '@/src/auth/adminSession'
 
-// 批处理大小
-const BATCH_SIZE = 5
+// 批处理大小 - 减小以避免 CloudFlare 524 超时（100秒）
+const BATCH_SIZE = 3
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
