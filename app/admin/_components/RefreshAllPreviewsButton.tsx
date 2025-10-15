@@ -89,7 +89,8 @@ export default function RefreshAllPreviewsButton() {
             retryInfo: { batch: page + 1, attempt: retryCount + 1, maxAttempts: MAX_RETRIES }
           }))
           
-          await new Promise(resolve => setTimeout(resolve, 3000)) // 等待3秒后重试
+          // 增加重试等待时间从3秒到5秒
+          await new Promise(resolve => setTimeout(resolve, 5000))
           return processBatch(page, retryCount + 1)
         }
         
@@ -111,7 +112,8 @@ export default function RefreshAllPreviewsButton() {
               retryInfo: { batch: page + 1, attempt: retryCount + 1, maxAttempts: MAX_RETRIES }
             }))
             
-            await new Promise(resolve => setTimeout(resolve, 3000))
+            // 增加重试等待时间从3秒到5秒
+            await new Promise(resolve => setTimeout(resolve, 5000))
             return processBatch(page, retryCount + 1)
           }
           return { success: false, error: '请求超时（已重试）' }
@@ -172,8 +174,22 @@ export default function RefreshAllPreviewsButton() {
           break
         }
         
-        // 失败后等待2秒再继续
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        // 失败后强制休息10秒，让连接完全恢复
+        console.log(`[Batch ${currentPage}] 失败后强制休息 10 秒...`)
+        setProcessing(prev => ({
+          ...prev,
+          retryInfo: { 
+            batch: 0, 
+            attempt: 0, 
+            maxAttempts: 0,
+            message: `批次失败，休息 10 秒让连接恢复...`
+          } as any
+        }))
+        await new Promise(resolve => setTimeout(resolve, 10000))
+        setProcessing(prev => ({
+          ...prev,
+          retryInfo: undefined
+        }))
         continue
       }
 
@@ -205,19 +221,19 @@ export default function RefreshAllPreviewsButton() {
       currentPage++
       consecutiveSuccesses++
       
-      // 每处理20个剧本后，休息5秒让连接恢复
-      if (consecutiveSuccesses % 20 === 0) {
-        console.log(`[Batch ${currentPage}] 已连续处理 ${consecutiveSuccesses} 个，休息 5 秒...`)
+      // 更激进的休息策略：每处理10个剧本后，休息10秒让连接充分恢复
+      if (consecutiveSuccesses % 10 === 0) {
+        console.log(`[Batch ${currentPage}] 已连续处理 ${consecutiveSuccesses} 个，休息 10 秒...`)
         setProcessing(prev => ({
           ...prev,
           retryInfo: { 
             batch: 0, 
             attempt: 0, 
             maxAttempts: 0,
-            message: `已处理 ${consecutiveSuccesses} 个，休息 5 秒恢复连接...`
+            message: `已处理 ${consecutiveSuccesses} 个，休息 10 秒恢复连接...`
           } as any
         }))
-        await new Promise(resolve => setTimeout(resolve, 5000))
+        await new Promise(resolve => setTimeout(resolve, 10000))
         setProcessing(prev => ({
           ...prev,
           retryInfo: undefined
@@ -301,9 +317,9 @@ export default function RefreshAllPreviewsButton() {
                   <p className="font-medium">✨ 新特性：</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
                     <li><strong>单个处理</strong>：每次仅处理 1 个剧本，确保稳定性</li>
-                    <li><strong>周期性休息</strong>：每处理 20 个剧本休息 5 秒，避免连接累积问题</li>
+                    <li><strong>激进休息策略</strong>：每处理 10 个剧本休息 10 秒，避免连接累积</li>
+                    <li><strong>失败后强制休息</strong>：失败后休息 10 秒让连接完全恢复</li>
                     <li><strong>自动重试</strong>：遇到超时或服务器错误自动重试（最多2次）</li>
-                    <li><strong>错误跳过</strong>：JSON 有问题的剧本会跳过并记录</li>
                   </ul>
                 </div>
               </div>
