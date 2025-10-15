@@ -39,6 +39,12 @@ export default function RefreshAllPreviewsButton() {
   const [showResult, setShowResult] = useState(false)
   const [forceRefresh, setForceRefresh] = useState(false)
   
+  // 区间选择
+  const [rangeMode, setRangeMode] = useState(false)
+  const [startIndex, setStartIndex] = useState(1)
+  const [endIndex, setEndIndex] = useState(100)
+  const [totalScripts, setTotalScripts] = useState<number | null>(null)
+  
   const [processing, setProcessing] = useState<ProcessingState>({
     isRunning: false,
     currentBatch: 0,
@@ -51,6 +57,29 @@ export default function RefreshAllPreviewsButton() {
   })
 
   const abortControllerRef = useRef<AbortController | null>(null)
+
+  // 获取总剧本数
+  async function fetchTotalCount() {
+    try {
+      const res = await fetch('/api/admin/scripts?state=published&pageSize=1')
+      const data = await res.json()
+      const total = data.data?.total || 0
+      setTotalScripts(total)
+      setEndIndex(Math.min(100, total))
+      return total
+    } catch (error) {
+      console.error('Failed to fetch total count:', error)
+      return 0
+    }
+  }
+
+  // 打开确认对话框时获取总数
+  function handleOpenConfirm() {
+    setShowConfirm(true)
+    if (!totalScripts) {
+      fetchTotalCount()
+    }
+  }
 
   async function processBatch(page: number, retryCount = 0): Promise<{ success: boolean; data?: any; error?: string }> {
     const MAX_RETRIES = 2
@@ -89,8 +118,7 @@ export default function RefreshAllPreviewsButton() {
             retryInfo: { batch: page + 1, attempt: retryCount + 1, maxAttempts: MAX_RETRIES }
           }))
           
-          // 增加重试等待时间从3秒到5秒
-          await new Promise(resolve => setTimeout(resolve, 5000))
+          await new Promise(resolve => setTimeout(resolve, 3000)) // 等待3秒后重试
           return processBatch(page, retryCount + 1)
         }
         
@@ -112,8 +140,7 @@ export default function RefreshAllPreviewsButton() {
               retryInfo: { batch: page + 1, attempt: retryCount + 1, maxAttempts: MAX_RETRIES }
             }))
             
-            // 增加重试等待时间从3秒到5秒
-            await new Promise(resolve => setTimeout(resolve, 5000))
+            await new Promise(resolve => setTimeout(resolve, 3000))
             return processBatch(page, retryCount + 1)
           }
           return { success: false, error: '请求超时（已重试）' }
@@ -139,8 +166,13 @@ export default function RefreshAllPreviewsButton() {
       progress: null
     })
 
-    let currentPage = 0
+    // 计算起始页码（基于区间）
+    const startPage = rangeMode ? (startIndex - 1) : 0
+    const targetCount = rangeMode ? (endIndex - startIndex + 1) : 0
+    
+    let currentPage = startPage
     let consecutiveSuccesses = 0
+    let processedInRange = 0
 
     while (true) {
       const batchResult = await processBatch(currentPage)
@@ -174,22 +206,8 @@ export default function RefreshAllPreviewsButton() {
           break
         }
         
-        // 失败后强制休息10秒，让连接完全恢复
-        console.log(`[Batch ${currentPage}] 失败后强制休息 10 秒...`)
-        setProcessing(prev => ({
-          ...prev,
-          retryInfo: { 
-            batch: 0, 
-            attempt: 0, 
-            maxAttempts: 0,
-            message: `批次失败，休息 10 秒让连接恢复...`
-          } as any
-        }))
-        await new Promise(resolve => setTimeout(resolve, 10000))
-        setProcessing(prev => ({
-          ...prev,
-          retryInfo: undefined
-        }))
+        // 失败后等待2秒再继续
+        await new Promise(resolve => setTimeout(resolve, 2000))
         continue
       }
 
@@ -220,20 +238,31 @@ export default function RefreshAllPreviewsButton() {
 
       currentPage++
       consecutiveSuccesses++
+      processedInRange++
       
-      // 更激进的休息策略：每处理10个剧本后，休息10秒让连接充分恢复
-      if (consecutiveSuccesses % 10 === 0) {
-        console.log(`[Batch ${currentPage}] 已连续处理 ${consecutiveSuccesses} 个，休息 10 秒...`)
+      // 如果是区间模式，检查是否达到目标数量
+      if (rangeMode && processedInRange >= targetCount) {
+        console.log(`[Range Mode] 已完成区间处理: ${startIndex}-${endIndex}`)
+        setProcessing(prev => ({
+          ...prev,
+          isRunning: false
+        }))
+        break
+      }
+      
+      // 每处理20个剧本后，休息5秒让连接恢复
+      if (consecutiveSuccesses % 20 === 0) {
+        console.log(`[Batch ${currentPage}] 已连续处理 ${consecutiveSuccesses} 个，休息 5 秒...`)
         setProcessing(prev => ({
           ...prev,
           retryInfo: { 
             batch: 0, 
             attempt: 0, 
             maxAttempts: 0,
-            message: `已处理 ${consecutiveSuccesses} 个，休息 10 秒恢复连接...`
+            message: `已处理 ${consecutiveSuccesses} 个，休息 5 秒恢复连接...`
           } as any
         }))
-        await new Promise(resolve => setTimeout(resolve, 10000))
+        await new Promise(resolve => setTimeout(resolve, 5000))
         setProcessing(prev => ({
           ...prev,
           retryInfo: undefined
@@ -263,7 +292,7 @@ export default function RefreshAllPreviewsButton() {
   return (
     <>
       <button
-        onClick={() => setShowConfirm(true)}
+        onClick={handleOpenConfirm}
         disabled={processing.isRunning}
         className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium min-h-touch"
       >
@@ -298,8 +327,106 @@ export default function RefreshAllPreviewsButton() {
                   此操作将<strong className="text-violet-600">分批处理</strong>所有已审核通过的剧本，重新生成预览图。
                 </p>
                 
-                {/* 强制刷新选项 */}
-                <div className="mb-4">
+                {/* 区间选择选项 */}
+                <div className="mb-4 space-y-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rangeMode}
+                      onChange={(e) => {
+                        setRangeMode(e.target.checked)
+                        if (e.target.checked && !totalScripts) {
+                          fetchTotalCount()
+                        }
+                      }}
+                      className="w-4 h-4 text-violet-600 bg-gray-100 border-gray-300 rounded focus:ring-violet-500"
+                    />
+                    <span className="text-sm font-semibold text-gray-700">
+                      只刷新指定区间的剧本
+                    </span>
+                  </label>
+                  
+                  {rangeMode && (
+                    <div className="ml-6 p-3 bg-gray-50 rounded-lg space-y-2">
+                      <div className="text-xs text-gray-500 mb-2">
+                        {totalScripts ? `共 ${totalScripts} 个已发布的剧本` : '加载中...'}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <label className="text-xs text-gray-600 block mb-1">起始序号</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={totalScripts || 1}
+                            value={startIndex}
+                            onChange={(e) => {
+                              const val = Math.max(1, Math.min(totalScripts || 1, parseInt(e.target.value) || 1))
+                              setStartIndex(val)
+                              if (val > endIndex) setEndIndex(val)
+                            }}
+                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                          />
+                        </div>
+                        <div className="text-gray-400 pt-5">-</div>
+                        <div className="flex-1">
+                          <label className="text-xs text-gray-600 block mb-1">结束序号</label>
+                          <input
+                            type="number"
+                            min={startIndex}
+                            max={totalScripts || 1}
+                            value={endIndex}
+                            onChange={(e) => {
+                              const val = Math.max(startIndex, Math.min(totalScripts || 1, parseInt(e.target.value) || 1))
+                              setEndIndex(val)
+                            }}
+                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                          />
+                        </div>
+                      </div>
+                      <div className="text-xs text-violet-600 font-medium">
+                        将处理 {endIndex - startIndex + 1} 个剧本（第 {startIndex} 到第 {endIndex} 个）
+                      </div>
+                      {/* 快捷区间按钮 */}
+                      <div className="flex gap-2 flex-wrap pt-2">
+                        <button
+                          type="button"
+                          onClick={() => { setStartIndex(1); setEndIndex(Math.min(100, totalScripts || 100)) }}
+                          className="px-2 py-1 text-xs bg-violet-100 text-violet-700 rounded hover:bg-violet-200"
+                        >
+                          1-100
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setStartIndex(101); setEndIndex(Math.min(200, totalScripts || 200)) }}
+                          className="px-2 py-1 text-xs bg-violet-100 text-violet-700 rounded hover:bg-violet-200"
+                        >
+                          101-200
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setStartIndex(201); setEndIndex(Math.min(300, totalScripts || 300)) }}
+                          className="px-2 py-1 text-xs bg-violet-100 text-violet-700 rounded hover:bg-violet-200"
+                        >
+                          201-300
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setStartIndex(301); setEndIndex(Math.min(400, totalScripts || 400)) }}
+                          className="px-2 py-1 text-xs bg-violet-100 text-violet-700 rounded hover:bg-violet-200"
+                        >
+                          301-400
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setStartIndex(401); setEndIndex(totalScripts || 500) }}
+                          className="px-2 py-1 text-xs bg-violet-100 text-violet-700 rounded hover:bg-violet-200"
+                        >
+                          401-最后
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -316,12 +443,23 @@ export default function RefreshAllPreviewsButton() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 space-y-1">
                   <p className="font-medium">✨ 新特性：</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li><strong>区间选择</strong>：可选择只刷新指定区间（如1-100），分段处理更稳定 ⭐</li>
                     <li><strong>单个处理</strong>：每次仅处理 1 个剧本，确保稳定性</li>
-                    <li><strong>激进休息策略</strong>：每处理 10 个剧本休息 10 秒，避免连接累积</li>
-                    <li><strong>失败后强制休息</strong>：失败后休息 10 秒让连接完全恢复</li>
+                    <li><strong>周期性休息</strong>：每处理 20 个剧本休息 5 秒，避免连接累积问题</li>
                     <li><strong>自动重试</strong>：遇到超时或服务器错误自动重试（最多2次）</li>
                   </ul>
                 </div>
+                
+                {rangeMode && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800 mt-3">
+                    <p className="font-medium mb-1">💡 使用建议：</p>
+                    <ul className="list-disc list-inside space-y-1 ml-2 text-xs">
+                      <li>建议每次处理 100 个剧本（约 30 分钟）</li>
+                      <li>如果中途失败，记住失败位置，从下一个区间开始</li>
+                      <li>450 个剧本可分 5 次处理：1-100, 101-200, 201-300, 301-400, 401-450</li>
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
             
