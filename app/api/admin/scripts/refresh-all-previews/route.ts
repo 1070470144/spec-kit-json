@@ -1,9 +1,12 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/src/db/client'
-import { ok, unauthorized, internalError } from '@/src/api/http'
+import { ok, unauthorized, internalError, badRequest } from '@/src/api/http'
 import { generateScriptPreview, getPreviewImagePath } from '@/src/generators/script-preview'
 import { LocalStorage } from '@/src/storage/local'
 import { getAdminSession } from '@/src/auth/adminSession'
+
+// 批处理大小
+const BATCH_SIZE = 5
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
@@ -15,13 +18,33 @@ export async function POST(req: NextRequest) {
       return unauthorized('NOT_ADMIN')
     }
 
-    console.log('[REFRESH PREVIEWS] Starting batch preview refresh for published scripts...')
+    // 解析请求参数
+    const body = await req.json().catch(() => ({}))
+    const { 
+      page = 0, 
+      batchSize = BATCH_SIZE,
+      forceRefresh = false 
+    } = body
 
-    // 获取所有已发布的剧本（审核通过）
+    const skip = page * batchSize
+    
+    console.log(`[REFRESH PREVIEWS] Starting batch ${page + 1} (skip: ${skip}, take: ${batchSize})`)
+
+    // 获取总数量
+    const totalCount = await prisma.script.count({
+      where: {
+        state: 'published'
+      }
+    })
+
+    // 获取当前批次的已发布剧本
     const scripts = await prisma.script.findMany({
       where: {
         state: 'published'
       },
+      skip,
+      take: batchSize,
+      orderBy: { createdAt: 'desc' },
       select: {
         id: true,
         title: true,
@@ -45,10 +68,14 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    console.log(`[REFRESH PREVIEWS] Found ${scripts.length} published scripts`)
+    console.log(`[REFRESH PREVIEWS] Processing batch ${page + 1}: ${scripts.length} scripts`)
 
     const results = {
-      total: scripts.length,
+      page,
+      batchSize,
+      total: totalCount,
+      processed: scripts.length,
+      hasMore: skip + scripts.length < totalCount,
       success: 0,
       skipped: 0,
       failed: 0,
@@ -57,7 +84,7 @@ export async function POST(req: NextRequest) {
 
     const storage = new LocalStorage()
 
-    // 遍历所有剧本
+    // 遍历当前批次的剧本
     for (const script of scripts) {
       try {
         // 检查是否有玩家上传的预览图
@@ -65,8 +92,8 @@ export async function POST(req: NextRequest) {
           img.isCover && img.sortOrder !== -1
         )
 
-        if (hasUserUploadedImage) {
-          // 有玩家上传的图片，跳过
+        if (hasUserUploadedImage && !forceRefresh) {
+          // 有玩家上传的图片，跳过（除非强制刷新）
           results.skipped++
           results.details.push({
             id: script.id,
@@ -78,21 +105,42 @@ export async function POST(req: NextRequest) {
           continue
         }
 
-        // 解析JSON数据
+        // 解析JSON数据，增强错误处理
         let json: any = {}
+        let jsonParseError: string | null = null
+        
         try {
           if (script.versions[0]?.content) {
-            json = JSON.parse(script.versions[0].content)
+            const content = script.versions[0].content.trim()
+            if (!content) {
+              throw new Error('内容为空')
+            }
+            
+            // 检查是否是有效的JSON格式
+            if (!content.startsWith('{') && !content.startsWith('[')) {
+              throw new Error('不是有效的JSON格式')
+            }
+            
+            json = JSON.parse(content)
+            
+            // 基本验证JSON结构
+            if (!json || (typeof json !== 'object')) {
+              throw new Error('JSON结构无效')
+            }
+            
+          } else {
+            throw new Error('没有版本内容')
           }
         } catch (error) {
+          jsonParseError = error instanceof Error ? error.message : '未知JSON错误'
           results.failed++
           results.details.push({
             id: script.id,
             title: script.title,
             status: 'failed',
-            reason: 'JSON解析失败'
+            reason: `JSON解析失败: ${jsonParseError}`
           })
-          console.error(`[REFRESH PREVIEWS] Failed to parse JSON for ${script.title}:`, error)
+          console.error(`[REFRESH PREVIEWS] Failed to parse JSON for ${script.title}:`, jsonParseError)
           continue
         }
 
@@ -149,17 +197,34 @@ export async function POST(req: NextRequest) {
     }
 
     const duration = Date.now() - startTime
-    console.log(`[REFRESH PREVIEWS] Completed in ${duration}ms - Success: ${results.success}, Skipped: ${results.skipped}, Failed: ${results.failed}`)
+    console.log(`[REFRESH PREVIEWS] Batch ${page + 1} completed in ${duration}ms - Success: ${results.success}, Skipped: ${results.skipped}, Failed: ${results.failed}`)
+
+    // 计算总体进度
+    const processedSoFar = skip + results.processed
+    const progressPercentage = totalCount > 0 ? Math.round((processedSoFar / totalCount) * 100) : 100
 
     return ok({
-      message: '预览图刷新完成',
-      results
+      message: results.hasMore ? 
+        `批次 ${page + 1} 完成，共 ${Math.ceil(totalCount / batchSize)} 批次` : 
+        '所有批次处理完成',
+      batch: results,
+      progress: {
+        current: processedSoFar,
+        total: totalCount,
+        percentage: progressPercentage,
+        hasMore: results.hasMore,
+        nextPage: results.hasMore ? page + 1 : null
+      }
     })
 
   } catch (error) {
     const duration = Date.now() - startTime
     console.error(`[API ERROR] POST /api/admin/scripts/refresh-all-previews - ${duration}ms:`, error)
-    return internalError('REFRESH_PREVIEWS_FAILED')
+    return internalError('REFRESH_PREVIEWS_FAILED', {
+      message: error instanceof Error ? error.message : '批处理失败',
+      page,
+      batchSize
+    })
   }
 }
 

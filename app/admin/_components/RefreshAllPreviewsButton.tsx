@@ -1,54 +1,172 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+
+type BatchResult = {
+  page: number
+  batchSize: number
+  total: number
+  processed: number
+  hasMore: boolean
+  success: number
+  skipped: number
+  failed: number
+  details: Array<{ id: string; title: string; status: 'success' | 'skipped' | 'failed'; reason?: string }>
+}
+
+type Progress = {
+  current: number
+  total: number
+  percentage: number
+  hasMore: boolean
+  nextPage: number | null
+}
+
+type ProcessingState = {
+  isRunning: boolean
+  currentBatch: number
+  totalProcessed: number
+  totalSuccess: number
+  totalSkipped: number
+  totalFailed: number
+  allDetails: Array<{ id: string; title: string; status: 'success' | 'skipped' | 'failed'; reason?: string }>
+  progress: Progress | null
+}
 
 export default function RefreshAllPreviewsButton() {
-  const [loading, setLoading] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showProgress, setShowProgress] = useState(false)
   const [showResult, setShowResult] = useState(false)
-  const [result, setResult] = useState<{
-    total: number
-    success: number
-    skipped: number
-    failed: number
-    details: Array<{ id: string; title: string; status: string; reason?: string }>
-  } | null>(null)
+  const [forceRefresh, setForceRefresh] = useState(false)
+  
+  const [processing, setProcessing] = useState<ProcessingState>({
+    isRunning: false,
+    currentBatch: 0,
+    totalProcessed: 0,
+    totalSuccess: 0,
+    totalSkipped: 0,
+    totalFailed: 0,
+    allDetails: [],
+    progress: null
+  })
+
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  async function processBatch(page: number): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const controller = new AbortController()
+      abortControllerRef.current = controller
+
+      const res = await fetch('/api/admin/scripts/refresh-all-previews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page, batchSize: 5, forceRefresh }),
+        signal: controller.signal
+      })
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(`HTTP ${res.status}: ${errorText}`)
+      }
+
+      const data = await res.json()
+      return { success: true, data }
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          return { success: false, error: '用户取消操作' }
+        }
+        return { success: false, error: error.message }
+      }
+      return { success: false, error: '未知错误' }
+    }
+  }
 
   async function handleConfirm() {
     setShowConfirm(false)
-    setLoading(true)
+    setShowProgress(true)
+    
+    setProcessing({
+      isRunning: true,
+      currentBatch: 0,
+      totalProcessed: 0,
+      totalSuccess: 0,
+      totalSkipped: 0,
+      totalFailed: 0,
+      allDetails: [],
+      progress: null
+    })
 
-    try {
-      const res = await fetch('/api/admin/scripts/refresh-all-previews', {
-        method: 'POST'
-      })
+    let currentPage = 0
 
-      const data = await res.json()
+    while (true) {
+      const batchResult = await processBatch(currentPage)
 
-      if (res.ok && data.data?.results) {
-        setResult(data.data.results)
-        setShowResult(true)
-      } else {
-        alert('刷新失败：' + (data?.error?.message || '未知错误'))
+      if (!batchResult.success) {
+        // 处理错误
+        setProcessing(prev => ({
+          ...prev,
+          isRunning: false
+        }))
+        alert(`批处理失败: ${batchResult.error}`)
+        break
       }
-    } catch (error) {
-      console.error('Refresh failed:', error)
-      alert('刷新失败，请重试')
-    } finally {
-      setLoading(false)
+
+      const { batch, progress } = batchResult.data.data
+
+      // 更新处理状态
+      setProcessing(prev => ({
+        ...prev,
+        currentBatch: currentPage + 1,
+        totalProcessed: progress.current,
+        totalSuccess: prev.totalSuccess + batch.success,
+        totalSkipped: prev.totalSkipped + batch.skipped,
+        totalFailed: prev.totalFailed + batch.failed,
+        allDetails: [...prev.allDetails, ...batch.details],
+        progress
+      }))
+
+      // 检查是否还有更多批次
+      if (!progress.hasMore) {
+        // 所有批次处理完成
+        setProcessing(prev => ({
+          ...prev,
+          isRunning: false
+        }))
+        break
+      }
+
+      currentPage++
+      // 添加小延迟避免服务器压力
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
+  }
+
+  function handleCancel() {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    setProcessing(prev => ({
+      ...prev,
+      isRunning: false
+    }))
+  }
+
+  function handleShowDetailedResult() {
+    setShowProgress(false)
+    setShowResult(true)
   }
 
   return (
     <>
       <button
         onClick={() => setShowConfirm(true)}
-        disabled={loading}
+        disabled={processing.isRunning}
         className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium min-h-touch"
       >
-        {loading ? (
+        {processing.isRunning ? (
           <>
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            处理中...
+            批次 {processing.currentBatch} 处理中...
           </>
         ) : (
           <>
@@ -72,15 +190,32 @@ export default function RefreshAllPreviewsButton() {
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">刷新剧本预览图</h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  此操作将为所有<strong className="text-violet-600">已审核通过</strong>的剧本重新生成预览图。
+                <p className="text-sm text-gray-600 mb-3">
+                  此操作将<strong className="text-violet-600">分批处理</strong>所有已审核通过的剧本，重新生成预览图。
                 </p>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 space-y-1">
-                  <p className="font-medium">注意事项：</p>
+                
+                {/* 强制刷新选项 */}
+                <div className="mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={forceRefresh}
+                      onChange={(e) => setForceRefresh(e.target.checked)}
+                      className="w-4 h-4 text-violet-600 bg-gray-100 border-gray-300 rounded focus:ring-violet-500"
+                    />
+                    <span className="text-sm text-gray-700">
+                      强制刷新（包括有玩家上传图片的剧本）
+                    </span>
+                  </label>
+                </div>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 space-y-1">
+                  <p className="font-medium">✨ 新特性：</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li>只会覆盖<strong>自动生成</strong>的预览图</li>
-                    <li><strong>玩家上传</strong>的预览图会被保留</li>
-                    <li>处理失败的剧本会继续处理其他剧本</li>
+                    <li><strong>分批处理</strong>：每批处理 5 个剧本，避免超时</li>
+                    <li><strong>实时进度</strong>：显示详细进度信息</li>
+                    <li><strong>错误跳过</strong>：JSON 有问题的剧本会跳过并记录</li>
+                    <li><strong>可随时取消</strong>：支持中途停止操作</li>
                   </ul>
                 </div>
               </div>
@@ -97,38 +232,164 @@ export default function RefreshAllPreviewsButton() {
                 onClick={handleConfirm}
                 className="flex-1 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors min-h-touch"
               >
-                确认刷新
+                开始分批处理
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 结果对话框 */}
-      {showResult && result && (
+      {/* 实时进度对话框 */}
+      {showProgress && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">刷新预览图进度</h3>
+              <p className="text-sm text-gray-600">
+                {processing.isRunning ? '正在分批处理剧本预览图...' : '处理已完成'}
+              </p>
+            </div>
+
+            {/* 总体进度条 */}
+            {processing.progress && (
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">总体进度</span>
+                  <span className="text-sm text-gray-500">
+                    {processing.progress.current} / {processing.progress.total}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-violet-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${processing.progress.percentage}%` }}
+                  ></div>
+                </div>
+                <div className="text-center mt-2 text-lg font-semibold text-violet-600">
+                  {processing.progress.percentage}%
+                </div>
+              </div>
+            )}
+
+            {/* 统计卡片 */}
+            <div className="grid grid-cols-4 gap-3 mb-6">
+              <div className="bg-blue-50 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-blue-600">{processing.totalProcessed}</div>
+                <div className="text-xs text-blue-600 mt-1">已处理</div>
+              </div>
+              <div className="bg-green-50 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-green-600">{processing.totalSuccess}</div>
+                <div className="text-xs text-green-600 mt-1">成功</div>
+              </div>
+              <div className="bg-amber-50 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-amber-600">{processing.totalSkipped}</div>
+                <div className="text-xs text-amber-600 mt-1">跳过</div>
+              </div>
+              <div className="bg-red-50 rounded-lg p-3 text-center">
+                <div className="text-xl font-bold text-red-600">{processing.totalFailed}</div>
+                <div className="text-xs text-red-600 mt-1">失败</div>
+              </div>
+            </div>
+
+            {/* 当前批次信息 */}
+            {processing.isRunning && (
+              <div className="bg-violet-50 border border-violet-200 rounded-lg p-3 mb-6">
+                <div className="flex items-center gap-2 text-sm text-violet-700">
+                  <div className="w-3 h-3 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+                  正在处理批次 {processing.currentBatch}
+                </div>
+              </div>
+            )}
+
+            {/* 最近的处理结果 */}
+            {processing.allDetails.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">最近处理的剧本</h4>
+                <div className="max-h-32 overflow-y-auto border rounded-lg">
+                  {processing.allDetails.slice(-5).map((item, index) => (
+                    <div key={`${item.id}-${index}`} className={`px-3 py-2 text-sm border-b last:border-b-0 ${
+                      index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <span className="truncate flex-1">{item.title}</span>
+                        <span className={`px-2 py-0.5 text-xs rounded-full ml-2 ${
+                          item.status === 'success' ? 'bg-green-100 text-green-700' :
+                          item.status === 'skipped' ? 'bg-amber-100 text-amber-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {item.status === 'success' ? '✓' : item.status === 'skipped' ? '○' : '✗'}
+                        </span>
+                      </div>
+                      {item.reason && (
+                        <div className="text-xs text-gray-500 mt-1">{item.reason}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 操作按钮 */}
+            <div className="flex gap-3">
+              {processing.isRunning ? (
+                <button
+                  onClick={handleCancel}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  取消处理
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleShowDetailedResult}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    查看详细结果
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowProgress(false)
+                      location.reload()
+                    }}
+                    className="flex-1 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+                  >
+                    完成
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 详细结果对话框 */}
+      {showResult && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
             <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">刷新结果</h3>
+              <h3 className="text-lg font-semibold text-gray-900">详细处理结果</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                共处理 {processing.totalProcessed} 个剧本
+              </p>
             </div>
             
             <div className="p-6 space-y-4">
               {/* 统计卡片 */}
               <div className="grid grid-cols-4 gap-3">
                 <div className="bg-blue-50 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-blue-600">{result.total}</div>
-                  <div className="text-xs text-blue-600 mt-1">总计</div>
+                  <div className="text-2xl font-bold text-blue-600">{processing.totalProcessed}</div>
+                  <div className="text-xs text-blue-600 mt-1">总处理</div>
                 </div>
                 <div className="bg-green-50 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-green-600">{result.success}</div>
+                  <div className="text-2xl font-bold text-green-600">{processing.totalSuccess}</div>
                   <div className="text-xs text-green-600 mt-1">成功</div>
                 </div>
                 <div className="bg-amber-50 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-amber-600">{result.skipped}</div>
+                  <div className="text-2xl font-bold text-amber-600">{processing.totalSkipped}</div>
                   <div className="text-xs text-amber-600 mt-1">跳过</div>
                 </div>
                 <div className="bg-red-50 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-red-600">{result.failed}</div>
+                  <div className="text-2xl font-bold text-red-600">{processing.totalFailed}</div>
                   <div className="text-xs text-red-600 mt-1">失败</div>
                 </div>
               </div>
@@ -136,11 +397,11 @@ export default function RefreshAllPreviewsButton() {
               {/* 详细列表 */}
               <div className="border rounded-lg overflow-hidden">
                 <div className="bg-gray-50 px-4 py-2 border-b">
-                  <h4 className="text-sm font-medium text-gray-700">处理详情</h4>
+                  <h4 className="text-sm font-medium text-gray-700">全部处理详情</h4>
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {result.details.map((item, index) => (
-                    <div key={item.id} className={`px-4 py-3 border-b last:border-b-0 ${
+                  {processing.allDetails.length > 0 ? processing.allDetails.map((item, index) => (
+                    <div key={`${item.id}-${index}`} className={`px-4 py-3 border-b last:border-b-0 ${
                       index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                     }`}>
                       <div className="flex items-center justify-between gap-3">
@@ -161,20 +422,31 @@ export default function RefreshAllPreviewsButton() {
                         </span>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="px-4 py-8 text-center text-gray-500">
+                      暂无处理记录
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
             
-            <div className="p-6 border-t">
+            <div className="p-6 border-t flex gap-3">
+              <button
+                onClick={() => setShowResult(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                返回
+              </button>
               <button
                 onClick={() => {
                   setShowResult(false)
+                  setShowProgress(false)
                   location.reload()
                 }}
-                className="w-full px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors min-h-touch"
+                className="flex-1 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
               >
-                完成
+                完成并刷新
               </button>
             </div>
           </div>
