@@ -36,6 +36,10 @@ export async function GET(req: NextRequest) {
       return ok({ items: [], total: 0, page, pageSize })
     }
     where.createdById = s.userId
+    // 过滤掉已废弃的记录（如果没有明确指定 state 参数）
+    if (!state) {
+      where.state = { not: 'abandoned' }
+    }
     console.log('[List] Mine mode - userId:', s.userId, 'Where:', JSON.stringify(where))
   }
 
