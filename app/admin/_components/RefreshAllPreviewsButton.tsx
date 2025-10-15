@@ -59,14 +59,18 @@ export default function RefreshAllPreviewsButton() {
       const controller = new AbortController()
       abortControllerRef.current = controller
 
-      // 设置90秒超时，略小于CloudFlare的100秒超时
-      const timeoutId = setTimeout(() => controller.abort(), 90000)
+      // 设置60秒超时，避免 QUIC 空闲超时
+      const timeoutId = setTimeout(() => controller.abort(), 60000)
 
       const res = await fetch('/api/admin/scripts/refresh-all-previews', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ page, batchSize: 3, forceRefresh }),
-        signal: controller.signal
+        headers: { 
+          'Content-Type': 'application/json',
+          'Connection': 'keep-alive'
+        },
+        body: JSON.stringify({ page, batchSize: 2, forceRefresh }),
+        signal: controller.signal,
+        keepalive: true
       })
 
       clearTimeout(timeoutId)
@@ -173,8 +177,8 @@ export default function RefreshAllPreviewsButton() {
       }
 
       currentPage++
-      // 添加较长延迟避免服务器压力和 QUIC 协议错误
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // 添加适当延迟避免服务器压力（批次更小，延迟可以略短）
+      await new Promise(resolve => setTimeout(resolve, 1500))
     }
   }
 
@@ -249,8 +253,8 @@ export default function RefreshAllPreviewsButton() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 space-y-1">
                   <p className="font-medium">✨ 新特性：</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li><strong>小批量处理</strong>：每批 3 个剧本，避免 CloudFlare 524 超时</li>
-                    <li><strong>自动重试</strong>：遇到超时或服务器错误自动重试</li>
+                    <li><strong>超小批量</strong>：每批仅 2 个剧本，避免 QUIC 空闲超时</li>
+                    <li><strong>自动重试</strong>：遇到超时或服务器错误自动重试（最多2次）</li>
                     <li><strong>实时进度</strong>：显示详细进度信息</li>
                     <li><strong>错误跳过</strong>：JSON 有问题的剧本会跳过并记录</li>
                   </ul>
